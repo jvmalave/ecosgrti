@@ -1,0 +1,69 @@
+services:
+  # Base de Datos PostgreSQL 16
+  db:
+    image: postgres:16-alpine
+    container_name: ecosgrti_db
+    restart: always
+    environment:
+      # Usuario Root (Superusuario para mantenimiento)
+      POSTGRES_DB: ecosgrti_db
+      POSTGRES_USER: root_admin
+      POSTGRES_PASSWORD: root_password
+      # Variables personalizadas para nuestro script de inicio
+      APP_DB_USER: ecos_user
+      APP_DB_PASS: ecos_password_2024
+    ports:
+      - "5433:5432" # Evita conflicto con tu Postgres local
+    networks:
+      - ecosgrti_network
+    volumes:
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+
+  # Caché y Sesiones Redis 7.2
+  redis:
+    image: redis:7.2-alpine
+    container_name: ecosgrti_redis
+    networks:
+      - ecosgrti_network
+    ports:
+      - "6379:6379"
+
+  # Backend Laravel 11
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+    container_name: ecosgrti_backend
+    volumes:
+      - ./backend:/var/www/html
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - ecosgrti_network
+
+  # Frontend Angular 20
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend.Dockerfile
+    container_name: ecosgrti_frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Evita conflictos de dependencias entre host y contenedor
+    ports:
+      - "4200:4200"
+    #stdin_open: true
+    #tty: true
+    networks:
+      - ecosgrti_network
+
+networks:
+  ecosgrti_network:
+    driver: bridge
+
+volumes:
+  postgres_data:

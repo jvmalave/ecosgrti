@@ -1,0 +1,27 @@
+# --- Archivos de Sistema ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Configuración y Secretos (CRÍTICO) ---
+.env
+.env.backup
+.env.production
+backend/.env
+
+# --- Dependencias de Backend ---
+backend/vendor/
+backend/composer.lock
+
+# --- Caché y Logs de Laravel ---
+backend/storage/*.key
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*.php
+backend/storage/logs/*.log
+backend/bootstrap/cache/*.php
+
+# --- Docker ---
+.docker/
+docker-compose.override.yml
