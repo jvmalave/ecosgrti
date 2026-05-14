@@ -7,18 +7,21 @@ use App\Domains\Security\Requests\LoginRequest; // Nuestro validador
 use App\Domains\Security\Services\AuthService; // Nuestro gestor de lógica
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth; // Para autenticación
+use App\Domains\Audit\Services\AuditService; // Para registrar eventos de auditoría
 
 
 class AuthController extends Controller
 {
     protected AuthService $authService;
+    protected AuditService $auditService; // Para registrar eventos de auditoría
 
     /**
      * El constructor recibe el servicio automáticamente.
      */
-    public function __construct(AuthService $authService)
+    public function __construct(AuthService $authService, AuditService $auditService)
     {
         $this->authService = $authService;
+        $this->auditService = $auditService;
     }
 
     /**
@@ -41,7 +44,12 @@ class AuthController extends Controller
             // Credenciales Inválidas: Incrementamos intentos en Redis
             $this->authService->incrementAttempts($email);
             
-            // Aquí luego agregaremos el Log de Auditoría (Paso 24)
+            // Registro de Auditoría para Fallo
+            $this->auditService->store(
+              'LOGIN_FAIL', 
+              "Intento de acceso fallido para el correo: {$email}", 
+              $request
+            );
             
             return response()->json([
                 'error' => 'Credenciales no válidas'
@@ -52,6 +60,16 @@ class AuthController extends Controller
         $this->authService->resetAttempts($email);
         
         return $this->respondWithToken($token);
+
+        // Registro de Auditoría para Éxito
+        $user = Auth::user();
+
+        $this->auditService->store(
+            'LOGIN_SUCCESS', 
+            "Inicio de sesión exitoso para el usuario: {$user->email}", 
+            $request,
+            $user->id //
+        );
     }
 
 /**
@@ -60,7 +78,7 @@ class AuthController extends Controller
 /**
  * Formatear la respuesta con el token (Paso 30)
  */
-  protected function respondWithToken(string $token): JsonResponse // ✅ Añadimos string
+  protected function respondWithToken(string $token): JsonResponse 
   {
       return response()->json([
           'access_token' => $token,
