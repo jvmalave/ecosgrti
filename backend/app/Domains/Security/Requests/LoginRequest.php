@@ -12,7 +12,7 @@ class LoginRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true; // Permitimos que cualquier usuario intente iniciar sesión;
     }
 
     

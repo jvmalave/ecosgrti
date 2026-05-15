@@ -58,8 +58,6 @@ class AuthController extends Controller
 
         // 3. Credenciales Válidas: Reset de intentos y respuesta (Paso 27)
         $this->authService->resetAttempts($email);
-        
-        return $this->respondWithToken($token);
 
         // Registro de Auditoría para Éxito
         $user = Auth::user();
@@ -70,11 +68,9 @@ class AuthController extends Controller
             $request,
             $user->id //
         );
+        
+        return $this->respondWithToken($token);
     }
-
-/**
- * Formatear la respuesta con el token (Paso 30)
- */
 /**
  * Formatear la respuesta con el token (Paso 30)
  */
