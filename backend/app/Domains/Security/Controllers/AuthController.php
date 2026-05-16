@@ -2,6 +2,8 @@
 
 namespace App\Domains\Security\Controllers;
 
+
+
 use App\Http\Controllers\Controller;
 use App\Domains\Security\Requests\LoginRequest; // Nuestro validador
 use App\Domains\Security\Services\AuthService; // Nuestro gestor de lógica
@@ -10,9 +12,15 @@ use Illuminate\Support\Facades\Auth; // Para autenticación
 use App\Domains\Audit\Services\AuditService; // Para registrar eventos de auditoría
 use Illuminate\Support\Facades\Log; // Para registrar errores de auditoría laravel.log
 use Illuminate\Http\Request; // Para manejar la solicitud en logout
+use OpenApi\Attributes as OA;
+use App\Domains\Security\Docs\AuthDocs; // Para implementar la interfaz de documentación
 
 
-class AuthController extends Controller
+#[OA\Info(title: "ECOSGRTI API", version: "1.0.0", description: "Documentación de Seguridad para el Sistema de Gestión de Requerimientos TI")]
+#[OA\Server(url: "http://127.0.0.1:8000", description: "Servidor Local")]
+
+
+class AuthController extends Controller implements AuthDocs
 {
     protected AuthService $authService;
     protected AuditService $auditService; // Para registrar eventos de auditoría
@@ -29,7 +37,8 @@ class AuthController extends Controller
     /**
      * Punto de entrada para la US01: Autenticación.
      */
-    public function login(LoginRequest $request): JsonResponse
+
+        public function login(LoginRequest $request): JsonResponse
     {
         $credentials = $request->only('email', 'password');
         $email = $credentials['email'];
