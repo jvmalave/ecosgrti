@@ -8,6 +8,8 @@ use App\Domains\Security\Services\AuthService; // Nuestro gestor de lógica
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth; // Para autenticación
 use App\Domains\Audit\Services\AuditService; // Para registrar eventos de auditoría
+use Illuminate\Support\Facades\Log; // Para registrar errores de auditoría laravel.log
+use Illuminate\Http\Request; // Para manejar la solicitud en logout
 
 
 class AuthController extends Controller
@@ -62,28 +64,65 @@ class AuthController extends Controller
         // Registro de Auditoría para Éxito
         $user = Auth::user();
 
-        $this->auditService->store(
-            'LOGIN_SUCCESS', 
-            "Inicio de sesión exitoso para el usuario: {$user->email}", 
-            $request,
-            $user->id //
-        );
+        try {
+            $this->auditService->store(
+                'LOGIN_SUCCESS', 
+                "Inicio de sesión exitoso: {$user->email}", 
+                $request,
+                $user->id
+            );
+        } catch (\Exception $e) {
+            // Registramos el error en storage/logs/laravel.log para revisarlo luego
+            Log::error("Fallo registro de auditoría US01: " . $e->getMessage());
+        }
         
         return $this->respondWithToken($token);
+    }
+
+    // Método para cerrar sesión (Paso 24 del Diagrama)
+
+    public function logout(Request $request)
+    {
+        try {
+            // Obtenemos al usuario antes de invalidar el token para la auditoría
+            $user = auth()->user();
+
+            // 1. Invalidar el token actual
+            auth()->logout();
+
+            // 2. Registrar en Auditoría (Paso 24 del flujo, pero para éxito de salida)
+            $this->auditService->store(
+                'LOGOUT',
+                "Cierre de sesión exitoso para el usuario: {$user->email}",
+                $request,
+                $user->id
+            );
+
+            return response()->json(['message' => 'Sesión cerrada exitosamente']);
+
+        } catch (\Exception $e) {
+            // Si algo falla (ej. el sistema de auditoría), registramos el error interno
+            Log::error("Error en Logout US01: " . $e->getMessage());
+            
+            // Aun si la auditoría falla, el usuario debería sentir que salió
+            return response()->json(['message' => 'Sesión finalizada'], 200);
+        }
     }
 /**
  * Formatear la respuesta con el token (Paso 30)
  */
-  protected function respondWithToken(string $token): JsonResponse 
-  {
-      return response()->json([
-          'access_token' => $token,
-          'token_type' => 'bearer',
-          'expires_in' => Auth::factory()->getTTL() * 60,
-          'user' => [
-              'name' => Auth::user()->name,
-              // Aquí agregaremos la foto más adelante
-          ]
-      ]);
-  }
+    protected function respondWithToken(string $token): JsonResponse 
+    {
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => Auth::factory()->getTTL() * 60,
+            'user' => [
+                'name' => Auth::user()->name,
+                'email' => Auth::user()->email,
+                // Aquí agregaremos la foto más adelante
+            ]
+        ], 200);
+    }
 }
+
