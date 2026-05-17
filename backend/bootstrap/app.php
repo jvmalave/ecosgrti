@@ -16,4 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })
+    ->withCommands([
+        // 🚀 Cargamos explícitamente los comandos de nuestro dominio
+        base_path('app/Domains/Security/Console/Commands'),
+    ])->create();
