@@ -1,0 +1,13 @@
+import { Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
+
+@Component({
+  imports: [ RouterModule, RouterOutlet],
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.scss',
+})
+export class App {
+  protected title = 'sgrti-frontend';
+}
