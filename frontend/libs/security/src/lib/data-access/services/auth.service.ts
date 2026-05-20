@@ -31,7 +31,7 @@ export class AuthService {
 
 public login(credentials: { email: string; password: string }): Observable<UserSession> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
-      map((response: AuthResponse) => { // 🚀 Usamos map para transformar el flujo
+      map((response: AuthResponse) => { // Usamos map para transformar el flujo
         
         // 1. Construimos el objeto con la estructura que el Frontend espera
         const mappedSession: UserSession = {
