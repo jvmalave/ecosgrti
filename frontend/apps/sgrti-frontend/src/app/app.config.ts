@@ -6,7 +6,7 @@ import {
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { appRoutes } from './app.routes';
-import { authInterceptor } from '@ecosgrti/security';
+import { authInterceptor } from '@ecosgrti/security/data-access';
 import {
   provideClientHydration,
   withEventReplay,
@@ -16,12 +16,11 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideClientHydration(withEventReplay()),
     provideBrowserGlobalErrorListeners(),
-    
     provideRouter(appRoutes, withComponentInputBinding()),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideHttpClient(
+      withFetch(),
       withInterceptors([authInterceptor])
-    ),
-    provideHttpClient(withFetch())
+    )
   ],
 };

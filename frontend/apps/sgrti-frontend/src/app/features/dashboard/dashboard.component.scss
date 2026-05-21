@@ -1,0 +1,92 @@
+// --- Variables de color de la marca (Cantv) ---
+$color-magenta: #e91e63;
+$color-purple: #9c27b0;
+$gradient-end: #ff00ff;
+$gradient-start: #1c1ce2;
+$sidebar-bg: #1e293b; // Un tono oscuro azulado muy elegante para el sidebar
+$text-muted: #64748b;
+$text-white: #ffffff;
+
+// --- Sidebar (Menú Lateral) ---
+.sidebar-brand {
+  // Aplicamos el degradado lineal de arriba hacia abajo (o inclinado)
+  background: linear-gradient(180deg, $gradient-start 0%, $gradient-end 100%) !important;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+
+  .brand-logo-text {
+    color: $text-white;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 1.5rem;
+    .logo-cantv {
+    max-height:  100px; // Ajusta según tu logo
+  }
+  }
+
+  // Estilo de navegación sobre degradado
+  .nav-link {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin: 0.2rem 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    i { opacity: 0.8; }
+
+    &:hover {
+      color: $text-white !important;
+      background-color: rgba(255, 255, 255, 0.15) !important;
+      transform: translateX(5px);
+    }
+
+    &.active {
+      color: $text-white !important;
+      background-color: rgba(255, 255, 255, 0.25) !important;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      font-weight: 700;
+    }
+  }
+}
+
+// --- Header y Avatar ---
+
+.brand-avatar {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, $gradient-start, $gradient-end);
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+// --- Tarjetas e Indicadores ---
+.card-brand-accent {
+  border-left-color: $color-magenta !important;
+}
+
+.badge-brand {
+  background-color: rgba($color-magenta, 0.1);
+  color: $color-magenta;
+  border: 1px solid rgba($color-magenta, 0.2);
+}
+
+.btn-logout-white {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: $text-white;
+  border-radius: 50px;
+  font-weight: 600;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: $text-white;
+    color: $color-purple;
+    transform: scale(1.02);
+  }
+}
+

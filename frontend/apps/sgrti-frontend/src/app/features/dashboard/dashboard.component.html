@@ -1,0 +1,134 @@
+<div class="container-fluid min-vh-100 bg-light p-0">
+  <div class="row min-vh-100 g-0">
+    
+    <!-- <aside class="col-md-3 col-lg-2 d-none d-md-flex flex-column p-3 sidebar-brand">
+      <div class="fs-4 mb-4 text-center mt-2 brand-logo-text">
+        ECOSGRTI
+      </div>
+      
+      <nav class="flex-grow-1 mt-3">
+        <ul class="nav flex-column gap-2">
+          <li class="nav-item">
+            <a href="#" class="nav-link active rounded-end">🏠 Inicio</a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link rounded-end">📊 Reportes</a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link rounded-end">⚙️ Configuración</a>
+          </li>
+        </ul>
+      </nav>
+      
+      <div class="mt-auto border-top border-secondary pt-4 pb-2">
+        <button (click)="logout()" class="btn btn-brand-outline w-100 d-flex justify-content-center align-items-center gap-2">
+          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+      </div>
+    </aside> -->
+
+    <aside class="col-md-3 col-lg-2 d-none d-md-flex flex-column p-4 sidebar-brand">
+      <div class="fs-3 mb-4 text-center brand-logo-text">
+        <img src="assets/logo-cantv.png" alt="cantv" class="logo-cantv" onerror="this.style.display='none'">
+        Sistema de Gestión de Requerimientos TI
+      </div>
+      
+      <nav class="flex-grow-1 mt-2">
+        <ul class="nav flex-column gap-1">
+          <li class="nav-item">
+            <a href="#" class="nav-link active rounded-3 px-3 py-2">
+              <i class="fas fa-home"></i> Inicio
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link rounded-3 px-3 py-2">
+              <i class="fas fa-chart-pie"></i> Reportes
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link rounded-3 px-3 py-2">
+              <i class="fas fa-cog"></i> Configuración
+            </a>
+          </li>
+        </ul>
+      </nav>
+      
+      <div class="mt-auto pt-4 border-top border-white border-opacity-25">
+        <button (click)="logout()" class="btn btn-logout-white w-100 py-2">
+          <i class="fas fa-power-off me-2"></i> Salir
+        </button>
+      </div>
+    </aside>
+
+    <main class="col-md-9 col-lg-10 d-flex flex-column bg-light">
+      
+      <!-- <header class="bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center">
+        <h1 class="h5 mb-0 fw-bold text-secondary">Panel Principal</h1>
+        
+        @if (user()) {
+          <div class="d-flex align-items-center gap-3">
+            <div class="text-end d-none d-sm-block">
+              <p class="mb-0 fw-bold text-dark">{{ user()?.username }}</p>
+              <p class="mb-0 text-muted small">{{ user()?.email }}</p>
+            </div>
+            <div class="brand-avatar text-white fw-bold d-flex align-items-center justify-content-center rounded-circle">
+              {{ user()?.username?.substring(0, 1) | uppercase }}
+            </div>
+          </div>
+        } 
+      </header> -->
+
+      <header class="bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center">
+        <h1 class="h5 mb-0 fw-bold text-secondary">Panel Principal</h1>
+        
+        @if (user()) {
+          <div class="d-flex align-items-center gap-3">
+            <div class="text-end d-none d-sm-block">
+              <p class="mb-0 fw-bold text-dark">{{ user()?.username }}</p>
+              <p class="mb-0 text-muted small">{{ user()?.email }}</p>
+            </div>
+            <div class="brand-avatar text-white fw-bold d-flex align-items-center justify-content-center rounded-circle">
+              {{ user()?.username?.substring(0, 1) | uppercase }}
+            </div>
+          </div>
+        } 
+      </header>
+
+      <section class="p-4 p-md-5">
+        <div class="row g-4">
+          
+          <div class="col-md-8">
+            <div class="card shadow-sm border-0 border-start border-4 card-brand-accent h-100">
+              <div class="card-body p-4">
+                <h2 class="h4 fw-bold text-dark">¡Bienvenido de nuevo, {{ user()?.username }}!</h2>
+                <p class="text-muted mt-2 mb-0">Has ingresado al sistema con el rol: 
+                  <span class="badge badge-brand rounded-pill ms-2 px-3 py-2">
+                    {{ user()?.roles?.[0] }}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-body p-4">
+                <h3 class="h6 text-muted text-uppercase fw-bold mb-3">Estado de la Sesión</h3>
+                <p class="small text-muted mb-2">Email: <span class="fw-normal font-monospace text-dark">{{ user()?.email }}</span></p>
+                <p class="small text-muted mb-3">UUID: <span class="fw-normal font-monospace text-truncate d-block text-dark">{{ user()?.id }}</span></p>
+                
+                <hr class="text-muted opacity-25">
+                <div class="d-flex align-items-center text-success small fw-bold">
+                  <span class="status-dot bg-success rounded-circle me-2" style="width:8px; height:8px; display:inline-block;"></span> 
+                  Conexión Segura Activa
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </main>
+    
+  </div>
+</div>

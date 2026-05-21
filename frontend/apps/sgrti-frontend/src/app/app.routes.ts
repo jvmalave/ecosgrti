@@ -1,26 +1,27 @@
 import { Routes } from '@angular/router';
-import { authGuard } from '@ecosgrti/security';
-
+// 1. Importamos la lógica por la puerta de datos
+import { authGuard } from '@ecosgrti/security/data-access';
+// 2. Importamos el componente de forma estática (tradicional)
+import { LoginComponent } from '@ecosgrti/security'; 
 
 export const appRoutes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'login', //  Si entran a la raíz, los mandamos al login automáticamente
+    redirectTo: 'login',
   },
   {
     path: 'login',
-    // Cargamos el componente de forma directa desde nuestra librería de seguridad
-    loadComponent: () => import('@ecosgrti/security').then((m) => m.LoginComponent),
+    component: LoginComponent, 
   },
   {
     path: 'dashboard',
-    // 🚀 Lazy Loading para el futuro componente Dashboard (evita cargar código innecesario al inicio)
+    // 🚀 El Dashboard SÍ se queda con lazy loading, porque no todos llegan aquí
     loadComponent: () => import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
     canActivate: [authGuard],
   },
   {
     path: '**',
-    redirectTo: 'login', // ↩️ Cualquier ruta extraña o inexistente rebota al login
+    redirectTo: 'login',
   },
 ];

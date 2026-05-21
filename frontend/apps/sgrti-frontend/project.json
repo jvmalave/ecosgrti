@@ -19,7 +19,9 @@
           {
             "glob": "**/*",
             "input": "apps/sgrti-frontend/public"
-          }
+          },
+          "apps/sgrti-frontend/src/favicon.ico",
+          "apps/sgrti-frontend/src/assets"
         ],
         "styles": ["apps/sgrti-frontend/src/styles.scss"],
         "server": "apps/sgrti-frontend/src/main.server.ts",

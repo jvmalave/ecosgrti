@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms'; // Importar las herramientas de formularios
-import { AuthService } from '../../data-access/services/auth.service';
+import { AuthService} from '../../data-access/services/auth.service';
 import { Router } from '@angular/router';
 import { UserSession } from '../../data-access/models/auth.model';
+import { AlertService } from '../../data-access/services/alert.service';
 
 @Component({
   selector: 'lib-login',
@@ -21,6 +22,8 @@ export class LoginComponent {
   private readonly fb = inject(NonNullableFormBuilder);
 
   private readonly authService = inject(AuthService);
+
+  private readonly alertService = inject(AlertService);
 
   public readonly errorMessage = signal<string | null>(null);
 
@@ -60,7 +63,7 @@ export class LoginComponent {
       },
       error: (err) => {
         console.error('Error en la autenticación', err);
-        this.errorMessage.set('Credenciales inválidas. Por favor, intenta de nuevo.');
+        this.alertService.error('Credenciales inválidas. Por favor, verifica tu usuario y contraseña.');
       }
     });
   }
