@@ -11,4 +11,5 @@ Artisan::command('inspire', function () {
 // Programar el Job de Integridad para que corra diariamente
 Schedule::command('domains:verify-integrity')
   ->dailyAt('02:00')
-  ->emailOutputOnFailure('ecosgrti.soporte@gmail.com');
+  ->emailOutputOnFailure('ecosgrti.soporte@gmail.com')
+  ->withoutOverlapping();

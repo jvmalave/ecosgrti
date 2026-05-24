@@ -12,12 +12,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+          'role' => \App\Domains\Security\Middlewares\RoleMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })
     ->withCommands([
-        // 🚀 Cargamos explícitamente los comandos de nuestro dominio
+        //  Cargamos explícitamente los comandos de nuestro dominio
         base_path('app/Domains/Security/Console/Commands'),
     ])->create();

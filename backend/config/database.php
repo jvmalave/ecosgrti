@@ -95,7 +95,7 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => 'security,core,catalogs,workflow,public',
+            'search_path' => 'security,core,catalogs,workflow,audit,ia,public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 

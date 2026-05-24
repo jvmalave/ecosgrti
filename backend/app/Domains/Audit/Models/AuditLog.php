@@ -5,6 +5,7 @@ namespace App\Domains\Audit\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasUuid; // El trait que creamos para la US02
 
+
 class AuditLog extends Model
 {
     use HasUuid;

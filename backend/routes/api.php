@@ -9,7 +9,13 @@ use App\Domains\Security\Controllers\AuthController;
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     });
+
 // Rutas Privadas (Requieren Token)
 Route::middleware('auth:api')->group(function () {
     Route::post('auth/logout', [AuthController::class, 'logout']);
+    
+    // El endpoint que nutrirá de datos a tu dashboard
+    Route::get('dashboard', function () {
+        return response()->json(['mensaje' => 'Bienvenido al Dashboard']);
+    })->middleware('role:admin');;
 });

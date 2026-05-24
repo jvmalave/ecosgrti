@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log; // Para registrar errores de auditoría lara
 use Illuminate\Http\Request; // Para manejar la solicitud en logout
 use OpenApi\Attributes as OA;
 use App\Domains\Security\Docs\AuthDocs; // Para implementar la interfaz de documentación
+use Illuminate\Support\Facades\Cache; // Para manejar la cache
 
 
 #[OA\Info(title: "ECOSGRTI API", version: "1.0.0", description: "Documentación de Seguridad para el Sistema de Gestión de Requerimientos TI")]
@@ -47,7 +48,7 @@ class AuthController extends Controller implements AuthDocs
         if ($this->authService->isLockedOut($email)) {
             return response()->json([
                 'error' => 'Demasiados intentos. Por favor, espere 15 minutos.'
-            ], 429);
+            ], 423);
         }
 
         // 2. Intento de autenticación (Paso 22 al 25 del Diagrama)
@@ -84,6 +85,14 @@ class AuthController extends Controller implements AuthDocs
             // Registramos el error en storage/logs/laravel.log para revisarlo luego
             Log::error("Fallo registro de auditoría US01: " . $e->getMessage());
         }
+
+        // 4. Guardar el token en la cache (Paso 28)
+
+        Cache::put(
+            'user_session_' . $user->id, 
+            $token, 
+            Auth::factory()->getTTL() * 60
+        );
         
         return $this->respondWithToken($token);
     }
