@@ -7,6 +7,8 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from '@ecosgrti/security/data-access';
+import { AUTH_API_URL } from '@ecosgrti/security/data-access';
+import { environment } from '../environments/environment.development';
 import {
   provideClientHydration,
   withEventReplay,
@@ -21,6 +23,8 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withFetch(),
       withInterceptors([authInterceptor])
-    )
+    ),
+    { provide: AUTH_API_URL, useValue: environment.authApiUrl },
+
   ],
 };

@@ -7,7 +7,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   
   // 2. Obtenemos el usuario o sesión actual (usando el Signal de solo lectura)
-  const session = authService.currentUser();
+
+  const session = authService.currentSession();
 
   // 3. Si el usuario está autenticado y tiene un token válido, clonamos la petición
   if (session && session.token) {

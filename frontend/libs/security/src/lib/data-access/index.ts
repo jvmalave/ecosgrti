@@ -4,3 +4,4 @@ export * from './guards/auth.guard';
 export * from './interceptors/auth.interceptor';
 export * from './models/auth.model';
 export * from './services/alert.service';
+export * from './tokens/tokens';

@@ -8,28 +8,21 @@ export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
   const platformId = inject(PLATFORM_ID); 
 
-  const session = authService.currentUser();
+  // 1. Leemos el Signal público
+  const session = authService.currentSession();
 
-  // 1. Si ya hay sesión en memoria, pasa.
+  // 2. Si hay sesión, adelante
   if (session && session.token) {
     return true;
   }
 
-  // 2. 🛡️ LA PIEZA CLAVE SSR: 
-  // Si estamos en el servidor (Node), lo dejamos pasar porque no puede verificar el token.
+  // 3. Mecanismo de seguridad SSR (evitar redirecciones en el servidor)
   if (!isPlatformBrowser(platformId)) {
     return true; 
   }
 
-  // 3. Si ya estamos en el navegador, revisamos el almacenamiento físico
-  const savedUser = localStorage.getItem('ecosgrti_session');
-  if (savedUser) {
-    const parsed = JSON.parse(savedUser);
-    if (parsed && parsed.token) {
-      return true; 
-    }
-  }
-
-  // 4. Si estamos en el navegador y realmente no hay nada, entonces sí rebotamos al login
-  return router.createUrlTree(['/login']);
+  // 4. Si no hay sesión y estamos en el navegador, pa' fuera
+  // Usar navigate es más directo y es lo que espera nuestra prueba
+  router.navigate(['/login']);
+  return false;
 };

@@ -1,0 +1,121 @@
+// --- Variables de color (basadas en la imagen) ---
+$color-magenta: #e91e63;
+$color-purple: #9c27b0;
+$gradient-end: #ff00ff; // Magenta vibrante
+$gradient-start: #3636e8;   // Púrpura profundo
+$footer-purple: #7b1fa2;
+$text-white: #ffffff;
+$text-muted: #6c757d;
+
+// --- Mixins y utilidades (para sombras e inputs) ---
+@mixin subtle-shadow {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+// --- Estilos generales ---
+body {
+  background-color: $text-white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; // O la fuente que uses en tu proyecto
+}
+
+// --- Componente de Cabecera (Header) ---
+.login-header {
+  background: linear-gradient(90deg, $gradient-start 0%, $gradient-end 100%);
+  color: $text-white;
+  padding: 2rem 1.5rem;
+  
+  .logo-cantv {
+    max-height:  100px; // Ajusta según tu logo
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: bold;
+    margin: 0;
+  }
+}
+
+// --- Componente de Formulario ---
+.login-form-container {
+  padding: 2.5rem 1.5rem; // Espaciado entre header/form y form/botones
+  
+  // Estilos específicos para las etiquetas de formulario
+  .form-label {
+    display: block;
+    text-align: center;
+    color: $text-muted;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  // Estilos específicos para los campos de entrada (inputs)
+  .form-control {
+    border-radius: 15px; // Bordes muy redondeados
+    @include subtle-shadow; // Sombra sutil
+    padding: 0.50rem 1rem;
+    
+    &:focus {
+      border-color: $color-purple;
+      box-shadow: 0 0 0 0.2rem rgba($color-purple, 0.25);
+    }
+  }
+}
+
+// --- Componente de Botones (Acciones) ---
+.circular-btn-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+
+  // El botón circular real
+  .circular-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%; // Hace el botón un círculo perfecto
+    border: 3px solid $color-magenta; // Borde rosa vibrante
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    padding: 0;
+
+    &:hover {
+      background-color: rgba($color-magenta, 0.1);
+      transform: scale(1.05); // Pequeña animación al pasar el ratón
+    }
+
+    // Estilo para el icono dentro del botón
+    svg {
+      width: 32px;
+      height: 32px;
+      fill: $color-magenta; // Color del icono
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      border-color: #ccc; // Lo ponemos gris
+      
+      svg { fill: #ccc; } // Pintamos el icono gris
+      
+      &:hover {
+        background-color: transparent;
+        transform: none; // Quitamos la animación
+      }
+    }
+  }
+
+  // El texto debajo del botón
+  .btn-label {
+    font-size: 0.85rem;
+    color: $text-muted;
+    font-weight: 500;
+  }
+}
+
+// --- Componente de Pie de Página (Footer) ---
+.login-footer {
+  background-color: $footer-purple;
+  height: 50px; // O el grosor que desees
+}

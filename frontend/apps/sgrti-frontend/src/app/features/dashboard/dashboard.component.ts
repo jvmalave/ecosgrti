@@ -24,6 +24,6 @@ export class DashboardComponent {
    *Se Finaliza la sesión del usuario
    */
   logout() {
-    this.authService.logout();
+    this.authService.logout().subscribe();
   }
 }

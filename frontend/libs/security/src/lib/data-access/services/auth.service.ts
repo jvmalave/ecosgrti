@@ -3,9 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { UserSession } from '../models/auth.model';
 import { AuthResponse } from '../models/auth.model';
 import { isPlatformBrowser } from '@angular/common';
-import { Observable, map } from 'rxjs';
+import { Observable, map, finalize } from 'rxjs';
 import { Router } from '@angular/router';
-
+import { AUTH_API_URL } from '../tokens/tokens';
 
 @Injectable({
   providedIn: 'root',
@@ -13,7 +13,8 @@ import { Router } from '@angular/router';
 export class AuthService {
   private router = inject(Router);
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8000/api/auth'; 
+  private readonly apiUrl = inject(AUTH_API_URL);
+  //private readonly apiUrl = 'http://localhost:8000/api/auth'; 
 
   private readonly _currentUser = signal<UserSession | null>(
     inject(PLATFORM_ID) && isPlatformBrowser(inject(PLATFORM_ID))
@@ -25,6 +26,7 @@ export class AuthService {
   );
   public readonly currentUser = this._currentUser.asReadonly();
   private platformId = inject(PLATFORM_ID);
+  public readonly currentSession = this._currentUser.asReadonly();
 
   
 
@@ -62,18 +64,28 @@ export class AuthService {
   /**
    * Logout completo: Invalida en servidor y limpia cliente
    */
-  public logout(): void {
-    // 1. Se llama a Laravel para destruir el token en Redis
-    this.http.post(`${this.apiUrl}/logout`, {}).subscribe({
-      next: () => {
-        this.clearLocalSession();
-      },
-      error: (err) => {
-        console.warn('El servidor devolvió un error al cerrar sesión, forzando cierre local.', err);
-        this.clearLocalSession();
-      }
-    });
-  }
+  // public logout(): void {
+  //   // 1. Se llama a Laravel para destruir el token en Redis
+  //   this.http.post(`${this.apiUrl}/logout`, {}).subscribe({
+  //     next: () => {
+  //       this.clearLocalSession();
+  //     },
+  //     error: (err) => {
+  //       console.warn('El servidor devolvió un error al cerrar sesión, forzando cierre local.', err);
+  //       this.clearLocalSession();
+  //     }
+  //   });
+  // }
+
+  public logout(): Observable<void> {
+  // 1. Devolvemos la petición para que el componente (o el test) pueda suscribirse
+  return this.http.post<void>(`${this.apiUrl}/logout`, {}).pipe(
+    // 2. finalize se ejecuta pase lo que pase (éxito o error), reemplazando tu next/error
+    finalize(() => {
+      this.clearLocalSession();
+    })
+  );
+}
 
   /**
    * Método auxiliar privado para limpiar el rastro local.
@@ -81,6 +93,8 @@ export class AuthService {
   private clearLocalSession(): void {
     // Se vacia el Signal (la UI reacciona instantáneamente)
     this._currentUser.set(null);
+
+    console.log('Platform ID es:', this.platformId);
     
     // Se borra el almacenamiento físico
     if (isPlatformBrowser(this.platformId)) {
