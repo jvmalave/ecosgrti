@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Domains\Security\Controllers;
+namespace App\Domains\Security\Http\Controllers;
 
 
 
 use App\Http\Controllers\Controller;
-use App\Domains\Security\Requests\LoginRequest; // Nuestro validador
+use App\Domains\Security\Http\Requests\LoginRequest; // Nuestro validador
 use App\Domains\Security\Services\AuthService; // Nuestro gestor de lógica
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth; // Para autenticación
