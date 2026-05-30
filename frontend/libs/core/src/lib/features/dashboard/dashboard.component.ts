@@ -5,7 +5,7 @@ import { UpperCasePipe } from '@angular/common';
 
 
 @Component({
-  selector: 'app-dashboard',
+  selector: 'lib-dashboard',
   standalone: true,
   imports: [UpperCasePipe],
   templateUrl: './dashboard.component.html',

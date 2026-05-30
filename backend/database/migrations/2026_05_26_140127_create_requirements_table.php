@@ -25,6 +25,13 @@ return new class extends Migration
             $table->string('needs_spreadsheet_path')->nullable(); // Planilla de necesidades
             $table->string('it_request_doc_path')->nullable(); // Documento de Solicitud TI
 
+            // ==========================================
+            // COLUMNAS DEL UNIT SNAPSHOT (INMUTABILIDAD)
+            // ==========================================
+            $table->string('snapshot_society_name');
+            $table->string('snapshot_system_name');
+            $table->string('snapshot_unit_name');
+
             // Relación con el Consultor Funcional (Esto trae mágicamente su persona, unidad, sistema, etc.)
             $table->foreignUuid('functional_consultant_id')
                   ->constrained('security.functional_consultants')

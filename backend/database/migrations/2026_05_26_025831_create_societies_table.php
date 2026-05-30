@@ -6,25 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('security.societies', function (Blueprint $table) {
+        // Movido al esquema 'catalogs'
+        Schema::create('catalogs.societies', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name')->nullable();
+            $table->string('name')->unique(); 
+            $table->string('acronym')->nullable(); 
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('security.societies');
+        Schema::dropIfExists('catalogs.societies');
     }
 };
-
-

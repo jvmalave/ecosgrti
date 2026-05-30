@@ -11,7 +11,10 @@ use App\Domains\Core\Http\Controllers\RequirementController;
 
 Route::prefix('core')->middleware('auth:api')->group(function () {
     
-    // US04 - Momento 1: Crear un nuevo requerimiento
+    // US05 - Carga híbrida del Dashboard
+    Route::get('requirements', [RequirementController::class, 'index']);
+
+  // US04 - Momento 1: Crear un nuevo requerimiento
     Route::post('requirements', [RequirementController::class, 'store']);
     
 });

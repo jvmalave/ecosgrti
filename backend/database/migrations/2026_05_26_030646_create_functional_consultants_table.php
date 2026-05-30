@@ -6,30 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up()
+    public function up(): void
     {
         Schema::create('security.functional_consultants', function (Blueprint $table) {
             $table->uuid('id')->primary();
             
-            // Relaciones
+            // Relación interna en el mismo esquema (Persona)
             $table->foreignUuid('person_id')->constrained('security.persons')->onDelete('cascade');
-            $table->foreignUuid('requesting_unit_id')->constrained('security.requesting_units')->onDelete('cascade');
-            $table->foreignUuid('society_id')->constrained('security.societies');
-            $table->foreignUuid('system_id')->constrained('security.systems');
+            
+            // Relación cruzada hacia el esquema Catalogs (Unidad Solicitante)
+            $table->foreignUuid('requesting_unit_id')->constrained('catalogs.requesting_units')->onDelete('restrict');
             
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        // Incluimos el esquema para que sepa exactamente qué borrar
         Schema::dropIfExists('security.functional_consultants');
     }
 };

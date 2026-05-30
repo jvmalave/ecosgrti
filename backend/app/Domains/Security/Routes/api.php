@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Domains\Security\Http\Controllers\AuthController; 
 use App\Domains\Security\Http\Controllers\FunctionalConsultantController;
+use App\Domains\Security\Http\Controllers\ConsultantController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,6 +27,17 @@ Route::middleware('auth:api')->group(function () {
         return response()->json(['mensaje' => 'Bienvenido al Dashboard']);
     })->middleware('role:admin');
 
-    // US04: Autocompletado Atómico del Grafo Organizacional
-    Route::get('consultores/lookup-organizacional/{personaId}', [FunctionalConsultantController::class, 'lookupOrganizacional']);
+    // ==============================================================
+    // SECCIÓN CONSULTORES (US04 y Selects del Frontend)
+    // ==============================================================
+    Route::prefix('consultores')->group(function () {
+        
+        // US04: Autocompletado Atómico del Grafo Organizacional (Existente)
+        Route::get('lookup-organizacional/{personaId}', [FunctionalConsultantController::class, 'lookupOrganizacional']);
+        
+        // Nuevos Endpoints: Listas para los Selects del Formulario
+        Route::get('functional-consultants', [ConsultantController::class, 'getFunctionalConsultants']);
+        Route::get('cspe-consultants', [ConsultantController::class, 'getCspeConsultants']);
+        
+    });
 });

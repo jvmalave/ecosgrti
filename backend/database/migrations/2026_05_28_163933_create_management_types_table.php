@@ -8,18 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        
-        Schema::create('catalogs.systems', function (Blueprint $table) {
+        Schema::create('catalogs.management_types', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            // Llave foránea hacia la tabla societies dentro del mismo esquema
-            $table->foreignUuid('society_id')->constrained('catalogs.societies')->onDelete('cascade');
-            $table->string('name');
+            $table->string('name')->unique();
+            $table->string('description')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('catalogs.systems');
+        Schema::dropIfExists('catalogs.management_types');
     }
 };

@@ -20,7 +20,7 @@ class UserSeeder extends Seeder
       // 2. Datos a crear o actualizar
       [
           'name' => 'Administrador del Sistema',
-          'password' => bcrypt('tu_contraseña_aqui'),
+          'password' => bcrypt('admin123'),
           'email_verified_at' => now(),
           // ... cualquier otro campo que necesites llenar
       ]);

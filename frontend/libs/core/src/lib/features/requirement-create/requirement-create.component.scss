@@ -1,0 +1,60 @@
+/* ========================================================
+  IDENTIDAD VISUAL CANTV (ECOSGRTI)
+   ======================================================== */
+
+// Degradado corporativo (Basado en la pantalla de Login y Sidebar)
+.brand-gradient {
+  background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%);
+  border-bottom: 3px solid #ea80fc;
+}
+
+// Color de texto corporativo
+.text-brand {
+  color: #d500f9 !important;
+}
+
+// Bordes corporativos (Para el panel del grafo)
+.border-brand {
+  border-color: #d500f9 !important;
+}
+
+// Checkbox corporativo
+.custom-checkbox .form-check-input:checked {
+  background-color: #d500f9;
+  border-color: #d500f9;
+}
+
+// Estilo hover para el dropdown
+.dropdown-item:hover {
+  background-color: rgba(213, 0, 249, 0.1);
+  color: #d500f9;
+}
+
+// Botón Primario Corporativo
+.btn-brand {
+  background: linear-gradient(90deg, #aa00ff 0%, #d500f9 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: linear-gradient(90deg, #7b1fa2 0%, #aa00ff 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4);
+    transform: translateY(-1px);
+  }
+  
+  &:disabled {
+    background: #e1bee7;
+    color: #9e9e9e;
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+// Suavizado general de la tarjeta
+.card {
+  border-radius: 12px;
+  overflow: hidden;
+}

@@ -10,32 +10,73 @@ class TestConsultantsSeeder extends Seeder
 {
     public function run()
     {
-        // 1. Generamos los UUIDs en memoria
-        $socId = Str::uuid();
-        $sysId = Str::uuid();
-        $unitId = Str::uuid();
+        // 1. Generamos los UUIDs en memoria (usamos toString() para evitar errores con el driver de Postgres)
+        $socId = Str::uuid()->toString();
+        $sysId = Str::uuid()->toString();
+        $unitId = Str::uuid()->toString();
         
-        $personFuncId = Str::uuid();
-        $personCspeId = Str::uuid();
+        $personFuncId = Str::uuid()->toString();
+        $personCspeId = Str::uuid()->toString();
         
-        $funcConsultantId = Str::uuid();
-        $cspeConsultantId = Str::uuid();
+        $funcConsultantId = Str::uuid()->toString();
+        $cspeConsultantId = Str::uuid()->toString();
 
-        // 2. Insertamos los catálogos organizacionales (con datos básicos)
-        DB::table('security.societies')->insert(['id' => $socId, 'name' => 'Sociedad de Prueba C.A.']);
-        DB::table('security.systems')->insert(['id' => $sysId, 'name' => 'Sistema ERP Core']);
-        DB::table('security.requesting_units')->insert(['id' => $unitId, 'name' => 'Dirección de Finanzas']);
+        $now = now();
 
-        // 3. Insertamos las Personas
-        DB::table('security.persons')->insert(['id' => $personFuncId, 'name' => 'Carlos Funcional']);
-        DB::table('security.persons')->insert(['id' => $personCspeId, 'name' => 'Ana CSPE']);
+        // ========================================================================
+        // 2. DOMINIO CATALOGS: Insertamos la jerarquía organizacional estricta
+        // ========================================================================
+        DB::table('catalogs.societies')->insert([
+            'id' => $socId, 
+            'name' => 'Sociedad de Prueba C.A.',
+            'acronym' => 'SPCA', // Campo requerido según el nuevo diseño
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
 
-        // 4. Insertamos los Consultores usando los UUIDs que acabamos de crear
+        DB::table('catalogs.systems')->insert([
+            'id' => $sysId, 
+            'society_id' => $socId, // Llave foránea hacia la sociedad
+            'name' => 'Sistema ERP Core',
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        DB::table('catalogs.requesting_units')->insert([
+            'id' => $unitId, 
+            'system_id' => $sysId,  // Llave foránea hacia el sistema
+            'name' => 'Dirección de Finanzas',
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        // ========================================================================
+        // 3. DOMINIO SECURITY: Insertamos las Personas
+        // ========================================================================
+        DB::table('security.persons')->insert([
+            'id' => $personFuncId, 
+            'first_name' => 'Carlos',
+            'last_name' => 'Funcional',
+            'email' => 'carlos.funcional@cantv.com.ve',
+            'phone' => '0412-0000000',
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        DB::table('security.persons')->insert([
+            'id' => $personCspeId, 
+            'first_name' => 'Ana',
+            'last_name' => 'CSPE',
+            'email' => 'ana.cspe@cantv.com.ve',
+            'phone' => '0416-0000000',
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        // 4. Insertamos los roles de Consultores
         DB::table('security.functional_consultants')->insert([
             'id' => $funcConsultantId,
             'person_id' => $personFuncId,
-            'society_id' => $socId,
-            'system_id' => $sysId,
             'requesting_unit_id' => $unitId,
         ]);
 
@@ -44,12 +85,11 @@ class TestConsultantsSeeder extends Seeder
             'person_id' => $personCspeId,
         ]);
 
-        // 5. ¡La magia! Imprimimos los UUIDs en la consola para ti
-        $this->command->info("\n✅ Datos de prueba creados exitosamente en tu Base de Datos.");
+        // 5. ¡La magia de la consola para nuestras pruebas en Angular!
+        $this->command->info("\n✅ Datos de prueba creados exitosamente bajo la nueva Arquitectura.");
         $this->command->info("===============================================================");
-        $this->command->info(" Copia estos UUIDs y pégalos como Values en Insomnia:");
-        $this->command->info(" functional_consultant_id : " . $funcConsultantId);
-        $this->command->info(" cspe_consultants[0]      : " . $cspeConsultantId);
+        $this->command->info(" Copia este ID para probar el Autocompletado (Momento 1) en Angular:");
+        $this->command->info(" PERSONA_ID (Consultor Funcional) : " . $personFuncId);
         $this->command->info("===============================================================\n");
     }
 }

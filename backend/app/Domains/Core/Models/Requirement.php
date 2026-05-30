@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Domains\Security\Models\FunctionalConsultant;
 use App\Domains\Security\Models\CspeConsultant;
+use App\Domains\Core\Models\RequirementCspePivot;
 use App\Traits\HasUuid;
 
 class Requirement extends Model
@@ -51,7 +52,10 @@ class Requirement extends Model
         return $this->belongsToMany(
             CspeConsultant::class, 
             'core.cspe_consultant_requirement',
+            'requirement_id',
             'cspe_consultant_id'
-        )->withTimestamps(); 
+        )
+        ->using(RequirementCspePivot::class) 
+        ->withTimestamps(); 
     }
 }

@@ -8,11 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        
-        Schema::create('catalogs.systems', function (Blueprint $table) {
+        Schema::create('catalogs.requesting_units', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            // Llave foránea hacia la tabla societies dentro del mismo esquema
-            $table->foreignUuid('society_id')->constrained('catalogs.societies')->onDelete('cascade');
+            // Llave foránea hacia la tabla systems dentro del mismo esquema
+            $table->foreignUuid('system_id')->constrained('catalogs.systems')->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
         });
@@ -20,6 +19,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('catalogs.systems');
+        Schema::dropIfExists('catalogs.requesting_units');
     }
 };

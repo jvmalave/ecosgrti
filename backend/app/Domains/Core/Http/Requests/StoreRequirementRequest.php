@@ -3,63 +3,51 @@
 namespace App\Domains\Core\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule; 
-use App\Domains\Core\Models\Requirement;
-use App\Domains\Security\Models\FunctionalConsultant;
-use App\Domains\Security\Models\CspeConsultant;
 
 class StoreRequirementRequest extends FormRequest
 {
-    
+    /**
+     * Determina si el usuario está autorizado a hacer esta petición.
+     */
     public function authorize(): bool
     {
-        // Como la ruta ya estará protegida por el middleware de autenticación (y rol),
-        // devolvemos true para permitir que pase a la validación.
-        return true;
+        // Retornamos true porque la seguridad ya está cubierta por tu middleware auth:api
+        return true; 
     }
 
     /**
-     * Las reglas de validación que se aplicarán a la petición.
+     * Reglas de validación estrictas.
      */
     public function rules(): array
     {
-        //dd($this->all());
         return [
-            // Usamos Rule::unique con la clase del Modelo
-            'rrti' => ['required', 'string', 'max:255', Rule::unique(Requirement::class, 'rrti')],
+            // Agregamos 'pgsql.' para indicar explícitamente la conexión, el esquema y la tabla
+            'rrti' => 'required|string|unique:pgsql.core.requirements,rrti',
+            'requirement_type' => 'required|string',
+            'management_type' => 'required|string',
+            'creation_date' => 'required|date',
+            'description' => 'required|string|min:10',
             
-            'requirement_type' => ['required', 'string', 'max:100'],
-            'creation_date' => ['required', 'date'],
-            'description' => ['required', 'string'],
-            'management_type' => ['required', 'string', 'max:100'],
+            // Lo mismo para el esquema de seguridad
+            'functional_consultant_id' => 'required|uuid|exists:pgsql.security.functional_consultants,person_id',
             
-            'needs_spreadsheet' => ['required', 'file', 'mimes:pdf', 'max:3072'],
-            'it_request_doc' => ['required', 'file', 'mimes:pdf', 'max:3072'],
-
-            // Usamos Rule::exists con la clase del Modelo
-            'functional_consultant_id' => [
-                'required', 
-                'uuid', 
-                Rule::exists(FunctionalConsultant::class, 'id')
-            ],
+            'cspe_consultants' => 'required|array',
+            'cspe_consultants.*' => 'required|uuid|exists:pgsql.security.cspe_consultants,id',
             
-            'cspe_consultants' => ['required', 'array', 'min:1'],
-            'cspe_consultants.*' => [
-                'required', 
-                'uuid', 
-                Rule::exists(CspeConsultant::class, 'id')
-            ],
+            // Archivos físicos
+            'it_request_doc' => 'required|file|mimes:pdf|max:5120',
+            'needs_spreadsheet' => 'required|file|mimes:pdf,xlsx,xls|max:5120',
         ];
     }
 
+    /**
+     * (Opcional) Mensajes en español para tu Swagger o Frontend si los necesitas.
+     */
     public function messages(): array
     {
         return [
-            'rrti.unique' => 'El número de requerimiento (RRTI) ingresado ya existe en el sistema.',
-            'cspe_consultants.min' => 'Debe asignar al menos un consultor CSPE al requerimiento.',
-            'functional_consultant_id.exists' => 'El consultor funcional seleccionado no es válido.',
-            
-            // Puedes agregar más mensajes personalizados si lo deseas
+            'rrti.unique' => 'El número RRTI ingresado ya se encuentra registrado en el ecosistema.',
+            'it_request_doc.mimes' => 'El documento de Solicitud TI debe ser estrictamente un archivo PDF.',
         ];
     }
 }

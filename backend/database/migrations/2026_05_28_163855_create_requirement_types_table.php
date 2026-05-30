@@ -6,23 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('security.requesting_units', function (Blueprint $table) {
+        Schema::create('catalogs.requirement_types', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name')->nullable();
+            $table->string('name')->unique();
+            $table->string('description')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('security.requesting_units');
+        Schema::dropIfExists('catalogs.requirement_types');
     }
 };
