@@ -4,6 +4,7 @@ namespace App\Domains\Core\Docs;
 
 use OpenApi\Attributes as OA;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use App\Domains\Core\Http\Requests\StoreRequirementRequest;
 
 interface RequirementDocs
@@ -48,7 +49,7 @@ interface RequirementDocs
             new OA\Response(response: 401, description: "No autorizado")
         ]
     )]
-    public function index(): JsonResponse;
+    public function index(Request $request): JsonResponse;
 
     #[OA\Post(
         path: "/api/core/requirements",

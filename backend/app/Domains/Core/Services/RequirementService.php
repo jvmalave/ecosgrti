@@ -66,7 +66,29 @@ class RequirementService
                 'updated_at' => now(),
             ]);
 
-            // 4. Mapeo e inserción en la tabla pivote de Consultores CSPE
+            // 4. Registro Forense (Audit Trail)
+            DB::table('audit.audit_logs')->insert([
+                'id' => Str::uuid()->toString(),
+                'user_id' => auth()->id(), // ID del usuario autenticado (Coordinador)
+                'action' => 'CREATE_REQUIREMENT',
+                'description' => "Creación del requerimiento RRTI: {$validatedData['rrti']}",
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                // Agrupamos todos los datos relevantes en el payload JSON
+                'payload' => json_encode([
+                    'entity' => 'core.requirements',
+                    'entity_id' => $requirementId,
+                    'rrti' => $validatedData['rrti'],
+                    'requirement_type' => $validatedData['requirement_type'],
+                    'functional_consultant_id' => $snapshot->real_consultant_id,
+                    'snapshot_unit' => $snapshot->unit_name,
+                    'snapshot_system' => $snapshot->system_name,
+                    'snapshot_society' => $snapshot->society_name
+                ]),
+                'created_at' => now(),
+                'updated_at' => now(), // Añadido según tu esquema
+            ]);
+            // 5. Mapeo e inserción en la tabla pivote de Consultores CSPE
             $cspePivotData = collect($validatedData['cspe_consultants'])->map(function ($cspeId) use ($requirementId) {
                 return [
                     'id' => Str::uuid()->toString(),
