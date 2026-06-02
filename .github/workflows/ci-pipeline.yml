@@ -1,0 +1,54 @@
+name: Pipeline de Integracion Continua (SGRTI)
+
+on:
+  push:
+    branches: [ develop, main, feature/sprint2-US03_US04_US05 ]
+  pull_request:
+    branches: [ develop, main ]
+
+jobs:
+  backend-validation:
+    name: Probar Backend (Laravel & PHPUnit)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 1. Descargar el código
+        uses: actions/checkout@v4
+
+      - name: 2. Levantar Docker usando el archivo de CI 🚀
+        # Usamos -f para decirle que ignore tu compose local y use el de producción/CI
+        run: docker compose -f docker-compose.ci.yml up -d db redis backend
+
+      - name: 3. Instalar dependencias de PHP
+        run: docker compose -f docker-compose.ci.yml exec -T backend composer install --no-interaction
+
+      - name: 4. Configurar variables de entornos de prueba
+        run: |
+          docker compose -f docker-compose.ci.yml exec -T backend cp .env.example .env.testing
+          docker compose -f docker-compose.ci.yml exec -T backend php artisan key:generate --env=testing
+
+      - name: 5. ¡Ejecutar PHPUnit!
+        run: docker compose -f docker-compose.ci.yml exec -T backend ./vendor/bin/phpunit
+
+  frontend-validation:
+    name: Probar Frontend (Angular)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Descargar el código
+        uses: actions/checkout@v4
+
+      - name: 2. Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 3. Instalar librerías de Angular
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 4. Ejecutar pruebas unitarias de Frontend
+        run: |
+          cd frontend
+          npm run test -- --watch=false --browsers=ChromeHeadless

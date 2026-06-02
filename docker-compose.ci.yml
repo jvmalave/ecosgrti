@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ecosgrti_db_ci
+    environment:
+      POSTGRES_DB: ecosgrti_db
+      POSTGRES_USER: root_admin
+      POSTGRES_PASSWORD: root_password
+    networks:
+      - ecosgrti_network_ci
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: ecosgrti_redis_ci
+    networks:
+      - ecosgrti_network_ci
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+    container_name: ecosgrti_backend_ci
+    # 💡 AQUÍ ESTÁ EL CAMBIO: Quitamos el entrypoint tail -f para que corra el PHP normal
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - db
+      - redis
+    networks:
+      - ecosgrti_network_ci
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=ecosgrti_db
+      - DB_USERNAME=root_admin
+      - DB_PASSWORD=root_password
+
+networks:
+  ecosgrti_network_ci:
+    driver: bridge
