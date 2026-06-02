@@ -16,12 +16,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 2. Ejecutar Suite de Pruebas Automatizadas (PHPUnit/Pest)
-        # 💡 CAMBIO AQUÍ: Cambiamos phpunit por pest al final de la instrucción
         run: |
           docker compose -f docker-compose.ci.yml run --entrypoint="" backend sh -c "
             composer install --no-interaction &&
             cp .env.example .env.testing &&
             php artisan key:generate --env=testing &&
+            php artisan jwt:secret --env=testing --force &&
             ./vendor/bin/pest
           "
 
