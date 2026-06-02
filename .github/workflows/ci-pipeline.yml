@@ -15,14 +15,14 @@ jobs:
       - name: 1. Descargar el código
         uses: actions/checkout@v4
 
-      - name: 2. Ejecutar Suite de Pruebas Automatizadas (PHPUnit)
-        # 💡 TRUCO: 'run' levanta el contenedor, instala y corre las pruebas de un solo golpe sin quedarse colgado
+      - name: 2. Ejecutar Suite de Pruebas Automatizadas (PHPUnit/Pest)
+        # 💡 CAMBIO AQUÍ: Cambiamos phpunit por pest al final de la instrucción
         run: |
           docker compose -f docker-compose.ci.yml run --entrypoint="" backend sh -c "
             composer install --no-interaction &&
             cp .env.example .env.testing &&
             php artisan key:generate --env=testing &&
-            ./vendor/bin/phpunit
+            ./vendor/bin/pest
           "
 
   frontend-validation:
@@ -33,7 +33,7 @@ jobs:
       - name: 1. Descargar el código con historial completo 🔄
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Esto le permite a Nx ver las otras ramas para comparar
+          fetch-depth: 0
 
       - name: 2. Preparar Node.js
         uses: actions/setup-node@v4
@@ -48,5 +48,4 @@ jobs:
       - name: 4. Ejecutar pruebas unitarias de Frontend
         run: |
           cd frontend
-          # Configuramos explícitamente la base de comparación para que no falle en GitHub
           npx nx affected:test --base=origin/develop --head=HEAD --watch=false
