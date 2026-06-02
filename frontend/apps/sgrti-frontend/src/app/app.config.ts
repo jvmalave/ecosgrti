@@ -25,6 +25,6 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([authInterceptor])
     ),
     { provide: AUTH_API_URL, useValue: environment.authApiUrl },
-
+    { provide: 'GLOBAL_API_URL', useValue: environment.apiUrl }
   ],
 };

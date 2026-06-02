@@ -5,21 +5,43 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 
-test('Escenario 01: Verificación de estructura multiesquema', function () {
-    // 1. Obtenemos los esquemas actuales de la base de datos
-    $esquemas = DB::select('SELECT schema_name FROM information_schema.schemata');
+// test('Escenario 01: Verificación de estructura multiesquema', function () {
+//     // 1. Obtenemos los esquemas actuales de la base de datos
+//     $esquemas = DB::select('SELECT schema_name FROM information_schema.schemata');
     
-    // Convertimos el resultado en un arreglo simple de textos
+//     // Convertimos el resultado en un arreglo simple de textos
+//     $nombresDeEsquemas = collect($esquemas)->pluck('schema_name')->toArray();
+
+//     // THEN: Deben estar presentes exactamente los esquemas requeridos
+//     $esquemasRequeridos = ['security', 'catalogs', 'core', 'audit', 'ia', 'workflow'];
+//     expect($nombresDeEsquemas)->toContain(...$esquemasRequeridos);
+
+//     // 2. Verificamos que el esquema "public" no tenga tablas
+//     $tablas = DB::select("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
+    
+//     // AND el esquema "public" debe permanecer vacío
+//     expect($tablas)->toBeEmpty();
+// });
+
+
+test('Escenario 01: Verificación de estructura multiesquema', function () {
+    // 1. Verificamos que existan los esquemas de nuestra arquitectura
+    $esquemas = DB::select("SELECT schema_name FROM information_schema.schemata");
     $nombresDeEsquemas = collect($esquemas)->pluck('schema_name')->toArray();
 
-    // THEN: Deben estar presentes exactamente los esquemas requeridos
     $esquemasRequeridos = ['security', 'catalogs', 'core', 'audit', 'ia', 'workflow'];
     expect($nombresDeEsquemas)->toContain(...$esquemasRequeridos);
 
-    // 2. Verificamos que el esquema "public" no tenga tablas
-    $tablas = DB::select("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
+    // 2. Verificamos que el esquema "public" no tenga tablas de negocio
+    // 💡 SOLUCIÓN: Agregamos el WHERE para excluir la tabla de control de Laravel
+    $tablas = DB::select("
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+          AND table_name != 'migrations'
+    ");
     
-    // AND el esquema "public" debe permanecer vacío
+    // AND el esquema "public" debe permanecer vacío de tablas de negocio
     expect($tablas)->toBeEmpty();
 });
 

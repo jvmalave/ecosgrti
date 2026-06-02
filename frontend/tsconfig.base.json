@@ -12,10 +12,13 @@
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "moduleResolution": "bundler", 
+    "moduleResolution": "bundler",
     "paths": {
       "@ecosgrti/security": ["./libs/security/src/index.ts"],
-      "@ecosgrti/security/data-access": ["./libs/security/src/lib/data-access/index.ts"]
+      "@ecosgrti/security/data-access": [
+        "./libs/security/src/lib/data-access/index.ts"
+      ],
+      "@sgrti/core": ["./libs/core/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

@@ -1,0 +1,226 @@
+<div class="container-fluid min-vh-100 bg-light p-0">
+  <div class="row min-vh-100 g-0">
+    <aside
+      class="col-md-3 col-lg-2 d-none d-md-flex flex-column p-4 sidebar-brand"
+    >
+      <div class="fs-3 mb-4 text-center brand-logo-text">
+        <img
+          src="assets/logo-cantv.png"
+          alt="cantv"
+          class="logo-cantv"
+          onerror="this.style.display='none'"
+        />
+        Sistema de Gestión de Requerimientos TI
+      </div>
+
+      <nav class="flex-grow-1 mt-2">
+        <ul class="nav flex-column gap-1">
+          <li class="nav-item">
+            <a href="#" class="nav-link active rounded-3 px-3 py-2">
+              <i class="fas fa-home"></i> Inicio
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link rounded-3 px-3 py-2">
+              <i class="fas fa-chart-pie"></i> Reportes
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link rounded-3 px-3 py-2">
+              <i class="fas fa-cog"></i> Configuración
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="mt-auto pt-4 border-top border-white border-opacity-25">
+        <button (click)="logout()" class="btn btn-logout-white w-100 py-2">
+          <i class="fas fa-power-off me-2"></i> Salir
+        </button>
+      </div>
+    </aside>
+
+    <main class="col-md-9 col-lg-10 d-flex flex-column bg-light">
+      <header
+        class="bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center"
+      >
+        <h1 class="h5 mb-0 fw-bold text-secondary">Panel Principal</h1>
+
+        @if (user()) {
+          <div class="d-flex align-items-center gap-3">
+            <div class="text-end d-none d-sm-block">
+              <p class="mb-0 fw-bold text-dark">{{ user()?.username }}</p>
+              <p class="mb-0 text-muted small">{{ user()?.email }}</p>
+            </div>
+            <div
+              class="brand-avatar text-white fw-bold d-flex align-items-center justify-content-center rounded-circle"
+            >
+              {{ user()?.username?.substring(0, 1) | uppercase }}
+            </div>
+          </div>
+        }
+      </header>
+
+      <section class="p-4 p-md-5">
+        <div class="row g-4">
+          <div class="col-md-8">
+            <div
+              class="card shadow-sm border-0 border-start border-4 card-brand-accent h-100"
+            >
+              <div class="card-body p-4">
+                <h2 class="h4 fw-bold text-dark">
+                  ¡Bienvenido de nuevo, {{ user()?.username }}!
+                </h2>
+                <p class="text-muted mt-2 mb-0">
+                  Has ingresado al sistema con el rol:
+                  <span class="badge badge-brand rounded-pill ms-2 px-3 py-2">
+                    {{ user()?.roles?.[0] }}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4 text-muted" />
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <ul class="nav nav-pills gap-2">
+              <li class="nav-item">
+                <button
+                  class="nav-link fw-semibold rounded-pill px-4"
+                  [class.active]="context() === 'PROCESO'"
+                  [class.bg-brand]="context() === 'PROCESO'"
+                  (click)="switchContext('PROCESO')"
+                >
+                  <i class="bi bi-gear-wide-connected me-2"></i>En Proceso
+                </button>
+              </li>
+              <li class="nav-item">
+                <button
+                  class="nav-link fw-semibold rounded-pill px-4"
+                  [class.active]="context() === 'HISTORICO'"
+                  [class.bg-secondary]="context() === 'HISTORICO'"
+                  (click)="switchContext('HISTORICO')"
+                >
+                  <i class="bi bi-archive-fill me-2"></i>Histórico (Finalizados)
+                </button>
+              </li>
+            </ul>
+
+            <div class="search-container mb-4">
+              <div class="input-group shadow-sm">
+                <span
+                  class="input-group-text bg-white border-end-0 text-muted"
+                  id="search-icon"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                  >
+                    <path
+                      d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"
+                    />
+                  </svg>
+                </span>
+
+                <input
+                  type="text"
+                  class="form-control border-start-0 ps-0"
+                  placeholder="Buscar por código RRTI..."
+                  [formControl]="searchControl"
+                  aria-describedby="search-icon"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted small text-uppercase">
+                  <tr>
+                    <th class="ps-4">RRTI</th>
+                    <th>Tipo</th>
+                    <th>Solicitante</th>
+                    <th>Unidad</th>
+                    <th>Fecha Creación</th>
+                    <th>Estatus</th>
+                    <th class="text-end pe-4">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @if (isLoading()) {
+                    <tr>
+                      <td colspan="7" class="text-center py-5">
+                        <div
+                          class="spinner-border text-brand"
+                          role="status"
+                        ></div>
+                        <p class="mt-2 text-muted small">
+                          Cargando datos del sistema...
+                        </p>
+                      </td>
+                    </tr>
+                  } @else if (requirements().length === 0) {
+                    <tr>
+                      <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                        No hay requerimientos en esta bandeja.
+                      </td>
+                    </tr>
+                  } @else {
+                    @for (req of requirements(); track req.id) {
+                      <tr>
+                        <td class="ps-4 fw-bold text-dark">#{{ req.rrti }}</td>
+                        <td>
+                          <span class="badge bg-light text-dark border">{{
+                            req.requirement_type
+                          }}</span>
+                        </td>
+                        <td>{{ req.first_name }} {{ req.last_name }}</td>
+                        <td class="text-muted small">
+                          {{ req.snapshot_unit_name }}
+                        </td>
+                        <td>{{ req.creation_date | date: 'dd/MM/yyyy' }}</td>
+                        <td>
+                          <span
+                            class="badge rounded-pill"
+                            [ngClass]="{
+                              'bg-warning text-dark': req.status === 'PL',
+                              'bg-info': req.status === 'EV',
+                              'bg-success': req.status === 'FC',
+                            }"
+                          >
+                            {{
+                              req.status === 'PL'
+                                ? 'Planificación'
+                                : req.status === 'EV'
+                                  ? 'Evaluación'
+                                  : req.status === 'FC'
+                                    ? 'Cerrado'
+                                    : req.status
+                            }}
+                          </span>
+                        </td>
+                        <td class="text-end pe-4">
+                          <button
+                            class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                          >
+                            <i class="bi bi-eye me-1"></i>Ver
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
