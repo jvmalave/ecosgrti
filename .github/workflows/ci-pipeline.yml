@@ -51,5 +51,5 @@ jobs:
       - name: 4. Ejecutar pruebas unitarias de Frontend
         run: |
           cd frontend
-          # Usamos npx para invocar la prueba de la librería core de forma directa
-          npx nx test core --watch=false
+          # Ejecuta los tests de todos los proyectos afectados en este sprint de forma automática
+          npx nx affected:test --parallel=3 --configuration=ci
