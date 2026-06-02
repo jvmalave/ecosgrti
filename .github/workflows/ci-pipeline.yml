@@ -15,28 +15,25 @@ jobs:
       - name: 1. Descargar el código
         uses: actions/checkout@v4
 
-      - name: 2. Levantar Docker usando el archivo de CI 🚀
-        # Usamos -f para decirle que ignore tu compose local y use el de producción/CI
-        run: docker compose -f docker-compose.ci.yml up -d db redis backend
-
-      - name: 3. Instalar dependencias de PHP
-        run: docker compose -f docker-compose.ci.yml exec -T backend composer install --no-interaction
-
-      - name: 4. Configurar variables de entornos de prueba
+      - name: 2. Ejecutar Suite de Pruebas Automatizadas (PHPUnit)
+        # 💡 TRUCO: 'run' levanta el contenedor, instala y corre las pruebas de un solo golpe sin quedarse colgado
         run: |
-          docker compose -f docker-compose.ci.yml exec -T backend cp .env.example .env.testing
-          docker compose -f docker-compose.ci.yml exec -T backend php artisan key:generate --env=testing
-
-      - name: 5. ¡Ejecutar PHPUnit!
-        run: docker compose -f docker-compose.ci.yml exec -T backend ./vendor/bin/phpunit
+          docker compose -f docker-compose.ci.yml run --entrypoint="" backend sh -c "
+            composer install --no-interaction &&
+            cp .env.example .env.testing &&
+            php artisan key:generate --env=testing &&
+            ./vendor/bin/phpunit
+          "
 
   frontend-validation:
     name: Probar Frontend (Angular)
     runs-on: ubuntu-latest
 
     steps:
-      - name: 1. Descargar el código
+      - name: 1. Descargar el código con historial completo 🔄
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Esto le permite a Nx ver las otras ramas para comparar
 
       - name: 2. Preparar Node.js
         uses: actions/setup-node@v4
@@ -51,5 +48,5 @@ jobs:
       - name: 4. Ejecutar pruebas unitarias de Frontend
         run: |
           cd frontend
-          # Ejecuta los tests de todos los proyectos afectados en este sprint de forma automática
-          npx nx affected:test --parallel=3 --configuration=ci
+          # Configuramos explícitamente la base de comparación para que no falle en GitHub
+          npx nx affected:test --base=origin/develop --head=HEAD --watch=false
