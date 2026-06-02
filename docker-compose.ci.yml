@@ -1,28 +1,36 @@
 version: '3.8'
 
 services:
+  # Base de Datos PostgreSQL 16
   db:
     image: postgres:16-alpine
     container_name: ecosgrti_db_ci
+    restart: always
     environment:
       POSTGRES_DB: ecosgrti_db
       POSTGRES_USER: root_admin
       POSTGRES_PASSWORD: root_password
+      APP_DB_USER: ecos_user
+      APP_DB_PASS: ecos_password_2024
     networks:
       - ecosgrti_network_ci
 
+  # Caché y Sesiones Redis 7.2
   redis:
     image: redis:7.2-alpine
     container_name: ecosgrti_redis_ci
     networks:
       - ecosgrti_network_ci
 
+  # Backend Laravel 11 
   backend:
     build:
       context: ./backend
+      # Apuntamos correctamente al Dockerfile del proyecto
       dockerfile: ../docker/backend.Dockerfile
     container_name: ecosgrti_backend_ci
-    # 💡 AQUÍ ESTÁ EL CAMBIO: Quitamos el entrypoint tail -f para que corra el PHP normal
+    # Sobrescribimos el entrypoint local para levantar el servidor incorporado de PHP en CI
+    entrypoint: ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
     volumes:
       - ./backend:/var/www/html
     depends_on:

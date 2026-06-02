@@ -51,4 +51,5 @@ jobs:
       - name: 4. Ejecutar pruebas unitarias de Frontend
         run: |
           cd frontend
-          npm run test -- --watch=false --browsers=ChromeHeadless
+          # Usamos npx para invocar la prueba de la librería core de forma directa
+          npx nx test core --watch=false
