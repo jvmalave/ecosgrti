@@ -1,0 +1,54 @@
+name: Pipeline de Integracion Continua (SGRTI)
+
+on:
+  push:
+    branches: [ develop, main, feature/sprint2-US03_US04_US05 ]
+  pull_request:
+    branches: [ develop, main ]
+
+jobs:
+  backend-validation:
+    name: Probar Backend (Laravel & PHPUnit)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 1. Descargar el código
+        uses: actions/checkout@v4
+
+      - name: 2. Ejecutar Suite de Pruebas Automatizadas (PHPUnit/Pest)
+        run: |
+          docker compose -f docker-compose.ci.yml run --entrypoint="" backend sh -c "
+            composer install --no-interaction &&
+            cp .env.example .env.testing &&
+            php artisan key:generate --env=testing &&
+            php artisan jwt:secret --env=testing --force &&
+            # 💡 TRUCO: Forzamos a que la tabla de control de migraciones no se guarde en public
+            export DB_MIGRATIONS_TABLE=core.migrations &&
+            php artisan migrate:fresh --env=testing --force &&
+            ./vendor/bin/pest --parallel --processes=2
+          "
+
+  frontend-validation:
+    name: Probar Frontend (Angular)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Descargar el código con historial completo 🔄
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 2. Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 3. Instalar librerías de Angular
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 4. Ejecutar pruebas unitarias de Frontend
+        run: |
+          cd frontend
+          npx nx affected:test --base=origin/develop --head=HEAD --watch=false

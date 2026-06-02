@@ -12,6 +12,296 @@
         }
     ],
     "paths": {
+        "/api/catalogs/requirement-types": {
+            "get": {
+                "tags": [
+                    "Catálogos"
+                ],
+                "summary": "Obtener lista de Tipos de Requerimiento",
+                "operationId": "a77c300b771caa1bc78538bde8f4a523",
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tipos de requerimiento recuperados exitosamente"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Nuevo Desarrollo"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/catalogs/management-types": {
+            "get": {
+                "tags": [
+                    "Catálogos"
+                ],
+                "summary": "Obtener lista de Tipos de Gestión",
+                "operationId": "819c76cb6bc82c2849cfe7e7b091094f",
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tipos de gestión recuperados exitosamente"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Interno"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/core/requirements": {
+            "get": {
+                "tags": [
+                    "Requerimientos"
+                ],
+                "summary": "Listar requerimientos para el Dashboard",
+                "operationId": "8bc982fd4ded711da060d869561a566e",
+                "responses": {
+                    "200": {
+                        "description": "Contexto del Dashboard cargado exitosamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Contexto del Dashboard cargado exitosamente."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "rrti": {
+                                                        "type": "string",
+                                                        "example": "REQ-2026-003"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "PL"
+                                                    },
+                                                    "is_locked": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "cspe_consultants": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string",
+                                                                    "format": "uuid"
+                                                                },
+                                                                "person_id": {
+                                                                    "type": "string",
+                                                                    "format": "uuid"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Requerimientos"
+                ],
+                "summary": "Registrar un nuevo requerimiento (Momento 1)",
+                "operationId": "5d94696fe1421d7c89c171a9721ba389",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "rrti",
+                                    "requirement_type",
+                                    "creation_date",
+                                    "description",
+                                    "management_type",
+                                    "functional_consultant_id",
+                                    "cspe_consultants[0]",
+                                    "needs_spreadsheet",
+                                    "it_request_doc"
+                                ],
+                                "properties": {
+                                    "rrti": {
+                                        "type": "string",
+                                        "example": "REQ-2026-003"
+                                    },
+                                    "requirement_type": {
+                                        "type": "string",
+                                        "example": "Nuevo Desarrollo"
+                                    },
+                                    "creation_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-05-26"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Descripción detallada del requerimiento"
+                                    },
+                                    "management_type": {
+                                        "type": "string",
+                                        "example": "Soporte Operativo"
+                                    },
+                                    "functional_consultant_id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "example": "f298ae93-5bd1-40f5-a2a4-74a27ff580b0"
+                                    },
+                                    "cspe_consultants[0]": {
+                                        "description": "Array de UUIDs de consultores (ej. cspe_consultants[0])",
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "needs_spreadsheet": {
+                                        "description": "Documento de Matriz de Necesidades (PDF/Excel)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "it_request_doc": {
+                                        "description": "Documento de Solicitud TI (PDF/Doc)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Requerimiento creado exitosamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Requerimiento creado exitosamente."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "rrti": {
+                                                    "type": "string",
+                                                    "example": "REQ-2026-003"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación (Ej. RRTI duplicado o campos faltantes)"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/auth/login": {
             "post": {
                 "tags": [
@@ -95,12 +385,130 @@
                     }
                 ]
             }
+        },
+        "/api/consultores/functional-consultants": {
+            "get": {
+                "tags": [
+                    "Consultores"
+                ],
+                "summary": "Listar Consultores Funcionales",
+                "description": "Obtiene los IDs de persona y nombres completos para el select del autocompletado organizacional.",
+                "operationId": "b5ea30757fb53dff12a50f5c68e347e3",
+                "responses": {
+                    "200": {
+                        "description": "Consultores funcionales recuperados",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Consultores funcionales recuperados"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "persona_id": {
+                                                        "type": "string",
+                                                        "format": "uuid",
+                                                        "example": "cd33b69c-7de3-4005-993d-3381942f378d"
+                                                    },
+                                                    "full_name": {
+                                                        "type": "string",
+                                                        "example": "Carlos Funcional"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/consultores/cspe-consultants": {
+            "get": {
+                "tags": [
+                    "Consultores"
+                ],
+                "summary": "Listar Consultores CSPE disponibles",
+                "description": "Obtiene los IDs y nombres completos para la asignación CSPE en el Momento 1 o 2.",
+                "operationId": "0cbe1aaeb09dc658cab5ac11389b48c6",
+                "responses": {
+                    "200": {
+                        "description": "Consultores CSPE recuperados",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Consultores CSPE recuperados"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "cspe_id": {
+                                                        "type": "string",
+                                                        "format": "uuid",
+                                                        "example": "a1b2c3d4-e5f6-7890-1234-56789abcdef0"
+                                                    },
+                                                    "full_name": {
+                                                        "type": "string",
+                                                        "example": "Ana CSPE"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "tags": [
         {
+            "name": "Catálogos",
+            "description": "Catálogos"
+        },
+        {
+            "name": "Requerimientos",
+            "description": "Requerimientos"
+        },
+        {
             "name": "Seguridad",
             "description": "Seguridad"
+        },
+        {
+            "name": "Consultores",
+            "description": "Consultores"
         }
     ]
 }

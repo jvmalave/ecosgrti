@@ -35,6 +35,8 @@ services:
       context: ./backend
       dockerfile: ../docker/backend.Dockerfile
     container_name: ecosgrti_backend
+    # TÉCNICA KEEP-ALIVE: Mantiene el contenedor despierto sin ejecutar PHP al inicio
+    entrypoint: ["tail", "-f", "/dev/null"]
     volumes:
       - ./backend:/var/www/html
     ports:

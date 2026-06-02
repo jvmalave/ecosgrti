@@ -2,7 +2,7 @@
 
 namespace App\Domains\Security\Docs;
 
-use App\Domains\Security\Requests\LoginRequest;
+use App\Domains\Security\Http\Requests\LoginRequest;
 use OpenApi\Attributes as OA;
 use Illuminate\Http\Request;
 
