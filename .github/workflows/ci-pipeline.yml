@@ -22,10 +22,11 @@ jobs:
             cp .env.example .env.testing &&
             php artisan key:generate --env=testing &&
             php artisan jwt:secret --env=testing --force &&
-            php artisan migrate --env=testing --force &&
-            ./vendor/bin/pest
+            # 💡 Ejecutamos un fresado limpio inicial para estructurar los esquemas antes de Pest
+            php artisan migrate:fresh --env=testing --force &&
+            ./vendor/bin/pest --parallel --processes=2
           "
-          
+
   frontend-validation:
     name: Probar Frontend (Angular)
     runs-on: ubuntu-latest
