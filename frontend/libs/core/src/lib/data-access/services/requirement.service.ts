@@ -1,49 +1,19 @@
 import { Injectable, inject, ProviderToken } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { HttpParams } from '@angular/common/http';
 
 // ==========================================
-// INTERFACES DE DOMINIO 
+// IMPORTACIÓN DE MODELOS DE DOMINIO
 // ==========================================
-export interface RequirementDashboard {
-  id: string;
-  rrti: string;
-  requirement_type: string;
-  creation_date: string;
-  description: string;
-  management_type: string;
-  status: string;
-  is_locked: boolean;
-  cspe_consultants: unknown[]; 
-}
-
-export interface OrganizationalGraph {
-  persona_id: string;
-  functional_consultant_id: string;
-  requesting_unit_name: string;
-  system_name: string;
-  society_name: string;
-}
-
-export interface ApiResponse<T> {
-  message: string;
-  data: T;
-}
-
-export interface CatalogItem {
-  id: string;
-  name: string;
-}
-
-export interface FunctionalConsultantItem {
-  persona_id: string;
-  full_name: string;
-}
-
-export interface CspeConsultantItem {
-  cspe_id: string;
-  full_name: string;
-}
+import { ApiResponse } from '../models/api-response.model';
+import { 
+  RequirementDashboard, 
+  OrganizationalGraph, 
+  CatalogItem, 
+  FunctionalConsultantItem, 
+  CspeConsultantItem 
+} from '../models/requirement.model'
 
 @Injectable({
   providedIn: 'root'
@@ -84,7 +54,33 @@ export class RequirementService {
     return this.http.post<ApiResponse<unknown>>(this.coreApiUrl, formData);
   }
 
-  getDashboardRequirements(): Observable<ApiResponse<RequirementDashboard[]>> {
-    return this.http.get<ApiResponse<RequirementDashboard[]>>(this.coreApiUrl);
+  /**
+   * US05: Obtener requerimientos para el Dashboard con paginación (Carga Híbrida)
+   */
+/**
+   * US05: Obtener requerimientos para el Dashboard con paginación (Carga Híbrida)
+   */
+  getDashboardRequirements(
+    status: 'active' | 'finalized' = 'active', 
+    limit = 10, 
+    offset = 0,
+    search?: string // <-- NUEVO: Parámetro opcional para el término de búsqueda
+  ): Observable<ApiResponse<RequirementDashboard[]>> {
+    
+    // 1. Usamos 'let' porque HttpParams es inmutable y necesitamos reasignarlo
+    let params = new HttpParams()
+      .set('status', status)
+      .set('limit', limit.toString())
+      .set('offset', offset.toString());
+
+    // 2. Si existe un término de búsqueda válido, lo adjuntamos a los parámetros
+    if (search) {
+      params = params.set('search', search);
+    }
+
+    // 3. Mantenemos tu tipado estricto
+    return this.http.get<ApiResponse<RequirementDashboard[]>>(this.coreApiUrl, { params });
   }
+
+  
 }

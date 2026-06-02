@@ -4,14 +4,13 @@ import { ReactiveFormsModule, NonNullableFormBuilder, Validators } from '@angula
 import { Subject, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import Swal, { SweetAlertIcon } from 'sweetalert2';
-
+import { RequirementService } from '../../data-access/services/requirement.service';
 import { 
-  RequirementService, 
   OrganizationalGraph, 
   CatalogItem, 
   FunctionalConsultantItem, 
   CspeConsultantItem 
-} from '../../data-access/services/requirement.service';
+} from '../../data-access/models/requirement.model';
 
 @Component({
   selector: 'lib-requirement-create',

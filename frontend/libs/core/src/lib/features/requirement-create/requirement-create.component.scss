@@ -2,6 +2,11 @@
   IDENTIDAD VISUAL CANTV (ECOSGRTI)
    ======================================================== */
 
+// Color de fondo corporativo
+body {
+  background-color: #f8f3f8 !important;
+}
+
 // Degradado corporativo (Basado en la pantalla de Login y Sidebar)
 .brand-gradient {
   background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%);
