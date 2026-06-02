@@ -22,7 +22,8 @@ jobs:
             cp .env.example .env.testing &&
             php artisan key:generate --env=testing &&
             php artisan jwt:secret --env=testing --force &&
-            # 💡 Ejecutamos un fresado limpio inicial para estructurar los esquemas antes de Pest
+            # 💡 TRUCO: Forzamos a que la tabla de control de migraciones no se guarde en public
+            export DB_MIGRATIONS_TABLE=core.migrations &&
             php artisan migrate:fresh --env=testing --force &&
             ./vendor/bin/pest --parallel --processes=2
           "
