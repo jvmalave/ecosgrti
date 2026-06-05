@@ -8,12 +8,14 @@ use App\Domains\Security\Models\FunctionalConsultant;
 use App\Domains\Security\Models\CspeConsultant;
 use App\Domains\Core\Models\RequirementCspePivot;
 use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Requirement extends Model
 {
     
     use HasUuid;
     use HasFactory;
+    use SoftDeletes;
 
     protected $table = 'core.requirements';
 
