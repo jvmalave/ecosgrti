@@ -116,3 +116,19 @@ $text-white: #ffffff;
   }
 }
 
+/* ========================================================
+  ÍCONOS PERSONALIZADOS (IMÁGENES)
+   ======================================================== */
+.custom-icon {
+  width: 18px;       /* El tamaño estándar de un ícono de botón */
+  height: 18px;      /* Mantiene la proporción cuadrada */
+  object-fit: contain; /* Evita que la imagen se deforme */
+  vertical-align: middle; /* Lo centra con cualquier texto que pongas al lado */
+}
+
+/* Opcional: Si quieres que el ícono haga un pequeño rebote al pasar el mouse */
+.btn-outline-brand:hover .custom-icon {
+  transform: scale(1.1);
+  transition: transform 0.2s ease-in-out;
+}
+

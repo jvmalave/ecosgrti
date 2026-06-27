@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { CommonModule, UpperCasePipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { ReactiveFormsModule, FormControl } from '@angular/forms'; // <-- 1. Importamos Formularios Reactivos
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators'; // <-- 2. Importamos Operadores RxJS
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'; // <-- 3. Para prevenir Memory Leaks
@@ -9,13 +10,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop'; // <-- 3. Para 
 import { AuthService } from '@ecosgrti/security/data-access';
 import { RequirementService } from '../../data-access/services/requirement.service'; 
 import { RequirementDashboard } from '../../data-access/models/requirement.model'; 
+import { RequirementModalComponent } from '../requirement-modal/requirement-modal.component';
 import { ApiResponse } from '../../data-access/models/api-response.model';
 
 @Component({
   selector: 'lib-dashboard',
   standalone: true,
   // 4. Inyectamos ReactiveFormsModule aquí para poder usar [formControl] en el HTML
-  imports: [CommonModule, UpperCasePipe, ReactiveFormsModule], 
+  imports: [CommonModule, UpperCasePipe, ReactiveFormsModule, RequirementModalComponent], 
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -24,6 +26,7 @@ export class DashboardComponent implements OnInit {
   // ==========================================
   // 1. INYECCIÓN DE DEPENDENCIAS
   // ==========================================
+  private refreshSub!: Subscription;
   public authService = inject(AuthService);
   private router = inject(Router);
   private requirementService = inject(RequirementService);
@@ -55,7 +58,7 @@ export class DashboardComponent implements OnInit {
       this.context.set(savedContext);
     }
 
-    // 6. NUEVO: Suscripción Reactiva al Buscador
+    // NUEVO: Suscripción Reactiva al Buscador
     this.searchControl.valueChanges.pipe(
       debounceTime(500),         // Espera 500ms sin teclear
       distinctUntilChanged(),    // Solo avanza si el texto realmente cambió
@@ -63,6 +66,14 @@ export class DashboardComponent implements OnInit {
     ).subscribe(() => {
       this.currentOffset.set(0); // Si el usuario busca algo, debemos reiniciar la paginación a la página 1
       this.loadRequirements();
+    });
+
+    //Se escucha el "refresh" que viene del Modal
+    this.requirementService.refreshDashboard$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      // Cuando el modal guarde, esta línea se ejecutará en silencio
+      this.loadRequirements(); 
     });
 
     // Carga Inicial
@@ -109,6 +120,29 @@ export class DashboardComponent implements OnInit {
     this.loadRequirements();
   }
 
+
+  //  SIGNALS PARA CONTROL DEL MODAL
+  isDetailModalOpen = signal<boolean>(false);
+  selectedRequirementId = signal<string>('');
+
+  /**
+   * Abre el modal asignando el ID del requerimiento seleccionado.
+   */
+  openDetailModal(id: string): void {
+    this.selectedRequirementId.set(id);
+    this.isDetailModalOpen.set(true);
+  }
+
+  /**
+   * Cierra el modal y refresca el dashboard si hubo cambios o borrados.
+   */
+  closeDetailModal(refreshDashboard = false): void {
+    this.isDetailModalOpen.set(false);
+    if (refreshDashboard) {
+      // Aquí llamas a tu método para recargar la tabla (ej. this.loadRequirements())
+    }
+  }
+
   logout() {
     this.authService.logout().subscribe({
       next: () => {
@@ -116,5 +150,12 @@ export class DashboardComponent implements OnInit {
         this.router.navigate(['/login']);
       }
     });
+  }
+
+  /**
+   * Navega a la vista de estimación del requerimiento seleccionado.
+   */
+  goToEstimation(requirementId: string): void {
+    this.router.navigate(['/requerimientos', requirementId, 'estimacion']); 
   }
 }

@@ -148,7 +148,7 @@
                     <th>Unidad</th>
                     <th>Fecha Creación</th>
                     <th>Estatus</th>
-                    <th class="text-end pe-4">Acciones</th>
+                    <th class="ps-4">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -189,8 +189,9 @@
                           <span
                             class="badge rounded-pill"
                             [ngClass]="{
+                              'bg-danger text-light': req.status === 'EV',
                               'bg-warning text-dark': req.status === 'PL',
-                              'bg-info': req.status === 'EV',
+                              'bg-info': req.status === 'ATF',
                               'bg-success': req.status === 'FC',
                             }"
                           >
@@ -205,12 +206,45 @@
                             }}
                           </span>
                         </td>
-                        <td class="text-end pe-4">
-                          <button
-                            class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                        <td class="align-middle text-center">
+                          <div
+                            class="d-flex align-items-center justify-content-center gap-2"
                           >
-                            <i class="bi bi-eye me-1"></i>Ver
-                          </button>
+                            <button
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                              (click)="openDetailModal(req.id)"
+                              title="Ver Detalle"
+                            >
+                              <img
+                                src="assets/icons/show-details.png"
+                                alt="Ver Detalles"
+                                class="custom-icon"
+                              />
+                            </button>
+
+                            <button
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                              (click)="goToEstimation(req.id)"
+                              title="Estimación"
+                            >
+                              <img
+                                src="assets/icons/estimation.png"
+                                alt="Estimación"
+                                class="custom-icon"
+                              />
+                            </button>
+
+                            <button
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                              title="Gestionar Requerimiento"
+                            >
+                              <img
+                                src="assets/icons/manage-req.png"
+                                alt="Gestionar Requerimiento"
+                                class="custom-icon"
+                              />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     }
@@ -220,6 +254,28 @@
             </div>
           </div>
         </div>
+        @if (isDetailModalOpen()) {
+          <div
+            class="modal-backdrop fade show"
+            style="z-index: 1050 !important"
+          ></div>
+
+          <div
+            class="modal fade show"
+            tabindex="-1"
+            style="display: block; z-index: 1060 !important"
+          >
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+              <div class="modal-content border-0 shadow-lg">
+                <lib-requirement-modal
+                  [requirementId]="selectedRequirementId()"
+                  (modalClosed)="closeDetailModal(true)"
+                >
+                </lib-requirement-modal>
+              </div>
+            </div>
+          </div>
+        }
       </section>
     </main>
   </div>

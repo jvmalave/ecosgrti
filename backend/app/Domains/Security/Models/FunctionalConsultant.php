@@ -34,8 +34,13 @@ class FunctionalConsultant extends Model
         return $this->belongsTo(RequestingUnit::class, 'requesting_unit_id');
     }
 
-    public function persona()
+    public function person()
     {
-        return $this->belongsTo(Person::class, 'person_id');
+        return $this->belongsTo(\App\Domains\Security\Models\Person::class, 'person_id');
     }
+
+    // public function persona()
+    // {
+    //     return $this->belongsTo(Person::class, 'person_id');
+    // }
 }

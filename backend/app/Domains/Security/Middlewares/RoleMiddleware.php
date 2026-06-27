@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Domains\Security\Middlewares;
+
 use App\Domains\Security\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -8,29 +9,43 @@ use Illuminate\Http\Request;
 
 class RoleMiddleware
 {
-    /**
-     * Handle an incoming request.
-     */
-    public function handle(Request $request, Closure $next, string ...$roles)
+  /**
+   * Handle an incoming request.
+   */
+  
+
+  public function handle(Request $request, Closure $next, string ...$roles)
     {
-        // 1. Obtenemos los roles del usuario autenticado
-        $userRoles = $request->user()->roles;
+        $user = $request->user();
 
-        // 2. SOLUCIÓN: Si la base de datos nos devuelve un string (JSON), lo convertimos a Arreglo
-        if (is_string($userRoles)) {
-            $userRoles = json_decode($userRoles, true) ?? [];
-        }
+        // Extraemos los roles gracias al Cast del Modelo
+        $userRoles = $user->roles ?? []; 
 
-        // 3. Comparamos los arreglos
-        if (empty(array_intersect($userRoles, $roles))) {
-            return response()->json(['message' => 'Acceso denegado. Privilegios insuficientes.'], 403);
+        // POR QUÉ: Normalizamos ambos arreglos a minúsculas (lowercase) 
+        // para garantizar una comparación tolerante a errores de tipeo en la BD o en las Rutas.
+        $normalizedUserRoles = array_map('strtolower', $userRoles);
+        $normalizedRequiredRoles = array_map('strtolower', $roles);
+
+        // Comparamos usando los arreglos normalizados
+        if (empty(array_intersect($normalizedUserRoles, $normalizedRequiredRoles))) {
+            
+            \Illuminate\Support\Facades\Log::warning('Bloqueo RBAC: Intento de acceso sin privilegios', [
+                'user_id' => $user->id,
+                'user_roles_detected' => $userRoles,
+                'required_roles' => $roles,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Acceso denegado. Privilegios insuficientes.'
+            ], 403);
         }
 
         return $next($request);
     }
 
-    private function checkUserHasAnyRole(User $user, array $roles): bool
-{
+  private function checkUserHasAnyRole(User $user, array $roles): bool
+  {
     return count(array_intersect($user->roles, $roles)) > 0;
-}
+  }
 }

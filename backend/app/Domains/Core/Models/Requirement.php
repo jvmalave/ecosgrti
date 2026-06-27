@@ -9,6 +9,7 @@ use App\Domains\Security\Models\CspeConsultant;
 use App\Domains\Core\Models\RequirementCspePivot;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Domains\Core\Models\ScheduleEstimation;
 
 class Requirement extends Model
 {
@@ -27,17 +28,20 @@ class Requirement extends Model
 
 
     protected $fillable = [
-        'id',
-        'rrti', 
-        'requirement_type',
-        'creation_date',
-        'description', 
-        'management_type', 
-        'needs_spreadsheet_path',
-        'it_request_doc_path',
-        'functional_consultant_id',
-        'status', 
-        'is_locked'
+      'id',
+      'rrti', 
+      'requirement_type',
+      'creation_date',
+      'description', 
+      'management_type', 
+      'needs_spreadsheet_path',
+      'it_request_doc_path',
+      'functional_consultant_id',
+      'status', 
+      'is_locked',
+      'snapshot_society_name',
+      'snapshot_system_name',
+      'snapshot_unit_name',
     ];
 
     /**
@@ -59,5 +63,14 @@ class Requirement extends Model
         )
         ->using(RequirementCspePivot::class) 
         ->withTimestamps(); 
+    }
+
+    /**
+     * Relación 1 a 1: Un Requerimiento tiene una (y solo una) Estimación de Cronograma (Camino de Hierro).
+     * * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function scheduleEstimation()
+    {
+        return $this->hasOne(ScheduleEstimation::class, 'requirement_id');
     }
 }

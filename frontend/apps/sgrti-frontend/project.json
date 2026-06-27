@@ -23,7 +23,10 @@
           "apps/sgrti-frontend/src/favicon.ico",
           "apps/sgrti-frontend/src/assets"
         ],
-        "styles": ["apps/sgrti-frontend/src/styles.scss"],
+        "styles": [ "apps/sgrti-frontend/src/styles.scss",
+                    "node_modules/bootstrap-icons/font/bootstrap-icons.css",
+                    "node_modules/@fortawesome/fontawesome-free/css/all.min.css"
+                  ],
         "server": "apps/sgrti-frontend/src/main.server.ts",
         "ssr": {
           "entry": "apps/sgrti-frontend/src/server.ts"

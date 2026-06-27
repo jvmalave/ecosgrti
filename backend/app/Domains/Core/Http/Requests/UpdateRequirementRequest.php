@@ -10,23 +10,33 @@ class UpdateRequirementRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return true; 
     }
 
     public function rules(): array
     {
+        // Capturamos el ID de la URL para ignorarlo en la regla unique
+        $requirementId = $this->route('id');
+
         return [
-            // 'sometimes' permite que el campo no se envíe, pero si se envía, 'required' evita que venga nulo/vacío
-            'description' => ['sometimes', 'required', 'string', 'min:10'],
-            'requirement_type' => ['sometimes', 'required', 'string'],
+            // Ignoramos el ID actual en la validación unique
+            'rrti' => "sometimes|required|string|unique:pgsql.core.requirements,rrti,{$requirementId}",
+            'requirement_type' => 'sometimes|required|string',
+            'management_type' => 'sometimes|required|string',
+            'creation_date' => 'sometimes|required|date',
+            'description' => 'sometimes|required|string|min:10',
             
-            // RN-Validación de Cambios en Consultores: Mínimo 1 asignado
-            'consultants' => ['sometimes', 'required', 'array', 'min:1'],
-            'consultants.*' => ['uuid', 'exists:security.users,id'],
+            // Relaciones: Validamos que el ID exista en el esquema correspondiente
+            'persona_id' => 'sometimes|required|uuid|exists:pgsql.security.persons,id',
             
-            // Protección contra inyección de archivos maliciosos
-            'file_solicitud' => ['nullable', 'file', 'mimes:pdf', 'max:5120'], // Máx 5MB
-            'file_planilla' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
+            
+            'cspe_consultants' => 'sometimes|required|array',
+            'cspe_consultants.*' => 'required|uuid|exists:pgsql.security.cspe_consultants,id',
+            
+            // Archivos: Son 'nullable' porque en una edición el usuario puede no querer cambiarlos.
+            // Pero si los envía, deben cumplir con el peso y formato.
+            'it_request_doc' => 'nullable|file|mimes:pdf|max:5120',
+            'needs_spreadsheet' => 'nullable|file|mimes:pdf,xlsx,xls|max:5120',
         ];
     }
 }
