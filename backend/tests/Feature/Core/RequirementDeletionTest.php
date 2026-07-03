@@ -116,7 +116,6 @@ it('fails to delete a locked requirement', function () {
             'justification' => 'Intento de borrado ilegal.',
         ])
         // NOTA: Si tu controlador devuelve un 403 (Forbidden) o 400 (Bad Request) por estar bloqueado, 
-        // cambia este 422 por tu código correspondiente.
-        ->assertStatus(422) 
+        ->assertStatus(403) 
         ->assertJsonPath('success', false);
 });
