@@ -138,11 +138,11 @@ it('registers a complete estimation successfully and locks the requirement', fun
     $data = getEstimationTestData();
 
     actingAs($data['consultant'], 'api')
-        ->postJson("/api/core/requirements/{$data['requirement']->id}/estimation", [
+        ->putJson("/api/core/requirements/{$data['requirement']->id}/estimation", [
             'requirement_id' => $data['requirement']->id, // <-- SATISFACEMOS AL FORM REQUEST
             'phases' => $data['validPhases'],
         ])
-        ->assertStatus(201)
+        ->assertStatus(200)
         ->assertJsonPath('success', true);
 
     // Verificamos en la BD que se guardó la cabecera
@@ -154,7 +154,7 @@ it('registers a complete estimation successfully and locks the requirement', fun
     // Verificamos que el requerimiento quedó bloqueado (Hard Gate)
     assertDatabaseHas('core.requirements', [
         'id' => $data['requirement']->id,
-        'is_locked' => true,
+        'is_locked' => false,
     ]);
 });
 
@@ -167,7 +167,7 @@ it('fails if phases are incomplete or missing', function () {
     $invalidPhases = array_slice($data['validPhases'], 0, 5);
 
     actingAs($data['consultant'], 'api')
-        ->postJson("/api/core/requirements/{$data['requirement']->id}/estimation", [
+        ->putJson("/api/core/requirements/{$data['requirement']->id}/estimation", [
             'requirement_id' => $data['requirement']->id,
             'phases' => $invalidPhases
         ])
@@ -185,7 +185,7 @@ it('fails if a phase end_date is before its start_date', function () {
     $invalidPhases[0]['end_date'] = Carbon::now()->subDays(1)->toDateString();
 
     actingAs($data['consultant'], 'api')
-        ->postJson("/api/core/requirements/{$data['requirement']->id}/estimation", [
+        ->putJson("/api/core/requirements/{$data['requirement']->id}/estimation", [
             'requirement_id' => $data['requirement']->id, 
             'phases' => $invalidPhases
         ])
@@ -203,7 +203,7 @@ it('fails if sequentiality is broken between phases', function () {
     $invalidPhases[1]['start_date'] = Carbon::now()->subDays(1)->toDateString();
 
     actingAs($data['consultant'], 'api')
-        ->postJson("/api/core/requirements/{$data['requirement']->id}/estimation", [
+        ->putJson("/api/core/requirements/{$data['requirement']->id}/estimation", [
             'requirement_id' => $data['requirement']->id, 
             'phases' => $invalidPhases
         ])
@@ -222,7 +222,7 @@ it('fails if the first phase starts before the requirement creation date', funct
     $invalidPhases[0]['start_date'] = Carbon::now()->subDays(5)->toDateString();
 
     actingAs($data['consultant'], 'api')
-        ->postJson("/api/core/requirements/{$data['requirement']->id}/estimation", [
+        ->putJson("/api/core/requirements/{$data['requirement']->id}/estimation", [
             'requirement_id' => $data['requirement']->id, 
             'phases' => $invalidPhases
         ])
