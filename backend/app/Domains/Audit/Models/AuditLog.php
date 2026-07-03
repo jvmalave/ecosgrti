@@ -22,6 +22,8 @@ class AuditLog extends Model
         'payload' // Para guardar datos extra en JSON si es necesario
     ];
 
+    
+
     // Desactivamos timestamps si prefieres manejar solo 'created_at' 
     // o déjalos si la migración los tiene.
 }

@@ -3,7 +3,9 @@
 namespace App\Domains\Core\Services;
 
 use Illuminate\Support\Facades\DB;
+
 use Illuminate\Support\Facades\Redis;
+
 
 class RequirementDashboardService
 {
@@ -11,23 +13,27 @@ class RequirementDashboardService
      * Obtiene la lista de requerimientos usando Carga Híbrida (Redis + PostgreSQL)
      * Ahora con soporte para Búsqueda Reactiva.
      */
+
     public function getRequirements(string $status, int $limit, int $offset, ?string $searchTerm = null): array
     {
-        // 1. Modificar la llave de caché para que sea única por cada búsqueda
-        // Usamos md5 para generar un sufijo corto y seguro, o 'all' si no hay búsqueda.
         $searchHash = $searchTerm ? md5(strtolower($searchTerm)) : 'all';
-        $cacheKey = "req_{$status}_{$offset}_{$searchHash}";
+        
+        $version = Redis::get('dashboard_version') ?: 1;
+        
+        // Bautizamos la llave incluyendo la versión (ej. req_v1_active_0_all)
+        $cacheKey = "req_v{$version}_{$status}_{$offset}_{$searchHash}";
 
-        // 2. Intento de Carga desde Redis (Cache Hit)
+        // 2. Intento de Carga desde Redis
         $cachedData = Redis::get($cacheKey);
         if ($cachedData) {
-            return json_decode($cachedData, true); // Respuesta en milisegundos
+            return json_decode($cachedData, true); 
         }
 
         // 3. Fallback a Base de Datos (Cache Miss)
         $query = DB::table('core.requirements as r')
             ->join('security.functional_consultants as fc', 'r.functional_consultant_id', '=', 'fc.id')
             ->join('security.persons as p', 'fc.person_id', '=', 'p.id')
+            ->whereNull('r.deleted_at')
             ->select(
                 'r.id', 
                 'r.rrti', 
@@ -39,21 +45,16 @@ class RequirementDashboardService
                 'r.snapshot_unit_name'
             );
 
-        // Lógica de separación de contextos (Proceso vs Histórico)
         if ($status === 'active') {
-            $query->where('r.status', '!=', 'FC'); // Lo que NO esté Finalizado/Cerrado
+            $query->where('r.status', '!=', 'FC'); 
         } else {
-            $query->where('r.status', '=', 'FC'); // Solo histórico
+            $query->where('r.status', '=', 'FC'); 
         }
 
-        // -------------------------------------------------------------
-        // Lógica del Buscador Reactivo
-        // -------------------------------------------------------------
         if (!empty($searchTerm)) {
             $query->where('r.rrti', 'ILIKE', '%' . $searchTerm . '%');
         }
 
-        // Ejecución con el truco "limit + 1" para calcular el "has_more" eficientemente
         $results = $query->orderBy('r.created_at', 'desc')
             ->offset($offset)
             ->limit($limit + 1)
@@ -61,23 +62,22 @@ class RequirementDashboardService
 
         $hasMore = $results->count() > $limit;
         
-        // Si trajimos el extra, lo sacamos de la lista final para enviar solo el límite solicitado
         if ($hasMore) {
             $results->pop(); 
         }
 
         // 4. Estructurar la respuesta
         $response = [
-            'data' => $results,
+            'data' => $results->values()->toArray(), // Protegemos el Array para Angular
             'meta' => [
                 'has_more' => $hasMore,
-                'total_returned' => $results->count(),
+                'total_returned' => count($results),
                 'offset' => $offset,
                 'limit' => $limit
             ]
         ];
 
-        // 5. Blindar Redis: Guardar el dataset con un TTL de 300 segundos
+        // 5. Guardar en Redis
         Redis::setex($cacheKey, 300, json_encode($response));
 
         return $response;

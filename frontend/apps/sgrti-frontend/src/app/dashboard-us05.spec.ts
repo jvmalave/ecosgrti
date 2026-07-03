@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { signal } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 
 // 1. VIAJAMOS HACIA LA LIBRERÍA CORE (Ajusta la ruta si es necesario)
 // 1. Apagamos la regla de Nx estrictamente para esta línea
@@ -18,17 +19,24 @@ import { AuthService } from '@ecosgrti/security/data-access';
 describe('DashboardComponent (US05 - BDD Scenarios)', () => {
   let component: DashboardComponent;
   let fixture: ComponentFixture<DashboardComponent>;
-  let mockRequirementService: { getDashboardRequirements: ReturnType<typeof vi.fn> };
+  // 💡 Expandimos el tipo seguro incorporando el Observable correspondiente
+  let mockRequirementService: { 
+    getDashboardRequirements: ReturnType<typeof vi.fn>;
+    refreshDashboard$: import('rxjs').Observable<unknown>; 
+  };
   let mockAuthService: { currentUser: unknown, logout: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     mockRequirementService = {
+      // 💡 Asignamos el flujo tipado de forma segura
+      refreshDashboard$: of(null), 
+      
       getDashboardRequirements: vi.fn().mockReturnValue(of({
         message: 'Éxito',
         data: [{ rrti: 'RRTI-2026-001', requirement_type: 'Test' }],
         meta: { has_more: false }
       }))
-    };
+    };//
 
     mockAuthService = {
       currentUser: signal({ id: '123', name: 'Coordinador CSPE' }),
@@ -38,13 +46,14 @@ describe('DashboardComponent (US05 - BDD Scenarios)', () => {
     localStorage.clear();
     
     await TestBed.configureTestingModule({
-      imports: [DashboardComponent],
-      providers: [
-        { provide: RequirementService, useValue: mockRequirementService },
-        { provide: AuthService, useValue: mockAuthService },
-        { provide: 'Router', useValue: { navigate: vi.fn() } }
-      ]
-    }).compileComponents();
+  // 💡 Importamos ReactiveFormsModule para dar soporte a searchControl.valueChanges
+    imports: [DashboardComponent, ReactiveFormsModule], 
+    providers: [
+    { provide: RequirementService, useValue: mockRequirementService },
+    { provide: AuthService, useValue: mockAuthService },
+    { provide: 'Router', useValue: { navigate: vi.fn() } }
+  ]
+  }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;

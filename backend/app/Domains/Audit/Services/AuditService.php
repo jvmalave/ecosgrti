@@ -33,13 +33,17 @@ class AuditService
      */
     public function logModelChange(string $action, string $description, array $payload, ?string $userId = null): void
     {
+        // 1. Forzamos la conversión a String puro ANTES de tocar el modelo
+        $jsonPayload = json_encode($payload);
+
+        // 2. Guardamos pasando exclusivamente strings
         $log = AuditLog::create([
             'user_id'     => $userId,
             'action'      => $action,
             'description' => $description,
-            'ip_address'  => request()->ip(), // Obtenemos la IP global
-            'user_agent'  => request()->header('User-Agent'),
-            'payload'     => json_encode($payload),
+            'ip_address'  => request()->ip(), 
+            'user_agent'  => request()->userAgent(), // 🟢 Más seguro que header()
+            'payload'     => $jsonPayload,           // 🟢 El string ya procesado
         ]);
 
         Log::info("Auditoría de modelo guardada con ID: " . $log->id);

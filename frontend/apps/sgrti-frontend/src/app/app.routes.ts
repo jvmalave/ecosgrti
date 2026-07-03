@@ -4,7 +4,6 @@ import { authGuard } from '@ecosgrti/security/data-access';
 // 2. Importamos el componente de forma estática (tradicional)
 import { LoginComponent } from '@ecosgrti/security'; 
 
-
 export const appRoutes: Routes = [
   {
     path: '',
@@ -19,16 +18,21 @@ export const appRoutes: Routes = [
     path: 'dashboard',
     // 🚀 El Dashboard SÍ se queda con lazy loading, porque no todos llegan aquí
     loadComponent: () => import('@sgrti/core').then((m) => m.DashboardComponent),
+    title: 'Dashboard | ECOSGRTI',
     canActivate: [authGuard],
   },
   {
     path: 'requerimientos/crear', 
-    // Usamos Lazy Loading apuntando a la ruta física de tu componente en la librería core
-    loadComponent: () => 
-      import('@sgrti/core')
-      .then(m => m.RequirementCreateComponent),
+    loadComponent: () => import('@sgrti/core').then(m => m.RequirementCreateComponent),
+    title: 'Crear Requerimiento | ECOSGRTI',
+    canActivate: [authGuard], 
   },
-
+  {
+    path: 'requerimientos/:requirementId/estimacion', 
+    loadComponent: () => import('@sgrti/core').then(m => m.EstimationFormComponent),
+    title: 'Estimación | ECOSGRTI',
+    canActivate: [authGuard], 
+  },
   {
     path: '**',
     redirectTo: 'login'
