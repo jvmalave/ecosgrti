@@ -50,6 +50,6 @@ class ProgressCalculationService
             ]);
         }
 
-        return round($normalizedProgress, 2);
+        return (float) round($normalizedProgress, 2);
     }
 }
