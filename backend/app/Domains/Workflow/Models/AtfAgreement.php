@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Domains\Core\Models\Requirement;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Database\Factories\Workflow\AtfAgreementFactory;
 
 class AtfAgreement extends Model
 {
-    use HasUuids, SoftDeletes;
+    use HasUuids, SoftDeletes, HasFactory;
 
     // Especificamos la tabla con su esquema
     protected $table = 'workflow.atf_agreements';
@@ -21,6 +23,12 @@ class AtfAgreement extends Model
 
     // 2. Le decimos que el ID es un texto (UUID)
     protected $keyType = 'string';
+
+    protected static function newFactory()
+{
+    // Ajusta esta ruta a donde realmente esté tu clase Factory
+    return AtfAgreementFactory::new();
+}
 
     protected $fillable = [
         'requirement_id',
