@@ -1,0 +1,112 @@
+<div class="modal-backdrop fade show" style="z-index: 1050 !important;"></div>
+
+<div class="modal fade show d-block" tabindex="-1" style="z-index: 1060 !important;" aria-labelledby="atfListModalLabel" aria-hidden="false">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+      
+      <div class="modal-header brand-gradient text-white px-4 py-3 border-0">
+        <h5 class="modal-title fw-bold d-flex align-items-center" id="atfListModalLabel">
+          <i class="bi bi-card-checklist me-2 fs-4"></i>
+          Gestión de Acuerdos Técnicos (ATF)
+        </h5>
+        <button 
+          type="button" 
+          class="btn-close btn-close-white" 
+          (click)="closeModal.emit()"
+          aria-label="Cerrar modal">
+          <span class="visually-hidden">Cerrar</span>
+        </button>
+      </div>
+
+      <div class="modal-body p-4 bg-light">
+
+        <div class="d-flex align-items-center mb-4">
+          <span class="text-muted fw-bold me-2 small">Tipo de Gestión:</span>
+          
+          <span class="badge rounded-pill px-3 py-2 me-2" style="background-color: #f3e8f5; color: #8e1482; border: 1px solid #8e1482;">
+            {{ currentManagementType() | titlecase }}
+          </span>
+          
+          <button class="btn btn-sm btn-outline-brand rounded-circle d-flex align-items-center justify-content-center" 
+                  style="width: 32px; height: 32px;"
+                  (click)="isUpdateTypeModalOpen.set(true)" 
+                  title="Actualizar Tipo de Gestión">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+        </div>
+        
+        <div class="card border-0 shadow-sm rounded-3">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="px-4 py-3 text-muted fw-bold small text-uppercase">Fecha</th>
+                    <th class="px-4 py-3 text-muted fw-bold small text-uppercase">Descripción del Acuerdo</th>
+                    <th class="px-4 py-3 text-end text-muted fw-bold small text-uppercase">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of agreements(); track item.id) {
+                    <tr>
+                      <td class="px-4 py-3 text-nowrap">
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill px-3 py-2">
+                          <i class="bi bi-calendar-event me-1"></i>
+                          {{ item.agreement_date | date:'dd/MM/yyyy' }}
+                        </span>
+                      </td>
+                      
+                      <td class="px-4 py-3 text-secondary" [title]="item.description">
+                        {{ item.description.length > 20 ? (item.description | slice:0:20) + '...' : item.description }}
+                      </td>
+                      
+                      <td class="px-4 py-3 text-end text-nowrap">
+                        <button 
+                          class="btn btn-sm btn-outline-brand rounded-pill px-3 me-2" 
+                          (click)="viewAgreement(item)" 
+                          title="Ver Detalle del Acuerdo">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                        @if (isAtfOpen()) {
+                          <button 
+                            class="btn btn-sm btn-outline-danger rounded-pill px-3" 
+                            (click)="deleteAgreement(item.id)" 
+                            title="Eliminar Acuerdo">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  }@empty {
+                    <tr>
+                      <td colspan="3" class="text-center py-5 text-muted bg-light">
+                        <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-25"></i>
+                        <span class="fw-medium">No hay acuerdos técnicos registrados.</span>
+                        <p class="small text-muted mt-1 mb-0">Haz clic en "Agregar Nuevo Acuerdo" para comenzar.</p>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        @if (isAtfOpen()) {
+          <div class="mt-4 pt-2 text-end border-top">
+            <button class="btn btn-brand rounded-pill px-4 shadow-sm" (click)="openCreateModal.emit()">
+              <i class="bi bi-plus-circle me-2"></i> Agregar Nuevo Acuerdo
+            </button>
+          </div>
+        }
+        @if (isUpdateTypeModalOpen()) {
+          <lib-update-management-type-modal
+            [requirementId]="requirementId()"
+            [currentType]="currentManagementType()" (closeModal)="isUpdateTypeModalOpen.set(false)"
+            (typeUpdated)="onTypeUpdated($event)">
+          </lib-update-management-type-modal>
+        }
+
+      </div>
+    </div>
+  </div>
+</div>

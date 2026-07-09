@@ -33,6 +33,8 @@ class RequirementDashboardService
         $query = DB::table('core.requirements as r')
             ->join('security.functional_consultants as fc', 'r.functional_consultant_id', '=', 'fc.id')
             ->join('security.persons as p', 'fc.person_id', '=', 'p.id')
+            // Agregamos un LEFT JOIN para contar si hay acuerdos
+            ->leftJoin('workflow.atf_agreements as aa', 'r.id', '=', 'aa.requirement_id')
             ->whereNull('r.deleted_at')
             ->select(
                 'r.id', 
@@ -42,8 +44,12 @@ class RequirementDashboardService
                 'r.creation_date', 
                 'p.first_name', 
                 'p.last_name',
-                'r.snapshot_unit_name'
-            );
+                'r.snapshot_unit_name',
+                'r.management_type',
+                // Usamos DB::raw para verificar la existencia (true si hay registros, false si no)
+                DB::raw('COUNT(aa.id) > 0 as has_atf_agreements')
+            )
+            ->groupBy('r.id', 'fc.id', 'p.id'); // Agrupamos para que el COUNT funcione
 
         if ($status === 'active') {
             $query->where('r.status', '!=', 'FC'); 

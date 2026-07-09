@@ -191,8 +191,12 @@
                             [ngClass]="{
                               'bg-danger text-light': req.status === 'EV',
                               'bg-warning text-dark': req.status === 'PL',
-                              'bg-info': req.status === 'ATF',
+                              'bg-info': req.status === 'ATF_OPEN',
                               'bg-success': req.status === 'FC',
+                              'bg-secondary': req.status === 'ATF_CLOSED',
+                              'bg-primary': req.status === 'REQ_CLOSED',
+                              
+
                             }"
                           >
                             {{
@@ -202,7 +206,13 @@
                                   ? 'Evaluación'
                                   : req.status === 'FC'
                                     ? 'Cerrado'
-                                    : req.status
+                                    : req.status=== 'ATF_OPEN'
+                                      ? 'ATF Abierto'
+                                      : req.status === 'ATF_CLOSED'
+                                        ? 'ATF Cerrado'
+                                        : req.status === 'REQ_CLOSED'
+                                          ? 'Req. Cerrado'
+                                          : req.status
                             }}
                           </span>
                         </td>
@@ -234,6 +244,46 @@
                               />
                             </button>
 
+                            <button 
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3" 
+                              (click)="gestionarAcuerdos(req)" 
+                              [disabled]="req.is_locked"
+                              title="Gestionar Acuerdos"
+                            >
+                              <img
+                                src="assets/icons/acuerdo.png"
+                                alt="ATF"
+                                class="custom-icon" 
+                                [class.opacity-50]="req.is_locked"
+                              />
+                            </button>
+
+                            <!-- <button 
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3" 
+                              title="Gestionar Acuerdos"
+                              (click)="gestionarAcuerdos(req)"
+                              [disabled]="workflowState.isLocked()"
+                              >
+                              <img
+                                src="assets/icons/acuerdo.png"
+                                alt="ATF"
+                                class="custom-icon" [class.opacity-50]="req.is_locked"
+                              />
+                            </button> -->
+
+                            
+                            <!-- <button
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                              title="Registrar Acuerdo ATF"
+                              (click)="openAtfModal(req.id)"
+                              [disabled]="req.is_locked"
+                            >
+                              <img
+                                src="assets/icons/acuerdo.png"
+                                alt="ATF"
+                                class="custom-icon" [class.opacity-50]="req.is_locked"
+                              />
+                            </button> -->
                             <button
                               class="btn btn-sm btn-outline-brand rounded-pill px-3"
                               title="Gestionar Requerimiento"
@@ -275,6 +325,28 @@
               </div>
             </div>
           </div>
+        }
+        @if (isAtfListModalOpen()) {
+        <lib-atf-agreements-list-modal
+          [requirementId]="selectedReqForAtf()!" 
+          [isAtfOpen]="isSelectedReqAtfOpen()"
+          [currentManagementType]="selectedReqManagementType()" 
+          (closeModal)="closeAtfListModal()"
+          (openCreateModal)="openAgreementCreate()" 
+          (viewAgreementDetail)="openAgreementView($event)"
+          (typeUpdated)="onRequirementMutated($event)"> 
+        </lib-atf-agreements-list-modal>
+      }
+
+        @if (isAtfModalOpen()) {
+          <lib-atf-agreements-modal
+            [requirementId]="selectedReqForAtf()!"
+            [initialMode]="atfModalMode()"
+            [agreementData]="selectedAgreementData()"
+            [isAtfOpen]="isSelectedReqAtfOpen()"
+            (closeModal)="closeAtfModal()"
+            (agreementSaved)="onAgreementSaved()">
+          </lib-atf-agreements-modal>
         }
       </section>
     </main>

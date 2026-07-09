@@ -1,0 +1,148 @@
+<div class="modal-backdrop fade show" style="z-index: 1050 !important"></div>
+
+<div
+  class="modal fade show"
+  tabindex="-1"
+  style="display: block; z-index: 1060 !important"
+  aria-modal="true"
+  role="dialog"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div
+        class="modal-header brand-gradient pb-3 pt-4 px-4 d-flex justify-content-between align-items-center"
+      >
+        <h5 class="modal-title text-white fw-bold">
+          <i class="bi bi-file-earmark-text me-2"></i>
+          @if (currentMode() === 'create') {
+            Registrar Acuerdo Técnico
+          } @else if (currentMode() === 'view') {
+            Detalle del Acuerdo
+          } @else {
+            Actualizar Acuerdo
+          }
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white shadow-none"
+          aria-label="Cerrar"
+          (click)="closeModal.emit()"
+        ></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <div class="alert alert-info mb-4" role="alert">
+          <i class="bi bi-info-circle-fill me-2"></i>
+          Ingrese los detalles del acuerdo técnico-funcional alcanzado para el
+          requerimiento.
+        </div>
+
+        <form [formGroup]="agreementForm" (ngSubmit)="onSubmit()">
+          <div class="mb-3">
+            <label
+              for="agreement_date"
+              class="form-label fw-bold text-muted small"
+            >
+              Fecha del Acuerdo <span class="text-danger">*</span>
+            </label>
+            <input
+              type="date"
+              id="agreement_date"
+              class="form-control"
+              formControlName="agreement_date"
+              [class.is-invalid]="
+                agreementForm.get('agreement_date')?.invalid &&
+                agreementForm.get('agreement_date')?.touched
+              "
+            />
+            @if (
+              agreementForm.get('agreement_date')?.invalid &&
+              agreementForm.get('agreement_date')?.touched
+            ) {
+              <div class="invalid-feedback">
+                La fecha del acuerdo es obligatoria.
+              </div>
+            }
+          </div>
+
+          <div class="mb-3">
+            <label
+              for="description"
+              class="form-label fw-bold text-muted small"
+            >
+              Descripción del Acuerdo <span class="text-danger">*</span>
+            </label>
+            <textarea
+              id="description"
+              class="form-control"
+              rows="5"
+              formControlName="description"
+              placeholder="Detalle los compromisos, alcances o decisiones tomadas..."
+              [class.is-invalid]="
+                agreementForm.get('description')?.invalid &&
+                agreementForm.get('description')?.touched
+              "
+            ></textarea>
+
+            @if (
+              agreementForm.get('description')?.invalid &&
+              agreementForm.get('description')?.touched
+            ) {
+              <div class="invalid-feedback">
+                @if (agreementForm.get('description')?.hasError('required')) {
+                  <span>La descripción es obligatoria.</span>
+                }
+                @if (agreementForm.get('description')?.hasError('minlength')) {
+                  <span>La descripción debe tener al menos 10 caracteres.</span>
+                }
+              </div>
+            }
+          </div>
+          <div class="modal-footer bg-light border-0 px-4 py-3">
+            <button
+              type="button"
+              class="btn btn-outline-secondary rounded-pill px-4"
+              (click)="closeModal.emit()"
+            >
+              <i class="bi bi-x-circle me-1"></i>
+              {{ currentMode() === 'view' ? 'Cerrar' : 'Cancelar' }}
+            </button>
+
+            @if (currentMode() === 'create' || currentMode() === 'edit') {
+              <button
+                type="submit"
+                class="btn btn-brand rounded-pill px-4 shadow-sm"
+                [disabled]="agreementForm.invalid || isSubmitting()"
+              >
+                @if (isSubmitting()) {
+                  <span
+                    class="spinner-border spinner-border-sm me-2"
+                    aria-hidden="true"
+                  ></span>
+                  Procesando...
+                } @else {
+                  <i class="bi bi-check2-circle me-1"></i>
+                  {{
+                    currentMode() === 'create'
+                      ? 'Guardar Acuerdo'
+                      : 'Actualizar Cambios'
+                  }}
+                }
+              </button>
+            }
+
+            @if (currentMode() === 'view' && isAtfOpen()) {
+              <button
+                type="button"
+                class="btn btn-brand rounded-pill px-4 shadow-sm"
+                (click)="switchToEdit()"
+              >
+                <i class="bi bi-pencil me-1"></i> Habilitar Edición
+              </button>
+            }
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

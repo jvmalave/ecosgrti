@@ -18,7 +18,10 @@
       "@ecosgrti/security/data-access": [
         "./libs/security/src/lib/data-access/index.ts"
       ],
-      "@sgrti/core": ["./libs/core/src/index.ts"]
+      "@sgrti/core": ["./libs/core/src/index.ts"],
+      "@app/workflow": ["./libs/workflow/src/index.ts"],
+      "@ecosgrti/workflow": ["./libs/workflow/src/index.ts"]
+
     }
   },
   "exclude": ["node_modules", "tmp"]

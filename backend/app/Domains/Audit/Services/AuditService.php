@@ -42,8 +42,8 @@ class AuditService
             'action'      => $action,
             'description' => $description,
             'ip_address'  => request()->ip(), 
-            'user_agent'  => request()->userAgent(), // 🟢 Más seguro que header()
-            'payload'     => $jsonPayload,           // 🟢 El string ya procesado
+            'user_agent'  => request()->userAgent(),
+            'payload'     => $jsonPayload, 
         ]);
 
         Log::info("Auditoría de modelo guardada con ID: " . $log->id);

@@ -1,0 +1,40 @@
+.brand-gradient {
+  background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%) !important;
+  border-bottom: 3px solid #ea80fc !important;
+}
+.btn-brand {
+  background: linear-gradient(90deg, #aa00ff 0%, #d500f9 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.btn-brand:hover {
+  background: linear-gradient(90deg, #7b1fa2 0%, #aa00ff 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4);
+  transform: translateY(-1px);
+}
+.btn-brand:disabled {
+  background: #e1bee7;
+  color: #9e9e9e;
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-outline-brand {
+  border: 1px solid #d500f9;
+  color: #d500f9;
+  font-weight: 600;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+.btn-outline-brand:hover:not(:disabled) {
+  background: rgba(213, 0, 249, 0.1);
+  color: #aa00ff;
+}
+.btn-outline-brand:disabled {
+  border-color: #e1bee7;
+  color: #9e9e9e;
+  cursor: not-allowed;
+}

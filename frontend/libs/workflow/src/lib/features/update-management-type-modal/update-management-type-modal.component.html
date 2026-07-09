@@ -1,0 +1,74 @@
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      
+      <div class="modal-header brand-gradient text-white rounded-top-4 border-0">
+        <h5 class="modal-title fw-bold">
+          <i class="bi bi-gear-fill me-2"></i> Actualizar Tipo de Gestión
+        </h5>
+        <button type="button" class="btn-close btn-close-white" 
+                aria-label="Cerrar"
+                (click)="closeModal.emit()" 
+                [disabled]="isSubmitting()"></button>
+      </div>
+
+      <div class="modal-body p-4 bg-light">
+        <p class="text-muted mb-4 small">
+          Selecciona el tipo de gestión que se acordo con unidad funcional para la ejecución de este requerimiento.
+        </p>
+
+        <div class="d-flex flex-column gap-3">
+          @for (option of managementOptions; track option.id) {
+            <div class="card cursor-pointer transition-all" 
+                role="button"
+                tabindex="0"
+                [class.border-brand]="selectedType() === option.id"
+                [class.bg-white]="selectedType() !== option.id"
+                [style.background-color]="selectedType() === option.id ? '#f0f5ff' : ''"
+                (click)="selectType(option.id)"
+                (keydown.enter)="selectType(option.id)">
+              
+                <div class="me-3 fs-3" [class.text-brand]="selectedType() === option.id" [class.text-muted]="selectedType() !== option.id">
+                  <i class="bi {{ option.icon }}"></i>
+                </div>
+                
+                <div class="flex-grow-1">
+                  <h6 class="mb-0 fw-bold" [class.text-dark]="selectedType() === option.id">
+                    {{ option.label }}
+                  </h6>
+                </div>
+
+                <div class="form-check m-0">
+                  <input class="form-check-input fs-5" type="radio" 
+                        [name]="'managementType'" 
+                        [value]="option.id"
+                        [checked]="selectedType() === option.id"
+                        (change)="selectType(option.id)">
+                </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="modal-footer bg-white border-top-0 rounded-bottom-4">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" 
+                (click)="closeModal.emit()" 
+                [disabled]="isSubmitting()">
+          <i class="bi bi-x-circle me-1"></i> Cancelar
+        </button>
+        
+        <button type="button" class="btn btn-brand rounded-pill px-4 shadow-sm" 
+                (click)="onSubmit()" 
+                [disabled]="isSubmitting()">
+          @if (isSubmitting()) {
+            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+            Procesando...
+          } @else {
+            <i class="bi bi-check2-circle me-1"></i> Confirmar Cambio
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

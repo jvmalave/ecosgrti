@@ -39,4 +39,39 @@ class ATFAgreementController extends Controller
             'current_progress' => $requirement->progress_percentage
         ], 201);
     }
+
+    public function index(string $requirementId)
+    {
+        $agreements = $this->atfService->getAgreements($requirementId);
+
+        return response()->json([
+            'data' => $agreements
+        ], 200);
+    }
+
+    public function update(StoreAtfAgreementRequest $request, string $requirementId, string $agreementId)
+    {
+        // 1. Obtenemos los datos ya validados y limpios por el Form Request
+        $data = $request->validated();
+
+        // 2. Delegamos la lógica a la capa de Servicio
+        $this->atfService->updateAgreement($agreementId, $data);
+
+        // 3. Retornamos la respuesta HTTP
+        return response()->json([
+            'message' => 'El acuerdo técnico ha sido actualizado exitosamente.'
+        ], 200);
+    }
+
+    /**
+     * Elimina un acuerdo lógicamente (CU-014).
+     */
+    public function destroy(string $requirementId, string $agreementId)
+    {
+        $this->atfService->deleteAgreement($agreementId);
+
+        return response()->json([
+            'message' => 'El acuerdo técnico ha sido eliminado correctamente.'
+        ], 200);
+    }
 }
