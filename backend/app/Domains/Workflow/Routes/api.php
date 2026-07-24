@@ -29,23 +29,39 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
     //===== US26: Gestión de Componente Roles) ======
     // Registrar Rol 
     Route::post('/requirements/{requirementId}/roles', [RequirementRoleController::class, 'store']);
+
+    // Listar Roles de un Requerimiento
+    Route::get('/requirements/{requirementId}/components-data', [RequirementRoleController::class, 'index']);
     
     // Actualizar Rol
-    Route::put('/requirements/{requirementId}/roles/{roleId}', [RequirementRoleController::class, 'update']);
+    Route::put('/roles/{roleId}', [RequirementRoleController::class, 'update']);
+
+    // Eliminar Rol
+    Route::delete('/roles/{roleId}', [RequirementRoleController::class, 'destroy']);
 
 
     // ===== US27: Gestión de Componente Entregables  =====
     // Registrar Entregable
     Route::post('/requirements/{requirementId}/deliverables', [DeliverableController::class, 'store']);
 
+    // Listar Entregables de un Requerimiento
+    Route::get('/requirements/{requirementId}/deliverables', [DeliverableController::class, 'index']);
+
     // Actualizar Entregable
-    Route::put('/requirements/{requirementId}/deliverables/{deliverableId}', [DeliverableController::class, 'update']);
+    Route::put('/deliverables/{deliverableId}', [DeliverableController::class, 'update']);
+
+    // Eliminar Entregable
+    Route::delete('/deliverables/{deliverableId}', [DeliverableController::class, 'destroy']);
 
 
     // ====US28: Gestión de Cierre de Fase (Hard Gate)====
-    Route::get('/requirements/{requirementId}/closure-readiness', [ATFClosureController::class, 'checkReadiness']);
-
-    Route::post('/requirements/{requirementId}/close-atf', [ATFClosureController::class, 'closePhase']);
+    
+    // Verificación de Quórum
+    Route::get('/requirements/{id}/closure-readiness', [ATFClosureController::class, 'checkReadiness']);
+    
+    // Confirmación y Cierre Atómico
+    Route::post('/requirements/{id}/close-atf', [ATFClosureController::class, 'closePhase']);
+    
 
     
     // =====  Otras =====

@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import Swal from 'sweetalert2';
-import { WorkflowApiService } from '../../data-access/services/workflow-api.service';
+import { WorkflowApiService } from '../../data-access/services/atf.service';
+import { NotificationService } from '../../data-access/services/notitication.services';
 
 
 @Component({
@@ -17,6 +18,8 @@ export class UpdateManagementTypeModalComponent implements OnInit {
 
   // --- INYECCIONES ---
   private workflowApi = inject(WorkflowApiService);
+  private notificationService = inject(NotificationService);
+
 
   // --- INPUTS & OUTPUTS ---
   public requirementId = input.required<string>();
@@ -60,15 +63,8 @@ export class UpdateManagementTypeModalComponent implements OnInit {
       next: (response) => {
         this.isSubmitting.set(false);
         
-        // Disparamos alerta rápida de éxito [cite: 102]
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: 'Tipo de gestión actualizado',
-          showConfirmButton: false,
-          timer: 2500
-        });
+        // Disparamos alerta rápida de éxito
+        this.notificationService.toastSuccess('Tipo de gestión actualizado');
 
         // Emitimos los datos frescos hacia el padre para actualizar la UI reactivamente 
         this.typeUpdated.emit({
@@ -79,13 +75,7 @@ export class UpdateManagementTypeModalComponent implements OnInit {
       error: (error: HttpErrorResponse) => {
         this.isSubmitting.set(false);
         console.error('Error al actualizar tipo de gestión:', error);
-        
-        Swal.fire({
-          title: 'Acción Denegada',
-          text: error.error?.message || 'No se pudo actualizar el tipo de gestión.',
-          icon: 'error',
-          confirmButtonColor: '#d33'
-        });
+        this.notificationService.showError('Acción Denegada', error.error?.message || 'No se pudo actualizar el tipo de gestión.');
       }
     });
   }

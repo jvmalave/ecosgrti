@@ -1,33 +1,49 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Domains\Workflow\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Domains\Workflow\Models\RequirementRole;
+use Illuminate\Support\Facades\Log;
 
 class StoreRequirementRoleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // La autorización (Gatekeeper) la manejaremos en el Controlador/Middleware
+        return true; // La autorización de perfil se manejará en Middleware/Policy
     }
+
+    /**
+     * Sanitización de entradas para prevenir ataques XSS (Cross-Site Scripting).
+     * Se ejecuta antes de aplicar las reglas de validación.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'role_name' => $this->role_name ? strip_tags(trim($this->role_name)) : null,
+            'description' => $this->description ? strip_tags(trim($this->description)) : null,
+            'assignment_type' => $this->assignment_type ? trim($this->assignment_type) : null,
+        ]);
+    }
+
     public function rules(): array
     {
-        // Determinamos si es un POST (creación) o PUT (actualización)
         if ($this->isMethod('post')) {
             $requirementId = $this->route('requirementId');
             $roleId = null;
         } else {
-            // En PUT, extraemos el ID del rol de la URL (ajusta 'id' si tu parámetro se llama 'role' o 'roleId' en api.php)
-            $roleId = $this->route('roleId') ?? $this->route('id') ?? $this->route('role');
-            
-            // Buscamos el rol en base de datos para saber a qué requerimiento pertenece
+            // Actualización
+            $roleId = $this->route('roleId');
             $role = RequirementRole::find($roleId);
             $requirementId = $role ? $role->requirement_id : null;
         }
+
+        Log::info('Validando unicidad:', [
+        'role_name' => $this->role_name,
+        'requirement_id' => $requirementId,
+        'role_id' => $roleId
+    ]);
 
         return [
             'role_name' => [
@@ -35,16 +51,18 @@ class StoreRequirementRoleRequest extends FormRequest
                 'string',
                 'max:100',
                 Rule::unique(RequirementRole::class, 'role_name')
-                    ->where('requirement_id', $requirementId)
-                    ->whereNull('deleted_at')
-                    ->ignore($roleId), // Ignoramos el rol actual
-            ],
+                ->where('requirement_id', $requirementId)
+                ->whereNull('deleted_at') 
+                ->ignore($roleId, 'id'), 
+                ],
+
+            
             'description' => 'required|string|min:10|max:500',
             'assignment_type' => 'required|string|max:50',
         ];
     }
 
-    public function message(): array
+    public function messages(): array
     {
         return [
             'role_name.required' => 'El nombre del rol es obligatorio.',
@@ -52,7 +70,6 @@ class StoreRequirementRoleRequest extends FormRequest
             'description.max' => 'La descripción no puede exceder los 500 caracteres.',
             'description.min' => 'La descripción debe tener al menos 10 caracteres.',
             'assignment_type.required' => 'El tipo de asignación es obligatorio.',
-
         ];
     }
 }

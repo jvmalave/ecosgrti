@@ -16,8 +16,8 @@ return new class extends Migration
             $table->uuid('requirement_id');
             $table->string('role_name');
             $table->text('description')->nullable();
-            $table->string('assignment_type'); // Corregido de 'assignment type' a 'assignment_type'
-            $table->softDeletes(); // Requerido para la auditoría y evitar pérdida física
+            $table->string('assignment_type'); 
+            $table->softDeletes(); 
             $table->timestamps();
 
             // Llave foránea hacia el esquema core
@@ -25,6 +25,8 @@ return new class extends Migration
                   ->references('id')
                   ->on('core.requirements')
                   ->onDelete('cascade');
+
+            $table->unique(['requirement_id', 'role_name'], 'req_role_unique');
         });
     }
 

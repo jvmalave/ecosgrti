@@ -1,40 +1,78 @@
-<div class="modal-backdrop fade show" style="z-index: 1050 !important;"></div>
+<div class="modal-backdrop fade show" style="z-index: 1050 !important"></div>
 
-<div class="modal fade show d-block" tabindex="-1" style="z-index: 1060 !important;" aria-labelledby="atfListModalLabel" aria-hidden="false">
+<div
+  class="modal fade show d-block"
+  tabindex="-1"
+  style="z-index: 1060 !important"
+  aria-labelledby="atfListModalLabel"
+  aria-hidden="false"
+>
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
-      
       <div class="modal-header brand-gradient text-white px-4 py-3 border-0">
-        <h5 class="modal-title fw-bold d-flex align-items-center" id="atfListModalLabel">
+        <h5
+          class="modal-title fw-bold d-flex align-items-center"
+          id="atfListModalLabel"
+        >
           <i class="bi bi-card-checklist me-2 fs-4"></i>
           Gestión de Acuerdos Técnicos (ATF)
         </h5>
-        <button 
-          type="button" 
-          class="btn-close btn-close-white" 
+        <button
+          type="button"
+          class="btn-close btn-close-white"
           (click)="closeModal.emit()"
-          aria-label="Cerrar modal">
+          aria-label="Cerrar modal"
+        >
           <span class="visually-hidden">Cerrar</span>
         </button>
       </div>
 
       <div class="modal-body p-4 bg-light">
-
-        <div class="d-flex align-items-center mb-4">
-          <span class="text-muted fw-bold me-2 small">Tipo de Gestión:</span>
-          
-          <span class="badge rounded-pill px-3 py-2 me-2" style="background-color: #f3e8f5; color: #8e1482; border: 1px solid #8e1482;">
-            {{ currentManagementType() | titlecase }}
-          </span>
-          
-          <button class="btn btn-sm btn-outline-brand rounded-circle d-flex align-items-center justify-content-center" 
-                  style="width: 32px; height: 32px;"
-                  (click)="isUpdateTypeModalOpen.set(true)" 
-                  title="Actualizar Tipo de Gestión">
-            <i class="bi bi-pencil-fill"></i>
-          </button>
-        </div>
         
+        <!--  Banner de inmutabilida  -->
+        @if (isAtfClosed()) {
+          <div class="alert d-flex align-items-center border-0 shadow-sm rounded-3 mb-4 p-3" style="background-color: #f3e8f5; border-left: 5px solid #8e1482 !important;">
+            <i class="bi bi-shield-lock-fill fs-3 me-3" style="color: #8e1482;"></i>
+            <div>
+              <h6 class="mb-1 fw-bold" style="color: #8e1482;">Fase Análisis Técnico Funcional Completada</h6>
+              <p class="mb-0 small text-muted">Todos los componentes y acuerdos se encuentran en modo de solo lectura, garantizando su inmutabilidad.</p>
+            </div>
+          </div>
+        }
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="d-flex align-items-center">
+            <span class="text-muted fw-bold me-2 small">Requerimiento:</span>
+            <span
+              class="badge rounded-pill px-3 py-2"
+              style="background-color: #f3e8f5; color: #8e1482; border: 1px solid #8e1482;"
+            >
+              {{ requirementCode() }}
+            </span>
+          </div>
+
+          <div class="d-flex align-items-center">
+            <span class="text-muted fw-bold me-2 small">Tipo de Gestión:</span>
+            <span
+              class="badge rounded-pill px-3 py-2 me-2"
+              style="background-color: #f3e8f5; color: #8e1482; border: 1px solid #8e1482;"
+            >
+              {{ currentManagementType() | titlecase }}
+            </span>
+            <!-- Ocultamos el botón de editar tipo de gestión si la fase está cerrada -->
+            @if (!isAtfClosed()) {
+              <button
+                class="btn btn-sm btn-outline-brand rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 32px; height: 32px"
+                (click)="isUpdateTypeModalOpen.set(true)"
+                title="Actualizar Tipo de Gestión"
+              >
+                <i class="bi bi-pencil-fill"></i>
+              </button>
+            }
+          </div>
+        </div>
+
         <div class="card border-0 shadow-sm rounded-3">
           <div class="card-body p-0">
             <div class="table-responsive">
@@ -52,37 +90,48 @@
                       <td class="px-4 py-3 text-nowrap">
                         <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill px-3 py-2">
                           <i class="bi bi-calendar-event me-1"></i>
-                          {{ item.agreement_date | date:'dd/MM/yyyy' }}
+                          {{ item.agreement_date | date: 'dd/MM/yyyy' }}
                         </span>
                       </td>
-                      
+
                       <td class="px-4 py-3 text-secondary" [title]="item.description">
-                        {{ item.description.length > 20 ? (item.description | slice:0:20) + '...' : item.description }}
+                        {{
+                          item.description.length > 20
+                            ? (item.description | slice: 0 : 20) + '...'
+                            : item.description
+                        }}
                       </td>
-                      
+
                       <td class="px-4 py-3 text-end text-nowrap">
-                        <button 
-                          class="btn btn-sm btn-outline-brand rounded-pill px-3 me-2" 
-                          (click)="viewAgreement(item)" 
-                          title="Ver Detalle del Acuerdo">
+                        <button
+                          class="btn btn-sm btn-outline-brand rounded-pill px-3 me-2"
+                          (click)="viewAgreement(item)"
+                          title="Ver Detalle del Acuerdo"
+                        >
                           <i class="bi bi-eye"></i>
                         </button>
-                        @if (isAtfOpen()) {
-                          <button 
-                            class="btn btn-sm btn-outline-danger rounded-pill px-3" 
-                            (click)="deleteAgreement(item.id)" 
-                            title="Eliminar Acuerdo">
+                        <!-- Ocultamos la eliminación si la fase está cerrada -->
+                        @if (!isAtfClosed()) {
+                          <button
+                            class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                            (click)="deleteAgreement(item.id)"
+                            title="Eliminar Acuerdo"
+                          >
                             <i class="bi bi-trash"></i>
                           </button>
                         }
                       </td>
                     </tr>
-                  }@empty {
+                  } @empty {
                     <tr>
                       <td colspan="3" class="text-center py-5 text-muted bg-light">
                         <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-25"></i>
                         <span class="fw-medium">No hay acuerdos técnicos registrados.</span>
-                        <p class="small text-muted mt-1 mb-0">Haz clic en "Agregar Nuevo Acuerdo" para comenzar.</p>
+                        @if (!isAtfClosed()) {
+                          <p class="small text-muted mt-1 mb-0">
+                            Haz clic en "Agregar Acuerdo" para comenzar.
+                          </p>
+                        }
                       </td>
                     </tr>
                   }
@@ -91,21 +140,112 @@
             </div>
           </div>
         </div>
-        @if (isAtfOpen()) {
-          <div class="mt-4 pt-2 text-end border-top">
-            <button class="btn btn-brand rounded-pill px-4 shadow-sm" (click)="openCreateModal.emit()">
-              <i class="bi bi-plus-circle me-2"></i> Agregar Nuevo Acuerdo
+
+        <!-- 🚀 BLOQUE DE CONTROLES: Basado en la inmutabilidad de la fase -->
+        <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+          <div class="d-flex gap-2">
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-brand rounded-pill px-3 d-flex align-items-center"
+              [disabled]="!canManageRoles()"
+              (click)="openRolesManagement()"
+              [title]="!hasAgreements() ? 'Requiere al menos un acuerdo para habilitarse' : (isAtfClosed() ? 'Ver Roles (Solo Lectura)' : 'Gestionar Roles')"
+            >
+              <i class="bi" [ngClass]="isAtfClosed() ? 'bi-eye' : 'bi-person-badge'" class="me-2"></i> 
+              {{ isAtfClosed() ? 'Ver Roles' : 'Gestión de Roles' }}
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-brand rounded-pill px-3 d-flex align-items-center"
+              [disabled]="!canManageDeliverables()"
+              (click)="openDeliverablesManagement()"
+              [title]="!hasAgreements() ? 'Requiere al menos un acuerdo para habilitarse' : (isAtfClosed() ? 'Ver Entregables (Solo Lectura)' : 'Gestionar Entregables')"
+            >
+              <i class="bi" [ngClass]="isAtfClosed() ? 'bi-eye' : 'bi-files'" class="me-2"></i> 
+              {{ isAtfClosed() ? 'Ver Entregables' : 'Gestión de Entregables' }}
+            </button>
+          </div>
+
+          <!-- 🚀 El botón "Agregar Acuerdo" vuelve a la vida -->
+          @if (!isAtfClosed()) {
+            <div>
+              <button
+                class="btn btn-sm btn-brand rounded-pill px-3 shadow-sm d-flex align-items-center"
+                (click)="openCreateModal.emit()"
+              >
+                <i class="bi bi-plus-circle me-1"></i> Agregar Acuerdo
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- 🚀 BLOQUE HARD GATE (CIERRE DE FASE) -->
+        @if (!isAtfClosed()) {
+          <div class="mt-4 p-3 rounded-3 d-flex justify-content-between align-items-center" style="background-color: #fdfdfd; border: 1px dashed #ced4da;">
+            <div>
+              @if (!isReadyToClose()) {
+                <div class="d-flex align-items-center text-danger small">
+                  <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                  <div>
+                    <strong class="d-block">Bloqueo de Cierre Activo:</strong>
+                    <span>{{ closureReasons().join(' ') || 'Requiere al menos 1 acuerdo y 1 componente definido.' }}</span>
+                  </div>
+                </div>
+              } @else {
+                <div class="d-flex align-items-center text-success small">
+                  <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+                  <div>
+                    <strong class="d-block">Quórum Técnico Alcanzado:</strong>
+                    <span>El requerimiento está listo para finalizar el Análisis Técnico Funcional.</span>
+                  </div>
+                </div>
+              }
+            </div>
+            
+            <button
+              type="button"
+              class="btn rounded-pill px-4 shadow-sm fw-bold d-flex align-items-center"
+              [ngClass]="isReadyToClose() ? 'btn-brand' : 'btn-secondary opacity-50'"
+              [disabled]="!isReadyToClose()"
+              (click)="confirmClosure()"
+            >
+              <i class="bi" [ngClass]="isReadyToClose() ? 'bi-door-open-fill' : 'bi-lock-fill'" class="me-2"></i> 
+              Cerrar Fase Análisis Técnico Funcional
             </button>
           </div>
         }
+
+        <!-- Modales secundarios -->
         @if (isUpdateTypeModalOpen()) {
           <lib-update-management-type-modal
             [requirementId]="requirementId()"
-            [currentType]="currentManagementType()" (closeModal)="isUpdateTypeModalOpen.set(false)"
-            (typeUpdated)="onTypeUpdated($event)">
+            [currentType]="currentManagementType()"
+            (closeModal)="isUpdateTypeModalOpen.set(false)"
+            (typeUpdated)="onTypeUpdated($event)"
+          >
           </lib-update-management-type-modal>
         }
 
+        @if (isRolesListOpen()) {
+          <lib-atf-roles-list
+            [requirementId]="requirementId()"
+            [requirementName]="requirementCode()"
+            [isPhaseClosed]="isAtfClosed()"
+            (closeList)="isRolesListOpen.set(false)"
+          >
+          </lib-atf-roles-list>
+        }
+
+        @if (isDeliverablesListOpen()) {
+          <lib-atf-deliverables-list-modal
+            [requirementId]="requirementId()"
+            [requirementNumber]="requirementCode()"
+            [isPhaseClosed]="isAtfClosed()"
+            (volver)="isDeliverablesListOpen.set(false)"
+          >
+          </lib-atf-deliverables-list-modal>
+        }
       </div>
     </div>
   </div>

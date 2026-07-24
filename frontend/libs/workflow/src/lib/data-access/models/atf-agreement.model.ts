@@ -30,3 +30,15 @@ export interface UpdateManagementTypeResponse {
   tipo_gestion: string;
   progreso_global: number;
 }
+
+export interface ClosureReadinessResponse {
+  ready: boolean;
+  already_closed?: boolean;
+  reasons?: string[];
+}
+
+export interface ClosureResponse {
+  status: string;
+  message: string;
+  data?: unknown; // Opcional, si deseas mapear la data del requerimiento retornado
+}

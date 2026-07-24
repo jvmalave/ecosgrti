@@ -1,4 +1,4 @@
-// Ruta recomendada: frontend/libs/core/src/lib/feature/progress-dashboard/progress-dashboard.component.ts
+
 
 import { Component, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -14,7 +14,27 @@ export class ProgressDashboardComponent {
   
   // 1. Entradas (Inputs) reactivas usando Signals para el avance global
   public globalProgress = input.required<number>();
-  public globalStatus = input<string>('Requerimiento Registrado');
+  public globalStatus = input<string>('PL');
+
+
+  // Definición del diccionario de datos centralizado
+  public readonly statusDictionary: Record<string, string> = {
+    'RC': 'Requerimiento Creado',
+    'ES-R': 'Estimación Creada',
+    'ATF-I': 'ATF Iniciado',
+    'ATF-C': 'ATF Cerrado',
+    'REQ_CLOSED': 'Requerimiento Cerrado',
+    // Aquí puedes ir agregando futuros estados del ciclo de vida
+  };
+
+  // Getter para resolver el nombre del estado dinámicamente en la vista
+  get currentStatusName(): string {
+    const statusCode = this.globalStatus(); 
+    return this.statusDictionary[statusCode] || 'Estado Desconocido';
+  }
+
+
+
 
   // 2. Lógica del semáforo visual (Computed Signals)
   

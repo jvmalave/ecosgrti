@@ -1,10 +1,10 @@
 import { Component, inject, input, output, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { WorkflowApiService } from '../../data-access/services/workflow-api.service';
+import { WorkflowApiService } from '../../data-access/services/atf.service';
 import { AtfAgreementPayload, AtfAgreementResponse, AtfAgreementDetail } from '../../data-access/models/atf-agreement.model';
-import Swal, { SweetAlertIcon } from 'sweetalert2';
 import { HttpErrorResponse } from '@angular/common/http';
+import { NotificationService } from '../../data-access/services/notitication.services';
 
 @Component({
   selector: 'lib-atf-agreements-modal',
@@ -20,6 +20,7 @@ export class AtfAgreementsModalComponent implements OnInit {
 
   // Entradas y Salidas (Signals API)
   public requirementId = input.required<string>();
+  public requirementCreationDate = input.required<string>();
   public initialMode = input<'create' | 'view'>('create'); 
   // La data del acuerdo (si estamos en modo view)
   public agreementData = input<AtfAgreementDetail | null>(null);
@@ -38,7 +39,13 @@ export class AtfAgreementsModalComponent implements OnInit {
     description: ['', [Validators.required, Validators.minLength(10)]]
   });
 
+  private notificationService = inject(NotificationService);
+
+  public maxDateAllowed = '';
+
   ngOnInit(): void {
+    const tzOffset = (new Date()).getTimezoneOffset() * 60000;
+    this.maxDateAllowed = (new Date(Date.now() - tzOffset)).toISOString().split('T')[0];
     // Inicializamos el modo actual basado en el input
     this.currentMode.set(this.initialMode());
 
@@ -64,19 +71,6 @@ export class AtfAgreementsModalComponent implements OnInit {
     this.currentMode.set('edit');
     this.agreementForm.enable();
   }
-
-  private showNotification(icon: SweetAlertIcon, title: string, html: string, showCancel = false) {
-    return Swal.fire({
-      icon,
-      title,
-      html,
-      showCancelButton: showCancel,
-      confirmButtonText: showCancel ? 'Sí, continuar' : 'Aceptar',
-      cancelButtonText: 'No, regresar',
-      confirmButtonColor: '#d500f9'
-    });
-  }
-
 
 
   /**
@@ -132,20 +126,11 @@ export class AtfAgreementsModalComponent implements OnInit {
         // Títulos dinámicos según la acción
         const successTitle = this.currentMode() === 'edit' ? '¡Acuerdo Actualizado!' : '¡Acuerdo Registrado!';
         
-        // Control de Flujo: Mostramos el mensaje y ESPERAMOS
-        Swal.fire({
-          title: successTitle,
-          text: response.message ?? 'La operación se realizó con éxito.',
-          icon: 'success',
-          confirmButtonColor: '#0056b3',
-          confirmButtonText: 'Continuar'
-        }).then((result) => {
-          if (result.isConfirmed || result.isDismissed) {
-            this.workflowApi.refreshDashboard$.next(); 
-            this.agreementSaved.emit(); 
-            this.closeModal.emit();
-          }
-        });
+        // Disparamos notificación dexito
+        this.notificationService.showSuccess(successTitle, response.message ?? 'La operación se realizó con éxito.');
+      
+
+        
       },
       error: (error: HttpErrorResponse) => {
         console.error('Error al guardar el acuerdo ATF:', error);
@@ -153,12 +138,13 @@ export class AtfAgreementsModalComponent implements OnInit {
 
         const errorMsg = error.error?.message || 'Ocurrió un problema al intentar procesar el acuerdo. Verifique su conexión.';
 
-        Swal.fire({
-          title: 'Error de Procesamiento',
-          text: errorMsg,
-          icon: 'error',
-          confirmButtonColor: '#d33'
-        });
+        // Swal.fire({
+        //   title: 'Error de Procesamiento',
+        //   text: errorMsg,
+        //   icon: 'error',
+        //   confirmButtonColor: '#d33'
+        // });
+        this.notificationService.showError('Error de Procesamiento', errorMsg);
       }
     });
   }

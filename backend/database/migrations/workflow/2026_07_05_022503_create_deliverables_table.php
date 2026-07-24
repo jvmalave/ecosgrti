@@ -24,6 +24,8 @@ return new class extends Migration
                   ->references('id')
                   ->on('core.requirements')
                   ->onDelete('cascade');
+
+            $table->unique(['requirement_id', 'name'], 'req_deliverable_unique');
         });
     }
 

@@ -11,17 +11,38 @@ use App\Domains\Workflow\Models\Deliverable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\ValidationException;
-
+use Illuminate\Support\Str;
+use App\Domains\Workflow\Services\ProgressCalculationService;
+use App\Domains\Audit\Services\AuditService; 
 
 class ATFClosureService
 {
+    public function __construct(
+        private ProgressCalculationService $progressService,
+        private AuditService $auditService 
+    ) {}
+
     /**
-     * T28.1: FASE 1 - Verificación de Quórum
+     * FASE 1 - Verificación de Quórum e Idempotencia
      */
     public function checkClosureReadiness(string $requirementId): array
     {
-        $reasons = [];
+        // 🚀 1. NUEVO: Verificación de Idempotencia (Bloqueo de doble ejecución)
+        $isAlreadyClosed = DB::table('workflow.requirement_phase_history')
+            ->where('requirement_id', $requirementId)
+            ->where('phase_status_code', 'ATF-C')
+            ->exists();
 
+        if ($isAlreadyClosed) {
+            return [
+                'ready'          => false,
+                'already_closed' => true,
+                'reasons'        => ['La fase Análisis Técnico Funcional ya fue cerrada y sellada previamente.']
+            ];
+        }
+
+        // 2. Verificación de Quórum
+        $reasons = [];
         $agreementsCount = AtfAgreement::where('requirement_id', $requirementId)->count();
         $rolesCount = RequirementRole::where('requirement_id', $requirementId)->count();
         $deliverablesCount = Deliverable::where('requirement_id', $requirementId)->count();
@@ -30,25 +51,29 @@ class ATFClosureService
             $reasons[] = 'Se requiere al menos un (1) Acuerdo firmado.';
         }
 
-        // Regla: Si gestión mixta, ambos. Si es Roles/Entregables, al menos uno del tipo.
-        // Aquí asumimos validación general según tu diagrama.
         if ($rolesCount < 1 && $deliverablesCount < 1) {
             $reasons[] = 'Se requiere definir al menos un (1) componente técnico (Rol o Entregable).';
         }
 
         return [
-            'ready'   => empty($reasons),
-            'reasons' => $reasons,
+            'ready'          => empty($reasons),
+            'already_closed' => false,
+            'reasons'        => $reasons,
         ];
     }
 
     /**
-     * T28.2: FASE 2 - Cierre Atómico
+     * FASE 2 - Cierre Atómico con Máquina de Estados
      */
     public function executeClosure(string $requirementId, string $userId): Requirement
     {
-        // 1. Gatekeeper: Validar quórum
         $readiness = $this->checkClosureReadiness($requirementId);
+        
+        // 🚀 NUEVO: Bloqueo estricto del Endpoint si alguien intenta forzar la petición
+        if ($readiness['already_closed']) {
+            throw ValidationException::withMessages(['status' => $readiness['reasons']]);
+        }
+
         if (!$readiness['ready']) {
             throw ValidationException::withMessages(['quorum' => $readiness['reasons']]);
         }
@@ -56,20 +81,43 @@ class ATFClosureService
         return DB::transaction(function () use ($requirementId, $userId) {
             $requirement = Requirement::lockForUpdate()->findOrFail($requirementId);
 
-            // 2. Transacción de Cierre
+            // 1. Registro inmutable en el historial
+            DB::table('workflow.requirement_phase_history')->insert([
+                'id'                  => (string) Str::uuid(),
+                'requirement_id'      => $requirementId,
+                'phase_status_code'   => 'ATF-C',
+                'transitioned_at'     => now(),
+                'executed_by_user_id' => $userId,
+                'created_at'          => now(),
+                'updated_at'          => now(),
+            ]);
+
+            // 2. Actualización del Estado Maestro
+            $requirement->update(['status' => 'ATF-C']);
+
+            // 3. Auditoría Forense centralizada
+            $this->auditService->logModelChange(
+                'ATF_PHASE_CLOSE', 
+                'Cierre atómico de la Fase Análisis Técnico Funcional', 
+                [
+                    'requirement_id' => $requirementId,
+                    'user_id'        => $userId,
+                    'record_id'      => $requirementId
+                ],
+                $userId,
+                $requirementId
+            );
+
+            // 4. Limpieza de Caché
+            Redis::del(["atf_cache_{$requirementId}", "atf_components_{$requirementId}"]);
+
+            // 5. Recálculo y percistencia del Avance Global
+
+            $calculatedProgress = $this->progressService->calculateGlobalProgress($requirement);
+
             $requirement->update([
-                'phase_actual' => 'ATF_COMPLETED',
-                'status_atf'   => 'CLOSED',
-                'is_locked'    => true, 
+                'progress_percentage' => $calculatedProgress
             ]);
-
-            // 3. Auditoría y Caché
-            DB::table('audit.workflow_logs')->insert([
-                'action' => 'ATF_PHASE_CLOSE', 'user_id' => $userId, 
-                'requirement_id' => $requirementId, 'timestamp' => now()
-            ]);
-
-            Redis::del("atf_cache_{$requirementId}", "atf_components_{$requirementId}");
 
             return $requirement;
         });

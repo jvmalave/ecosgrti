@@ -96,6 +96,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'security,core,catalogs,workflow,audit,ia,public',
+            'schema' => ['public', 'workflow', 'security', 'catalogs', 'audit'],
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 

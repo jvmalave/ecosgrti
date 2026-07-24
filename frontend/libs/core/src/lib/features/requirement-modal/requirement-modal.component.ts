@@ -240,9 +240,9 @@ export class RequirementModalComponent implements OnInit, OnDestroy {
 public enableEditing(): void {
     const req = this.currentRequirement();
     
-    // FAILSAFE HARD GATE: Abortamos la edición si está sellado o no está en fase 'PL'
-    if (req?.is_locked || req?.status !== 'PL') {
-      console.warn('Operación denegada: El requerimiento está sellado o fuera de fase PL.');
+    // FAILSAFE HARD GATE: Abortamos la edición si está sellado o no está en fase 'RC'
+    if (req?.is_locked || req?.status !== 'RC') {
+      console.warn('Operación denegada: El requerimiento está sellado o fuera de fase RC.');
       return; 
     }
 
@@ -343,7 +343,7 @@ public enableEditing(): void {
   onCspeChange(cspeId: string, event: Event): void {
     const isChecked = (event.target as HTMLInputElement).checked;
     
-    // 🟢 FIX 2: Extracción segura. Si es undefined, usamos un arreglo vacío []
+    // Extracción segura. Si es undefined, usamos un arreglo vacío []
     const safeValues = this.editForm.get('cspe_consultants')?.value || [];
     const currentCspe = [...safeValues];
 

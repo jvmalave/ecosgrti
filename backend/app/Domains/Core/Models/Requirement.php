@@ -43,6 +43,7 @@ class Requirement extends Model
       'snapshot_society_name',
       'snapshot_system_name',
       'snapshot_unit_name',
+      'progress_percentage'
     ];
 
 

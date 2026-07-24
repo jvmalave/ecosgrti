@@ -13,7 +13,7 @@ class AuthService
 
     /**
      * Verifica si el usuario está bloqueado en Redis.
-     * (Paso 16 del Diagrama)
+     * 
      */
     public function isLockedOut(string $email): bool
     {
@@ -23,7 +23,7 @@ class AuthService
 
     /**
      * Incrementa el contador de fallos.
-     * (Paso 24 del Diagrama)
+     * 
      */
     public function incrementAttempts(string $email): int
     {
@@ -37,7 +37,7 @@ class AuthService
 
     /**
      * Limpia los intentos tras un login exitoso.
-     * (Paso 27 del Diagrama)
+     * 
      */
     public function resetAttempts(string $email): void
     {

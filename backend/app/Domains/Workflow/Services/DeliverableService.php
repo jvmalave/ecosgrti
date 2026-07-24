@@ -5,63 +5,115 @@ declare(strict_types=1);
 namespace App\Domains\Workflow\Services;
 
 use App\Domains\Workflow\Models\Deliverable;
+use App\Domains\Audit\Services\AuditService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Cache;
+
 
 class DeliverableService
 {
+    public function __construct(
+        private readonly AuditService $auditService
+    ) {}
+
     /**
-     * FASE 2: Escritura y Unicidad (CU-023)
+     * Obtiene entregables con caché (CU-022)
+     */
+    
+
+    public function getDeliverablesByRequirement(string $requirementId): array
+    {
+        $cacheKey = $this->getCacheKey($requirementId);
+
+        // Utilizamos ->toArray() para asegurar que guardamos un array plano y no un objeto Eloquent
+        return Cache::remember($cacheKey, 3600, function () use ($requirementId) {
+            return Deliverable::where('requirement_id', $requirementId)->get()->toArray();
+        });
+    }
+
+    /**
+     * Registra un nuevo entregable con auditoría y limpieza de caché (CU-023)
      */
     public function createDeliverable(string $requirementId, array $validatedData, string $userId): Deliverable
     {
         return DB::transaction(function () use ($requirementId, $validatedData, $userId) {
-            // 1. Inserción Atómica
             $deliverable = Deliverable::create(array_merge(
                 $validatedData,
                 ['requirement_id' => $requirementId]
             ));
 
-            // 2. Registro de Auditoría
-            Log::channel('audit')->info('Acción: CREATE_COMP', [
-                'Action'  => 'CREATE_COMP',
-                'User'    => $userId,
-                'Payload' => $validatedData
-            ]);
+            $this->auditService->logModelChange(
+                'CREATE_DELIVERABLE',
+                'Creación de entregable: ' . ($validatedData['name'] ?? 'N/A'),
+                $validatedData,
+                $userId,
+                $deliverable->id
+            );
 
-            // 3. Saneamiento de caché local de componentes
-            Redis::del("atf_components_{$requirementId}");
+            $this->invalidateCache($requirementId);
 
             return $deliverable;
         });
     }
 
     /**
-     * FASE 4: Actualizar Registro (CU-025)
+     * Actualiza un entregable con auditoría (CU-025)
      */
     public function updateDeliverable(Deliverable $deliverable, array $validatedData, string $userId): Deliverable
     {
         return DB::transaction(function () use ($deliverable, $validatedData, $userId) {
-            // Calculamos el delta para la auditoría
-            $deltas = array_diff_assoc($validatedData, $deliverable->toArray());
-
-            // 1. Actualización Atómica
+            $oldValues = $deliverable->toArray();
             $deliverable->update($validatedData);
+            
+            $this->auditService->logModelChange(
+                'UPDATE_DELIVERABLE',
+                "Actualización del entregable: {$deliverable->id}",
+                ['old' => $oldValues, 'new' => $validatedData],
+                $userId,
+                $deliverable->id
+            );
 
-            // 2. Registro de Auditoría con Deltas (JSONB conceptual)
-            if (!empty($deltas)) {
-                Log::channel('audit')->info('Acción: UPDATE_COMP', [
-                    'Action' => 'UPDATE_COMP',
-                    'User'   => $userId,
-                    'Deltas' => $deltas
-                ]);
-            }
-
-            // 3. Saneamiento de caché local
-            Redis::del("atf_components_{$deliverable->requirement_id}");
+            $this->invalidateCache($deliverable->requirement_id);
 
             return $deliverable;
         });
+    }
+
+    public function deleteDeliverable(string $id): bool
+    {
+        return DB::connection('pgsql')->transaction(function () use ($id) {
+            $deliverable = Deliverable::findOrFail($id);
+            $data = $deliverable->toArray();
+            $requirementId = $deliverable->requirement_id;
+
+            $deleted = $deliverable->delete(); // Soft delete automático
+
+            if ($deleted) {
+                $this->auditService->logModelChange(
+                    'DELETE DELIVERABLE', 
+                    'Eliminación del entregable: ' . $data['name'], 
+                    [
+                        'record_id'      => $id,
+                        'user_id'        => request()->user()?->id,
+                        'old_values'     => $data,
+                        'requirement_id' => $requirementId
+                    ]
+                );
+                // Limpieza de caché específica del requerimiento
+                $cacheKey = $this->getCacheKey($requirementId);
+                Cache::forget($cacheKey);
+            }
+            return $deleted;
+        });
+    }
+
+    protected function getCacheKey(string $requirementId): string 
+    {
+        return "deliverables_req_{$requirementId}";
+    }
+
+    protected function invalidateCache(string $requirementId): void
+    {
+        Cache::forget($this->getCacheKey($requirementId));
     }
 }

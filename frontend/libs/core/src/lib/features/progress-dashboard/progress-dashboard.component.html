@@ -24,8 +24,9 @@
     <!-- Leyenda inferior: Estado global actual -->
     <div class="mt-2 text-end">
       <small class="text-muted fw-semibold">
-        Estado:
-        <span class="text-uppercase text-dark">{{ globalStatus() }}</span>
+        <span class="text-uppercase badge bg-light text-dark border">
+      {{ currentStatusName }}
+    </span>
       </small>
     </div>
   </div>
