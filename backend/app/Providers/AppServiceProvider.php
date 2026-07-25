@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
             database_path('migrations/catalogs'),
             database_path('migrations/core'),
             database_path('migrations/audit'),
+            database_path('migrations/workflow'),
         ]);
     }
 }

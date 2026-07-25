@@ -1,4 +1,4 @@
-<div class="container py-4 d-flex justify-content-center">
+<!-- <div class="container py-4 d-flex justify-content-center">
   <div class="w-100" style="max-width: 950px">
     <div class="d-flex justify-content-start mb-3">
       <button
@@ -15,9 +15,23 @@
       >
         <h5 class="mb-0 fw-bold d-flex align-items-center">
           <i class="bi bi-calendar-range me-2 fs-4"></i>
-          Estimación del Requerimiento: {{ requirementRrti() }}
+          Estimación del Requerimiento
         </h5>
       </div>
+
+      <div class="d-flex align-items-center mt-3 ps-4">
+      <span class="text-muted fw-bold me-2 small">Requerimiento:</span>
+      <span
+        class="badge rounded-pill px-3 py-2"
+        style="
+          background-color: #f3e8f5;
+          color: #8e1482;
+          border: 1px solid #8e1482;
+        "
+      >
+        {{ requirementRrti() }}
+      </span>
+    </div>
 
       <div class="card-body bg-white p-4">
         @if (isLoadingData()) {
@@ -161,7 +175,7 @@
               >
                 <button
                   type="button"
-                  class="btn btn-outline-brand px-4 rounded-pill"
+                  class="btn btn-sm btn-outline-brand px-4 rounded-pill"
                   (click)="onSaveDraft()"
                   [disabled]="estimationForm.invalid || isSubmitting()"
                 >
@@ -171,7 +185,7 @@
                 @if (hasSavedData()) {
                   <button
                     type="button"
-                    class="btn btn-brand px-4 rounded-pill shadow-sm"
+                    class="btn btn-sm btn-brand px-4 rounded-pill shadow-sm"
                     (click)="onConfirmClosePhase()"
                     [disabled]="estimationForm.invalid || isSubmitting()"
                   >
@@ -181,6 +195,238 @@
                 }
               </div>
             }
+          </form>
+        }
+      </div>
+    </div>
+  </div>
+</div> -->
+
+<div class="modal-backdrop fade show" style="z-index: 1050 !important"></div>
+
+<div
+  class="modal fade show d-block"
+  tabindex="-1"
+  style="z-index: 1060 !important"
+  aria-modal="true"
+  role="dialog"
+>
+  <!-- Utilizamos modal-xl para dar suficiente espacio horizontal a la tabla de estimaciones -->
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content shadow-lg border-0 estimation-card">
+      <!-- Cabecera del Modal -->
+      <div
+        class="modal-header brand-gradient text-white pt-3 pb-3 border-bottom-0"
+      >
+        <h5 class="mb-0 fw-bold d-flex align-items-center">
+          <i class="bi bi-calendar-range me-2 fs-4"></i>
+          Estimación del Requerimiento
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white shadow-none"
+          aria-label="Cerrar"
+          (click)="closeModal.emit()"
+        ></button>
+      </div>
+
+      <div class="modal-body bg-white p-4">
+        <!-- Banner del Requerimiento -->
+        <div class="d-flex align-items-center mb-4">
+          <span class="text-muted fw-bold me-2 small">Requerimiento:</span>
+          <span
+            class="badge rounded-pill px-3 py-2"
+            style="
+              background-color: #f3e8f5;
+              color: #8e1482;
+              border: 1px solid #8e1482;
+            "
+          >
+            {{ requirementCode() }}
+          </span>
+        </div>
+
+        @if (isLoadingData()) {
+          <div
+            class="d-flex justify-content-center align-items-center py-5 text-brand"
+          >
+            <div class="spinner-border me-2" role="status"></div>
+            <span class="fw-semibold">Cargando datos del requerimiento...</span>
+          </div>
+        } @else {
+          @if (isLocked()) {
+            <div
+              class="alert alert-warning border-start border-4 border-warning shadow-sm mb-4"
+              role="alert"
+            >
+              <div class="d-flex align-items-center">
+                <i class="bi bi-lock-fill fs-4 me-3 text-warning"></i>
+                <div>
+                  <h6 class="alert-heading mb-1 fw-bold">
+                    Fase de Planificación Cerrada
+                  </h6>
+                  <p class="mb-0 small">
+                    Los datos mostrados son de solo lectura.
+                  </p>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <p class="text-muted small mb-4">
+              Complete las fechas de inicio, fin y horas estimadas. Puede
+              guardar un borrador o cerrar la fase para avanzar.
+            </p>
+          }
+
+          <form [formGroup]="estimationForm">
+            <div formArrayName="phases">
+              @for (phaseControl of phases.controls; track $index) {
+                <div
+                  [formGroupName]="$index"
+                  class="row g-3 align-items-center mb-3 pb-3 border-bottom border-light phase-row"
+                >
+                  <!-- Nombre de la Fase -->
+                  <div class="col-md-3">
+                    <span class="d-block fw-bold mb-0 text-dark">
+                      {{ getPhaseLabel(phaseControl.get('phase_name')?.value) }}
+                    </span>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label
+                      [for]="'start_date_' + $index"
+                      class="form-label small text-muted mb-1 fw-semibold"
+                    >
+                      Fecha Inicio
+                    </label>
+                    @if (isLocked()) {
+                      <input
+                        [id]="'start_date_' + $index"
+                        type="text"
+                        class="form-control form-control-sm input-locked"
+                        [value]="
+                          phaseControl.get('start_date')?.value
+                            | date: 'dd-MM-yyyy'
+                        "
+                        disabled
+                      />
+                    } @else {
+                      <input
+                        [id]="'start_date_' + $index"
+                        type="date"
+                        class="form-control form-control-sm"
+                        formControlName="start_date"
+                        [min]="requirementCreationDate()"
+                        [class.is-invalid]="
+                          phaseControl.get('start_date')?.invalid &&
+                          phaseControl.get('start_date')?.touched
+                        "
+                      />
+                    }
+                  </div>
+
+                  <!-- Fecha Fin -->
+                  <div class="col-md-3">
+                    <label
+                      [for]="'end_date_' + $index"
+                      class="form-label small text-muted mb-1 fw-semibold"
+                    >
+                      Fecha Fin
+                    </label>
+                    @if (isLocked()) {
+                      <input
+                        [id]="'end_date_' + $index"
+                        type="text"
+                        class="form-control form-control-sm input-locked"
+                        [value]="
+                          phaseControl.get('end_date')?.value
+                            | date: 'dd-MM-yyyy'
+                        "
+                        disabled
+                      />
+                    } @else {
+                      <input
+                        [id]="'end_date_' + $index"
+                        type="date"
+                        class="form-control form-control-sm"
+                        formControlName="end_date"
+                        [min]="
+                          phaseControl.get('start_date')?.value ||
+                          requirementCreationDate()
+                        "
+                        [class.is-invalid]="
+                          phaseControl.get('end_date')?.invalid &&
+                          phaseControl.get('end_date')?.touched
+                        "
+                      />
+                    }
+                  </div>
+
+                  <!-- Horas Estimadas -->
+                  <div class="col-md-3">
+                    <label
+                      [for]="'estimated_hours_' + $index"
+                      class="form-label small text-muted mb-1 fw-semibold"
+                    >
+                      Horas Est.
+                    </label>
+                    <div class="input-group input-group-sm">
+                      <input
+                        [id]="'estimated_hours_' + $index"
+                        type="number"
+                        class="form-control"
+                        formControlName="estimated_hours"
+                        min="0"
+                        [class.input-locked]="isLocked()"
+                        [class.is-invalid]="
+                          phaseControl.get('estimated_hours')?.invalid &&
+                          phaseControl.get('estimated_hours')?.touched
+                        "
+                      />
+                      <span
+                        class="input-group-text"
+                        [class.bg-light]="!isLocked()"
+                        >hrs</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Controles Inferiores -->
+            <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary px-4 rounded-pill"
+                (click)="closeModal.emit()"
+              >
+                <i class="bi bi-x-circle me-1"></i> Cancelar
+              </button>
+
+              @if (!isLocked()) {
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-brand px-4 rounded-pill"
+                  (click)="onSaveDraft()"
+                  [disabled]="estimationForm.invalid || isSubmitting()"
+                >
+                  <i class="bi bi-save me-1"></i> Guardar Borrador
+                </button>
+
+                @if (hasSavedData()) {
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-brand px-4 rounded-pill shadow-sm"
+                    (click)="onConfirmClosePhase()"
+                    [disabled]="estimationForm.invalid || isSubmitting()"
+                  >
+                    <i class="bi bi-check-circle-fill me-1"></i> Confirmar y
+                    Cerrar Fase
+                  </button>
+                }
+              }
+            </div>
           </form>
         }
       </div>

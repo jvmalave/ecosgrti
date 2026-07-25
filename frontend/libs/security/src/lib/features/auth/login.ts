@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms'; // Importar las herramientas de formularios
-import { AuthService} from '@ecosgrti/security/data-access'
+import { AuthService} from '../../data-access/services/auth.service'
 import { Router } from '@angular/router';
-import { UserSession } from '@ecosgrti/security/data-access';
-import { AlertService } from '@ecosgrti/security/data-access';
+import { UserSession } from '../../data-access/models/auth.model';
+import { AlertService } from '../../data-access/services/alert.service';
 
 @Component({
-  selector: 'app-login',
+  selector: 'lib-login',
   standalone: true,
   imports: [
     CommonModule, 

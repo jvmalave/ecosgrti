@@ -58,6 +58,12 @@ $text-white: #ffffff;
 } 
 .btn-outline-brand { 
   border-color: #d500f9; color: #d500f9; 
+  transition: all 0.3s ease; 
+} 
+.btn-outline-brand:hover { 
+  background: #d500f9; color: white; 
+  box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4); 
+  transform: translateY(-1px);
 }
 
 
@@ -130,5 +136,9 @@ $text-white: #ffffff;
 .btn-outline-brand:hover .custom-icon {
   transform: scale(1.1);
   transition: transform 0.2s ease-in-out;
+}
+
+button:disabled {
+  cursor: not-allowed !important;
 }
 

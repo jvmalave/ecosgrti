@@ -1,0 +1,153 @@
+<div class="modal-backdrop fade show" style="z-index: 1070 !important"></div>
+
+<div
+  class="modal fade show d-block"
+  tabindex="-1"
+  style="z-index: 1080 !important"
+  aria-labelledby="deliverablesListModalLabel"
+  aria-hidden="false"
+>
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+      
+      <!-- Encabezado Modal con gradiente corporativo -->
+      <div class="modal-header brand-gradient text-white px-4 py-3 border-0">
+        <h5 class="modal-title fw-bold d-flex align-items-center" id="deliverablesListModalLabel">
+          <i class="bi bi-file-earmark-text me-2 fs-4"></i>
+          Gestión de Entregables
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          (click)=handleClose()
+          aria-label="Cerrar modal"
+        ></button>
+      </div>
+
+      <div class="modal-body p-4 bg-light">
+        
+        <!-- Indicador de Requerimiento -->
+        <div class="d-flex align-items-center mb-4">
+          <span class="text-muted fw-bold me-2 small">Requerimiento:</span>
+          <span
+            class="badge rounded-pill px-3 py-2 me-2"
+            style="background-color: #f3e8f5; color: #8e1482; border: 1px solid #8e1482;"
+          >
+            {{ requirementNumber() }}
+          </span>
+        </div>
+
+        <!-- Barra de Búsqueda y Botones de Acción -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="input-group shadow-sm" style="max-width: 350px;">
+            <span class="input-group-text bg-white border-end-0 rounded-start-pill text-muted">
+              <i class="bi bi-search"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control border-start-0 rounded-end-pill ps-0" 
+              placeholder="Buscar entregable por nombre..."
+              [ngModel]="searchTerm()"
+              (ngModelChange)="updateSearch($event)"
+              [disabled]="deliverables().length === 0"
+            >
+          </div>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-4 shadow-sm fw-medium d-flex align-items-center" (click)=handleClose()>
+              <i class="bi bi-arrow-left me-2"></i> Volver
+            </button>
+            @if (!isPhaseClosed()) {
+              <button class="btn btn-sm btn-brand rounded-pill px-4 shadow-sm fw-medium d-flex align-items-center" (click)="openCreateModal()">
+                <i class="bi bi-plus-circle me-2"></i> Agregar Entregable
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Tabla de Entregables -->
+        <div class="card border-0 shadow-sm rounded-3">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="px-4 py-3 text-muted fw-bold small text-uppercase">Nombre del Entregable</th>
+                    <th class="px-4 py-3 text-muted fw-bold small text-uppercase">Descripción</th>
+                    <th class="px-4 py-3 text-end text-muted fw-bold small text-uppercase">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+                  @if (isLoading()) {
+                    <tr>
+                      <td colspan="3" class="text-center py-5">
+                        <div class="spinner-border" style="color: #d500f9;" role="status"></div>
+                        <p class="mt-2 text-muted mb-0">Cargando entregables...</p>
+                      </td>
+                    </tr>
+                  } 
+                  @else if (filteredDeliverables().length > 0) {
+                    @for (deliverable of filteredDeliverables(); track deliverable.id) {
+                      <tr>
+                        <td class="px-4 py-3 fw-medium text-dark">{{ deliverable.name }}</td>
+                        <td class="px-4 py-3 text-secondary" [title]="deliverable.description">
+                          {{ deliverable.description.length > 50 ? (deliverable.description | slice:0:50) + '...' : deliverable.description }}
+                        </td>
+                        <td class="px-4 py-3 text-end text-nowrap">
+                          <button 
+                            class="btn btn-sm btn-outline-brand rounded-pill px-3 me-2" 
+                            (click)="openViewModal(deliverable)"
+                            title="Ver / Actualizar Detalle"
+                          >
+                            <i class="bi bi-eye"></i>
+                          </button>
+
+                          @if (!isPhaseClosed()) {
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" 
+                              title="Eliminar Rol" 
+                              (click)="onDelete(deliverable)">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                            }
+                        </td>
+                      </tr>
+                    }
+                  } 
+                  @else {
+                    <tr>
+                      <td colspan="3" class="text-center py-5 text-muted bg-light">
+                        <i class="bi bi-folder-x fs-1 d-block mb-3 text-secondary opacity-25"></i>
+                        @if (searchTerm()) {
+                          <span class="fw-medium">El entregable no existe en este requerimiento.</span>
+                        } @else {
+                          <span class="fw-medium">No hay entregables involucrados en este requerimiento.</span>
+                          @if (!isPhaseClosed()) {
+                            <p class="small text-muted mt-1 mb-0">Si requiere registrar un entregable presiona el botón "Agregar Entregable".</p>
+                          }
+                        }
+                      </td>
+                    </tr>
+                  }
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Formulario de Creación/Edición -->
+@if (isModalOpen()) {
+  <lib-atf-deliverable-form-modal
+    [requirementId]="requirementId()"
+    [isPhaseClosed]="isPhaseClosed()"
+    [deliverableToEdit]="selectedDeliverable()"
+    (closeModal)="closeModal()"
+    (deliverableSaved)="onDeliverableSaved()">
+  </lib-atf-deliverable-form-modal>
+}

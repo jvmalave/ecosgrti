@@ -1,59 +1,349 @@
-import { Component, inject, input, signal, OnInit } from '@angular/core';
+// import { Component, inject, input, signal, OnInit } from '@angular/core';
+// import { CommonModule } from '@angular/common';
+// import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+// import { Router } from '@angular/router';
+// import { EstimationService } from '../../data-access/services/estimation';
+// import { EstimationPayload, SavedEstimatedPhase } from '../../data-access/models/requirement.model';
+// import { NotificationService } from '@app/workflow';
+// import { switchMap } from 'rxjs/operators';
+
+// @Component({
+//   selector: 'lib-estimation-form',
+//   standalone: true,
+//   imports: [CommonModule, ReactiveFormsModule],
+//   templateUrl: './estimation-form.component.html',
+//   styleUrls: ['./estimation-form.component.scss']
+// })
+// export class EstimationFormComponent implements OnInit {
+
+//   private fb = inject(FormBuilder);
+//   private estimationService = inject(EstimationService);
+//   private router = inject(Router);
+//   private notificationService = inject(NotificationService); 
+
+//   requirementId = input.required<string>();
+//   justification = input.required<string>();
+
+//   requirementRrti = signal<string>('Cargando...'); 
+//   isLocked = signal<boolean>(false);               
+//   isLoadingData = signal<boolean>(true);           
+
+//   isSubmitting = signal<boolean>(false);
+//   hasSavedData = signal<boolean>(false); 
+
+//   private defaultPhases = ['ATF', 'DISENO', 'CONSTRUCCION', 'PRUEBAS', 'CERTIFICACION', 'IMPLEMENTACION'];
+
+//   getPhaseLabel(phaseCode: string): string {
+//     const labels: Record<string, string> = {
+//       'ATF': 'ATF',
+//       'DISENO': 'Diseño Técnico',
+//       'CONSTRUCCION': 'Construcción',
+//       'PRUEBAS': 'Pruebas Integrales',
+//       'CERTIFICACION': 'Certificación',
+//       'IMPLEMENTACION': 'Implementación'
+//     };
+//     return labels[phaseCode] || phaseCode;
+//   }
+
+//   estimationForm: FormGroup = this.fb.group({
+//     phases: this.fb.array([])
+//   }, { validators: this.chronologyValidator });
+
+//   constructor() {
+//     this.initializeForm();
+//   }
+
+//   ngOnInit(): void {
+//     this.loadEstimationData();
+//   }
+
+//   get phases(): FormArray {
+//     return this.estimationForm.get('phases') as FormArray;
+//   }
+
+//   private initializeForm(): void {
+//     this.defaultPhases.forEach(phaseName => {
+//       const phaseGroup = this.fb.group({
+//         phase_name: [{ value: phaseName, disabled: true }], 
+//         start_date: ['', Validators.required],
+//         end_date: ['', Validators.required],
+//         estimated_hours: ['', [Validators.required, Validators.min(1)]]
+//       });
+//       this.phases.push(phaseGroup);
+//     });
+//   }
+
+//   private chronologyValidator(control: AbstractControl): ValidationErrors | null {
+//     const phasesArray = control.get('phases') as FormArray;
+//     if (!phasesArray) return null;
+
+//     let previousStartDate: Date | null = null;
+
+//     for (let i = 0; i < phasesArray.length; i++) {
+//       const phaseGroup = phasesArray.at(i);
+//       const startVal = phaseGroup.get('start_date')?.value;
+//       const endVal = phaseGroup.get('end_date')?.value;
+//       const phaseName = phaseGroup.get('phase_name')?.value || `Fase ${i + 1}`;
+
+//       if (startVal && endVal) {
+//         const currentStart = new Date(startVal);
+//         const currentEnd = new Date(endVal);
+
+//         if (currentEnd < currentStart) {
+//           return { chronologyError: `Error en ${phaseName}: La fecha de fin no puede ser anterior a la fecha de inicio.` };
+//         }
+
+//         if (previousStartDate !== null && currentStart < previousStartDate) {
+//           return { chronologyError: `Ruptura de secuencia: ${phaseName} no puede iniciar antes de la fecha de inicio de su predecesora.` };
+//         }
+//         previousStartDate = currentStart;
+//       }
+//     }
+//     return null;
+//   }
+  
+//   private loadEstimationData(): void {
+//     this.isLoadingData.set(true);
+    
+//     this.estimationService.getEstimationDetails(this.requirementId()).subscribe({
+//       next: (response) => {
+//         const data = response.data;
+//         this.requirementRrti.set(data.rrti);
+//         this.isLocked.set(data.is_locked);
+
+//         if (data.estimation && data.estimation.estimated_phases) {
+//           this.patchFormWithSavedData(data.estimation.estimated_phases);
+//           this.hasSavedData.set(true);
+//         }
+
+//         if (data.is_locked) {
+//           this.estimationForm.disable(); 
+//         }
+
+//         this.isLoadingData.set(false);
+//       },
+//       error: (err) => {
+//         // 🚀 3. Uso del servicio: Error de carga
+//         this.notificationService.showError('Error', 'Error al cargar los datos del requerimiento.');
+//         this.isLoadingData.set(false);
+//         console.log('Error al cargar los datos del requerimiento:', err);
+//       }
+//     });
+//   }
+
+//   private patchFormWithSavedData(savedPhases: SavedEstimatedPhase[]): void {
+//     this.phases.controls.forEach((control, index) => {
+//       const savedPhase = savedPhases[index];
+//       if (savedPhase) {
+//         control.patchValue({
+//           start_date: this.formatDateForInput(savedPhase.start_date),
+//           end_date: this.formatDateForInput(savedPhase.end_date),
+//           estimated_hours: savedPhase.estimated_hours
+//         });
+//       }
+//     });
+//   }
+
+//   private formatDateForInput(dateString: string | null | undefined): string {
+//     if (!dateString) return '';
+//     let cleanDate = dateString.trim().substring(0, 10);
+//     cleanDate = cleanDate.replace(/\//g, '-');
+//     const parts = cleanDate.split('-');
+//     if (parts.length === 3) {
+//       if (parts[0].length === 2 && parts[2].length === 4) {
+//         return `${parts[2]}-${parts[1]}-${parts[0]}`; 
+//       }
+//     }
+//     return cleanDate;
+//   }
+
+//   onSaveDraft(): void {
+//     if (this.estimationForm.invalid) {
+//       this.estimationForm.markAllAsTouched();
+//       return;
+//     }
+
+//     this.isSubmitting.set(true);
+//     const payload = this.getFormattedPayload();
+
+//     this.estimationService.saveEstimation(this.requirementId(), payload).subscribe({
+//       next: (response) => {
+//         // 🚀 4. Uso del servicio: Toast de éxito
+//         this.notificationService.toastSuccess('Estimación guardada correctamente.');
+//         this.hasSavedData.set(true);
+//         this.isSubmitting.set(false);
+//         console.log('Estimation guardada correctamente:', response);
+//       },
+//       error: (err) => {
+//         let errorMsg = 'Error al procesar la solicitud.';
+//         if (err.error?.errors) {
+//           errorMsg = Object.values(err.error.errors).flat().join('<br>');
+//         } else if (err.error?.message) {
+//           errorMsg = err.error.message;
+//         }
+//         // 🚀 5. Uso del servicio: Mostrar advertencia de validación
+//         this.notificationService.showWarning('Error de Validación', errorMsg);
+//         this.isSubmitting.set(false);
+//       }
+//     });
+//   }
+  
+//   async onConfirmClosePhase(): Promise<void> {
+//       // Validacion estricta 
+//       // Evaluamos el chronologyValidator y campos vacíos antes de pedir justificación
+//       if (this.estimationForm.invalid) {
+//         this.estimationForm.markAllAsTouched();
+        
+        
+//         // Uso de tu servicio centralizado para bloquear la acción
+//         this.notificationService.showWarning(
+//           'Error de Cronograma', 
+//           'Existen fechas inválidas o rupturas de secuencia. Corrija los errores antes de cerrar la fase definitivamente.'
+//         );
+//         return; // Abortamos la ejecución del prompt
+//       }
+
+//       const htmlMsg = `El requerimiento quedará <strong>bloqueado permanentemente</strong>.<br><br>Por favor, ingrese la justificación técnica para este cierre:`;
+      
+//       // Prompt de Justificación usando tu NotificationService
+//       const justificacion = await this.notificationService.promptText(
+//         'Cerrar Fase de Planificación', 
+//         htmlMsg, 
+//         'Ej: Planificación aprobada en comité CSPE...'
+//       );
+
+//       if (justificacion) {
+//         this.executeHardGate(justificacion);
+//       }
+//   } 
+
+//   private executeHardGate(justificationText: string): void {
+//     // Doble chequeo de seguridad frontend
+//     if (this.estimationForm.invalid) return;
+
+//     this.isSubmitting.set(true);
+    
+//     // 🚀 1. Obtenemos los datos actuales de la interfaz que el usuario intenta cerrar
+//     const payload = this.getFormattedPayload();
+
+//     // 🚀 2. Ejecución concatenada (RxJS switchMap)
+//     // Primero intentamos guardar la estimación. Esto obligará al backend a ejecutar el 'chronologyValidator'.
+//     this.estimationService.saveEstimation(this.requirementId(), payload)
+//       .pipe(
+//         // 🚀 3. Si el guardado es válido y exitoso, pasamos al cierre de la fase automáticamente
+//         switchMap(() => this.estimationService.closePlanningPhase(this.requirementId(), justificationText))
+//       )
+//       .subscribe({
+//         next: (response) => {
+//           // Uso de tu servicio: Mostrar éxito de operación crítica
+//           this.notificationService.showSuccess('¡Fase Cerrada!', 'El requerimiento está ahora inmutable. Lista para ATF.');
+//           this.estimationForm.disable(); 
+//           this.isSubmitting.set(false);
+//           this.hasSavedData.set(false); 
+//           console.log('Fase cerrada correctamente:', response);
+//         },
+//         error: (err) => {
+//           // 🚀 4. Si la fecha era inválida (ej. anterior a la creación), el backend abortará el guardado
+//           // y el switchMap JAMÁS se ejecutará, protegiendo el requerimiento de un cierre corrupto.
+//           let errorMsg = 'Error al procesar la solicitud.';
+//           if (err.error?.errors) {
+//             errorMsg = Object.values(err.error.errors).flat().join('<br>');
+//           } else if (err.error?.message) {
+//             errorMsg = err.error.message;
+//           }
+          
+//           // Uso de tu servicio: Mostrar el error exacto y detener el proceso
+//           this.notificationService.showWarning('Operación Rechazada', errorMsg);
+//           this.isSubmitting.set(false);
+//         }
+//       });
+//   }
+
+//   private getFormattedPayload(): EstimationPayload {
+//     const rawData = this.estimationForm.getRawValue();
+//     return {
+//       requirement_id: this.requirementId(),
+//       phases: rawData.phases
+//     };
+//   }
+
+//   goBackToDashboard(): void {
+//     this.router.navigate(['/dashboard']);
+//   }
+// }
+
+
+import { Component, inject, input, output, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import Swal from 'sweetalert2';
-import { Router } from '@angular/router';
 import { EstimationService } from '../../data-access/services/estimation';
 import { EstimationPayload, SavedEstimatedPhase } from '../../data-access/models/requirement.model';
+import { NotificationService } from '@app/workflow';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'lib-estimation-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './estimation-form.component.html',
-  styleUrls: ['./estimation-form.component.scss']
+  styleUrls: ['./estimation-form.component.scss'] 
 })
 export class EstimationFormComponent implements OnInit {
 
-  // Inyecciones
   private fb = inject(FormBuilder);
   private estimationService = inject(EstimationService);
-  private router = inject(Router);
+  private notificationService = inject(NotificationService); 
 
-  // Input Signal: Recibe el ID del requerimiento desde el componente padre
+  // ==========================================
+  // 1. ENTRADAS Y SALIDAS (Inputs / Outputs)
+  // ==========================================
   requirementId = input.required<string>();
-
-  // Signals para controlar el estado de la interfaz  
-  requirementRrti = signal<string>('Cargando...'); // Para mostrar en el título
-  isLocked = signal<boolean>(false);               // Controla el candado global
-  isLoadingData = signal<boolean>(true);           // Controla el loader inicial
-
-  // Input Signal: Recibe el Justificación desde el componente padre
-  justification = input.required<string>();
-
-  // Manejo de Estado Local con Signals
-  isSubmitting = signal<boolean>(false);
-  successMessage = signal<string | null>(null);
-  errorMessage = signal<string | null>(null);
+  requirementCode = input.required<string>(); 
+  requirementCreationDate = input.required<string>(); 
+  isPlanningClosed = input<boolean>(false);
   
-  // Nueva variable para saber si la data ya existe en BD (para mostrar el botón de cerrar fase)
+  closeModal = output<void>();
+  estimationSaved = output<void>();
+
+
+  // ==========================================
+  // 2. ESTADO LOCAL REACTIVO
+  // ==========================================
+  isLocked = signal<boolean>(false);               
+  isLoadingData = signal<boolean>(true);           
+  isSubmitting = signal<boolean>(false);
   hasSavedData = signal<boolean>(false); 
 
-  // Fases predefinidas exigidas por el "Camino de Hierro"
-  private defaultPhases = [
-    'ATF',
-    'DISENO',
-    'CONSTRUCCION',
-    'PRUEBAS',
-    'CERTIFICACION',
-    'IMPLEMENTACION'
-  ];
+  private defaultPhases = ['ATF', 'DISENO', 'CONSTRUCCION', 'PRUEBAS', 'CERTIFICACION', 'IMPLEMENTACION'];
 
-  // Función para obtener el label de la fase basado en el código
+  // ==========================================
+  // 3. CONFIGURACIÓN DEL FORMULARIO
+  // ==========================================
+  // 🚀 CORRECCIÓN: Solo declaramos el formulario aquí, sin inicializarlo.
+  estimationForm!: FormGroup;
+
+
+  ngOnInit(): void {
+    // 🚀 CORRECCIÓN: Inicializamos el formulario aquí, donde los Signals ya tienen datos.
+    this.estimationForm = this.fb.group({
+      phases: this.fb.array([])
+    }, { validators: (control: AbstractControl) => this.chronologyValidator(control) });
+
+    // Inicializamos las fases por defecto
+    this.initializeForm();
+    
+    // Procedemos a cargar los datos del backend
+    this.loadEstimationData();
+  }
+
+  get phases(): FormArray {
+    return this.estimationForm.get('phases') as FormArray;
+  }
+
   getPhaseLabel(phaseCode: string): string {
     const labels: Record<string, string> = {
       'ATF': 'ATF',
-      'DISENO': 'Diseño',
+      'DISENO': 'Diseño Técnico',
       'CONSTRUCCION': 'Construcción',
       'PRUEBAS': 'Pruebas Integrales',
       'CERTIFICACION': 'Certificación',
@@ -62,31 +352,10 @@ export class EstimationFormComponent implements OnInit {
     return labels[phaseCode] || phaseCode;
   }
 
-  // Definición del Formulario Reactivo
-  estimationForm: FormGroup = this.fb.group({
-    phases: this.fb.array([])
-  }, { validators: this.chronologyValidator });
-
-  constructor() {
-    this.initializeForm();
-  }
-
-  ngOnInit(): void {
-    this.loadEstimationData();
-  }
-
-  // Getter (Signal-like) para acceder fácilmente al FormArray en el HTML
-  get phases(): FormArray {
-    return this.estimationForm.get('phases') as FormArray;
-  }
-
-  /**
-   * Inicializa el FormArray con las 6 fases estáticas
-   */
   private initializeForm(): void {
     this.defaultPhases.forEach(phaseName => {
       const phaseGroup = this.fb.group({
-        phase_name: [{ value: phaseName, disabled: true }], // Solo lectura para el usuario
+        phase_name: [{ value: phaseName, disabled: true }], 
         start_date: ['', Validators.required],
         end_date: ['', Validators.required],
         estimated_hours: ['', [Validators.required, Validators.min(1)]]
@@ -95,71 +364,80 @@ export class EstimationFormComponent implements OnInit {
     });
   }
 
-  /**
-   * Validador cruzado (Frontend) para guiar al usuario antes de tocar el Backend.
-   * Verifica solapamientos básicos entre fechas consecutivas.
-   */
+  // ==========================================
+  // 4. VALIDACIÓN CRUZADA AVANZADA
+  // ==========================================
   private chronologyValidator(control: AbstractControl): ValidationErrors | null {
     const phasesArray = control.get('phases') as FormArray;
     if (!phasesArray) return null;
 
-    for (let i = 1; i < phasesArray.length; i++) {
-      const prevEnd = phasesArray.at(i - 1).get('end_date')?.value;
-      const currStart = phasesArray.at(i).get('start_date')?.value;
+    let previousStartDate: Date | null = null;
+    
+    const creationDate = new Date(this.requirementCreationDate());
+    creationDate.setHours(0, 0, 0, 0);
 
-      // Si hay fechas y la fecha de inicio actual es menor que el fin de la anterior, hay error
-      if (prevEnd && currStart && new Date(currStart) < new Date(prevEnd)) {
-        return { chronologyError: `La fase ${i + 1} no puede iniciar antes de que culmine la fase ${i}.` };
+    for (let i = 0; i < phasesArray.length; i++) {
+      const phaseGroup = phasesArray.at(i);
+      const startVal = phaseGroup.get('start_date')?.value;
+      const endVal = phaseGroup.get('end_date')?.value;
+      const phaseName = phaseGroup.get('phase_name')?.value || `Fase ${i + 1}`;
+
+      if (startVal && endVal) {
+        const currentStart = new Date(startVal);
+        const currentEnd = new Date(endVal);
+
+        if (currentStart < creationDate) {
+          return { chronologyError: `Error en ${phaseName}: La fecha de inicio no puede ser anterior a la creación del requerimiento.` };
+        }
+
+        if (currentEnd < currentStart) {
+          return { chronologyError: `Error en ${phaseName}: La fecha de fin no puede ser anterior a la fecha de inicio.` };
+        }
+
+        if (previousStartDate !== null && currentStart < previousStartDate) {
+          return { chronologyError: `Ruptura de secuencia: ${phaseName} no puede iniciar antes de la fecha de inicio de su predecesora.` };
+        }
+        previousStartDate = currentStart;
       }
     }
     return null;
   }
   
-  /**
-   * Consulta al Backend el estado actual del requerimiento al abrir la vista.
-   */
+  // ==========================================
+  // 5. CARGA Y FORMATEO DE DATOS
+  // ==========================================
   private loadEstimationData(): void {
     this.isLoadingData.set(true);
     
     this.estimationService.getEstimationDetails(this.requirementId()).subscribe({
       next: (response) => {
         const data = response.data;
-        
-        // 1. Asignamos la identidad del requerimiento
-        this.requirementRrti.set(data.rrti);
         this.isLocked.set(data.is_locked);
 
-        // 2. Si ya hay una estimación (Borrador o Cerrada), hidratamos el formulario
         if (data.estimation && data.estimation.estimated_phases) {
           this.patchFormWithSavedData(data.estimation.estimated_phases);
           this.hasSavedData.set(true);
         }
 
-        // 3. RN-Inmutabilidad: Si la fase PL está cerrada, bloqueamos el formulario por completo
         if (data.is_locked) {
-          this.estimationForm.disable(); // Read-Only
+          this.estimationForm.disable(); 
         }
 
         this.isLoadingData.set(false);
       },
       error: (err) => {
-        this.errorMessage.set('Error al cargar los datos del requerimiento.');
+        this.notificationService.showError('Error', 'Error al cargar los datos de estimación.');
         this.isLoadingData.set(false);
-        console.error('Error al obtener detalles de estimación:', err); // Log para debugging
+        console.error('Error al cargar datos:', err);
       }
     });
   }
 
-  /**
-   * Mapea los datos de la base de datos a las filas del FormArray Reactivo
-   */
   private patchFormWithSavedData(savedPhases: SavedEstimatedPhase[]): void {
     this.phases.controls.forEach((control, index) => {
       const savedPhase = savedPhases[index];
-
       if (savedPhase) {
         control.patchValue({
-          // POR QUÉ: Pasamos las fechas por el "filtro" antes de inyectarlas al HTML
           start_date: this.formatDateForInput(savedPhase.start_date),
           end_date: this.formatDateForInput(savedPhase.end_date),
           estimated_hours: savedPhase.estimated_hours
@@ -167,121 +445,20 @@ export class EstimationFormComponent implements OnInit {
       }
     });
   }
-  /**
-   * Formatea una fecha en el formato YYYY-MM-DD
-   */
+
   private formatDateForInput(dateString: string | null | undefined): string {
     if (!dateString) return '';
-    
-    // 1. Tomamos solo los primeros 10 caracteres (elimina horas como 15:30:00 si existen)
     let cleanDate = dateString.trim().substring(0, 10);
-    
-    // 2. Reemplazamos cualquier slash (/) por guion (-)
     cleanDate = cleanDate.replace(/\//g, '-');
-
-    // 3. Detectamos si Laravel lo guardó invertido (ej. 31-12-2026) y lo enderezamos
     const parts = cleanDate.split('-');
     if (parts.length === 3) {
-      // Si el primer bloque tiene 2 dígitos (Día o Mes), asumimos que el Año está al final
       if (parts[0].length === 2 && parts[2].length === 4) {
-        return `${parts[2]}-${parts[1]}-${parts[0]}`; // Lo forzamos a YYYY-MM-DD
+        return `${parts[2]}-${parts[1]}-${parts[0]}`; 
       }
     }
-
-    // Retorna el formato estandarizado
     return cleanDate;
   }
 
-  /**
-   * BOTÓN 1: Guardar Borrador (Solo guarda, no bloquea)
-   */
-  onSaveDraft(): void {
-    if (this.estimationForm.invalid) {
-      this.estimationForm.markAllAsTouched();
-      return;
-    }
-
-    this.isSubmitting.set(true);
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
-
-    const payload = this.getFormattedPayload();
-
-    this.estimationService.saveEstimation(this.requirementId(), payload).subscribe({
-      next: (response) => {
-        // Alerta suave porque es solo un guardado
-        this.successMessage.set('Progreso guardado correctamente. Puede seguir editando.');
-        this.hasSavedData.set(true); // Habilitamos el botón de cerrar fase
-        this.isSubmitting.set(false);
-        console.log('Respuesta del backend:', response); // Log para debugging
-      },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message || 'Error al guardar la estimación.');
-        this.isSubmitting.set(false);
-        console.error('Error al guardar la estimación:', err); // Log para debugging
-      }
-    });
-  }
-
-  /**
-   * BOTÓN 2: Cerrar Fase (Hard Gate)
-   */
-  onConfirmClosePhase(): void {
-    Swal.fire({
-      title: 'Cerrar Fase de Planificación',
-      html: `El requerimiento quedará <strong>bloqueado permanentemente</strong>.<br><br>Por favor, ingrese la justificación técnica para este cierre (mín. 10 caracteres):`,
-      icon: 'warning',
-      input: 'textarea', // Le pedimos a SweetAlert que muestre un campo de texto
-      inputPlaceholder: 'Ej: Planificación aprobada en comité CSPE...',
-      inputAttributes: {
-        'aria-label': 'Justificación técnica'
-      },
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Cerrar y Bloquear',
-      cancelButtonText: 'Cancelar',
-      preConfirm: (text) => {
-        if (!text || text.length < 10) {
-          Swal.showValidationMessage('Debe ingresar una justificación de al menos 10 caracteres.');
-          return false; // Evita que se cierre el modal
-        }
-        return text;
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // result.value contiene el texto escrito en el textarea
-        this.executeHardGate(result.value);
-      }
-    });
-  }
-
-  /**
-   * Ejecuta la llamada final al backend para aplicar el candado
-   */
-  private executeHardGate(justificationText: string): void {
-    this.isSubmitting.set(true);
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
-    // Ahora enviamos justificationText en lugar de this.justification()
-    this.estimationService.closePlanningPhase(this.requirementId(), justificationText).subscribe({
-      next: (response) => {
-        Swal.fire('¡Fase Cerrada!', 'El requerimiento está ahora inmutable y en ejecución (ATF).', 'success');
-        this.estimationForm.disable(); // Aplicamos el bloqueo visual total
-        this.isSubmitting.set(false);
-        this.successMessage.set(null); 
-        this.hasSavedData.set(false); // Ocultamos botones si es necesario
-        console.log('Respuesta del backend al cerrar fase:', response); // Log para debugging
-      },
-      error: (err) => {
-        Swal.fire('Error', err.error?.message || 'No se pudo cerrar la fase.', 'error');
-        this.isSubmitting.set(false);
-      }
-    });
-  }
-  /**
-   * Helper para construir el payload reactivando los campos disabled
-   */
   private getFormattedPayload(): EstimationPayload {
     const rawData = this.estimationForm.getRawValue();
     return {
@@ -289,8 +466,99 @@ export class EstimationFormComponent implements OnInit {
       phases: rawData.phases
     };
   }
-  // Función para volver al dashboard 
-  goBackToDashboard(): void {
-    this.router.navigate(['/dashboard']);
+
+  // ==========================================
+  // 6. LÓGICA DE GUARDADO Y CIERRE (HARD GATE)
+  // ==========================================
+  onSaveDraft(): void {
+    if (this.estimationForm.invalid) {
+      this.estimationForm.markAllAsTouched();
+      const globalError = this.estimationForm.errors?.['chronologyError'];
+      if (globalError) {
+        this.notificationService.showWarning('Secuencia Inválida', globalError);
+      }
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    const payload = this.getFormattedPayload();
+
+    this.estimationService.saveEstimation(this.requirementId(), payload).subscribe({
+      next: (response) => {
+        this.notificationService.toastSuccess('Estimación guardada correctamente.');
+        this.hasSavedData.set(true);
+        this.isSubmitting.set(false);
+        this.estimationSaved.emit(); 
+        console.log('Estimation guardada correctamente:', response);
+      },
+      error: (err) => {
+        let errorMsg = 'Error al procesar la solicitud.';
+        if (err.error?.errors) {
+          errorMsg = Object.values(err.error.errors).flat().join('<br>');
+        } else if (err.error?.message) {
+          errorMsg = err.error.message;
+        }
+        this.notificationService.showWarning('Error de Validación', errorMsg);
+        this.isSubmitting.set(false);
+      }
+    });
+  }
+  
+  async onConfirmClosePhase(): Promise<void> {
+      if (this.estimationForm.invalid) {
+        this.estimationForm.markAllAsTouched();
+        
+        const globalError = this.estimationForm.errors?.['chronologyError'];
+        const msg = globalError || 'Existen fechas inválidas o campos en blanco. Corrija los errores antes de cerrar la fase.';
+        
+        this.notificationService.showWarning('Error de Cronograma', msg);
+        return; 
+      }
+
+      const htmlMsg = `El requerimiento quedará <strong>bloqueado permanentemente</strong>.<br><br>Por favor, ingrese la justificación técnica para este cierre:`;
+      
+      const justificacion = await this.notificationService.promptText(
+        'Cerrar Fase de Planificación', 
+        htmlMsg, 
+        'Ej: Planificación aprobada en comité CSPE...'
+      );
+
+      if (justificacion) {
+        this.executeHardGate(justificacion);
+      }
+  } 
+
+  private executeHardGate(justificationText: string): void {
+    if (this.estimationForm.invalid) return;
+
+    this.isSubmitting.set(true);
+    const payload = this.getFormattedPayload();
+
+    this.estimationService.saveEstimation(this.requirementId(), payload)
+      .pipe(
+        switchMap(() => this.estimationService.closePlanningPhase(this.requirementId(), justificationText))
+      )
+      .subscribe({
+        next: (response) => {
+          this.notificationService.showSuccess('¡Fase Cerrada!', 'El requerimiento está ahora inmutable. Listo para ATF.');
+          this.estimationForm.disable(); 
+          this.isSubmitting.set(false);
+          this.hasSavedData.set(false); 
+          this.estimationSaved.emit(); 
+          this.closeModal.emit(); 
+          console.log('Fase cerrada correctamente:', response);
+        },
+        error: (err) => {
+          let errorMsg = 'Error al procesar la solicitud.';
+          if (err.error?.errors) {
+            errorMsg = Object.values(err.error.errors).flat().join('<br>');
+          } else if (err.error?.message) {
+            errorMsg = err.error.message;
+          }
+          
+          this.notificationService.showWarning('Operación Rechazada', errorMsg);
+          this.isSubmitting.set(false);
+        }
+      });
   }
 }

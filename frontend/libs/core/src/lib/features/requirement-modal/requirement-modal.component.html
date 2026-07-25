@@ -7,9 +7,8 @@
         <i class="fa-solid fa-pen-to-square me-2 fs-5"></i>
       }
       {{
-        isEditing() ? 'Editando Requerimiento:' : 'Detalle de Requerimiento:'
+        isEditing() ? 'Editando Requerimiento' : 'Detalle de Requerimiento'
       }}
-      <span class="ms-2 opacity-75">{{ editForm.get('rrti')?.value }}</span>
     </h4>
     <button
       type="button"
@@ -19,294 +18,340 @@
     ></button>
   </div>
 
-  <div class="modal-body p-4">
-    <div
-      class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom"
-    >
-      <div>
-        @if (!isEditing()) {
-          <button
-            class="btn btn-outline-danger rounded-pill fw-bold px-4 shadow-sm"
-            (click)="iniciarBorradoLogico()"
-          >
-            <i class="bi-solid bi-trash me-2"></i>
-            Eliminar Requerimiento
-          </button>
-        }
-      </div>
-      <div class="d-flex gap-2">
-        @if (!isEditing()) {
-          <button
-            class="btn btn-brand rounded-pill px-4"
-            (click)="enableEditing()"
-            [disabled]="isLocked()"
-          >
-            <i class="bi bi-pencil-square me-2"></i>Actualizar Requerimiento
-          </button>
-        } @else {
-          <button
-            class="btn btn-outline-secondary rounded-pill px-4"
-            (click)="cancelEditing()"
-          >
-            <i class="fa-regular fa-circle-xmark fa-lg me-2"></i>
-            Cancelar
-          </button>
-          <button
-            class="btn btn-brand rounded-pill px-4"
-            (click)="saveChanges()"
-          >
-            <i class="fa-regular fa-circle-check fa-lg me-2"></i>Confirmar
-            Cambios
-          </button>
-        }
-      </div>
+  <div class="modal-body p-4 bg-light">
+      <!-- Bloque Izquierdo: Código del Requerimiento -->
+    <div class="d-flex align-items-center">
+      <span class="text-muted fw-bold me-2 small">Requerimiento:</span>
+      <span
+        class="badge rounded-pill px-3 py-2"
+        style="
+          background-color: #f3e8f5;
+          color: #8e1482;
+          border: 1px solid #8e1482;
+        "
+      >
+        {{ editForm.get('rrti')?.value }}
+      </span>
     </div>
+    
 
-    <form [formGroup]="editForm">
-      <div class="row g-4 mb-4">
-        <div class="col-md-3">
-          <span class="d-block small fw-bold mb-2">Número RRTI</span>
-          @if (isEditing()) {
-            <input
-              type="text"
-              class="form-control border-brand fw-bold"
-              formControlName="rrti"
-            />
-          } @else {
-            <div
-              class="p-2 border rounded bg-light text-muted input-locked fw-semibold"
-            >
-              {{ editForm.get('rrti')?.value }}
-            </div>
-          }
+    <div class="modal-body p-4">
+      @if (currentRequirement()?.is_locked) {
+        <div
+          class="alert alert-warning d-flex align-items-center mb-4 shadow-sm border-warning"
+          role="alert"
+        >
+          <i class="fa-solid fa-lock me-3 fs-4"></i>
+          <div>
+            <strong>¡Expediente Sellado!</strong> Este requerimiento ha
+            culminado su fase técnica y se encuentra bloqueado por auditoría.
+            Las modificaciones han sido deshabilitadas.
+          </div>
         </div>
-        <div class="col-md-3">
-          <span class="d-block small fw-bold mb-2"
-            >Fecha de Creación</span
-          >
-          @if (isEditing()) {
-            <input
-              type="date"
-              class="form-control border-brand"
-              formControlName="creation_date"
-            />
-          } @else {
-            <div
-              class="p-2 border rounded bg-light text-muted input-locked fw-semibold"
-            >
-              {{ editForm.get('creation_date')?.value | date: 'dd/MM/yyyy' }}
-            </div>
-          }
-        </div>
-        <div class="col-md-3">
-          <span class="d-block small fw-bold mb-2"
-            >Tipo Requerimiento</span
-          >
-          @if (isEditing()) {
-            <select
-              class="form-select border-brand"
-              formControlName="requirement_type"
-            >
-              <option value="">Seleccione...</option>
-              @for (rt of requirementTypes(); track rt.id) {
-                <option [value]="rt.name">{{ rt.name }}</option>
-              }
-            </select>
-          } @else {
-            <div class="p-2 border rounded bg-light text-muted fw-semibold">
-              {{ editForm.get('requirement_type')?.value }}
-            </div>
-          }
-        </div>
-        <div class="col-md-3">
-          <span class="d-block small fw-bold mb-2"
-            >Tipo Gestión</span
-          >
-          @if (isEditing()) {
-            <select
-              class="form-select border-brand"
-              formControlName="management_type"
-            >
-              <option value="">Seleccione...</option>
-              @for (mt of managementTypes(); track mt.id) {
-                <option [value]="mt.name">{{ mt.name }}</option>
-              }
-            </select>
-          } @else {
-            <div class="p-2 border rounded bg-light text-muted fw-semibold">
-              {{ editForm.get('management_type')?.value }}
-            </div>
-          }
-        </div>
+      }
+
+      <div class="mb-4 bg-light p-3 rounded border">
+        <h6 class="text-muted mb-3">
+          <i class="fa-solid fa-chart-line me-2"></i> Avance del Requerimiento
+        </h6>
+        <lib-progress-dashboard
+          [globalProgress]="currentRequirement()?.progress_percentage ?? 0"
+          [globalStatus]="currentRequirement()?.status ?? 'Registrado'"
+        >
+        </lib-progress-dashboard>
       </div>
-      <div class="row mb-4">
-        <div class="col-12">
-          <span class="d-block small fw-bold mb-2"
-            >Descripción del Requerimiento</span
-          >
-          @if (isEditing()) {
-            <textarea
-              class="form-control border-brand"
-              formControlName="description"
-              rows="3"
-            ></textarea>
-          } @else {
-            <div
-              class="p-3 border rounded bg-light text-muted"
-              style="min-height: 80px"
+
+      <div
+        class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom"
+      >
+        <div>
+          @if (!isEditing()) {
+            <button
+              class="btn btn-outline-danger rounded-pill fw-bold px-4 shadow-sm"
+              (click)="iniciarBorradoLogico()"
             >
-              {{ editForm.get('description')?.value }}
-            </div>
+              <i class="bi-solid bi-trash me-2"></i>
+              Eliminar Requerimiento
+            </button>
+          }
+        </div>
+
+        <div class="d-flex gap-2">
+          @if (!isEditing()) {
+            <button
+              class="btn btn-brand rounded-pill px-4"
+              (click)="enableEditing()"
+              [disabled]="
+                currentRequirement()?.is_locked ||
+                currentRequirement()?.status !== 'RC'
+              "
+            >
+              <i class="bi bi-pencil-square me-2"></i>Actualizar Requerimiento
+            </button>
+          } @else {
+            <button
+              class="btn btn-outline-secondary rounded-pill px-4"
+              (click)="cancelEditing()"
+            >
+              <i class="fa-regular fa-circle-xmark fa-lg me-2"></i>
+              Cancelar
+            </button>
+            <button
+              class="btn btn-brand rounded-pill px-4"
+              (click)="saveChanges()"
+            >
+              <i class="fa-regular fa-circle-check fa-lg me-2"></i>Confirmar
+              Cambios
+            </button>
           }
         </div>
       </div>
 
-      <div class="row g-4 mb-4 border-top pt-3">
-        <div class="col-12 mb-2">
-          <span class="d-block small text-muted fw-bold mb-2"
-            ><i class="fa-solid fa-sitemap me-2 text-brand"></i>Jerarquía
-            Organizacional Histórica</span
-          >
-          <div
-            class="d-flex flex-wrap gap-2 align-items-center p-3 rounded border"
-            style="background-color: #fcf8ff"
-          >
-            <span class="badge badge-soft-brand fs-6">{{
-              organizationalData()?.society_name
-            }}</span>
-            <i class="fa-solid fa-chevron-right text-brand opacity-50 mx-1"></i>
-            <span class="badge badge-soft-brand fs-6">{{
-              organizationalData()?.system_name
-            }}</span>
-            <i class="fa-solid fa-chevron-right text-brand opacity-50 mx-1"></i>
-            <span class="badge brand-gradient fs-6 text-white">{{
-              organizationalData()?.requesting_unit_name
-            }}</span>
+      <form [formGroup]="editForm">
+        <div class="row g-4 mb-4">
+          <div class="col-md-3">
+            <span class="d-block small fw-bold mb-2">Número RRTI</span>
+            @if (isEditing()) {
+              <input
+                type="text"
+                class="form-control border-brand fw-bold"
+                formControlName="rrti"
+              />
+            } @else {
+              <div
+                class="p-2 border rounded bg-light text-muted input-locked fw-semibold"
+              >
+                {{ editForm.get('rrti')?.value }}
+              </div>
+            }
+          </div>
+          <div class="col-md-3">
+            <span class="d-block small fw-bold mb-2">Fecha de Creación</span>
+            @if (isEditing()) {
+              <input
+                type="date"
+                class="form-control border-brand"
+                formControlName="creation_date"
+              />
+            } @else {
+              <div
+                class="p-2 border rounded bg-light text-muted input-locked fw-semibold"
+              >
+                {{ editForm.get('creation_date')?.value | date: 'dd/MM/yyyy' }}
+              </div>
+            }
+          </div>
+          <div class="col-md-3">
+            <span class="d-block small fw-bold mb-2">Tipo Requerimiento</span>
+            @if (isEditing()) {
+              <select
+                class="form-select border-brand"
+                formControlName="requirement_type"
+              >
+                <option value="">Seleccione...</option>
+                @for (rt of requirementTypes(); track rt.id) {
+                  <option [value]="rt.name">{{ rt.name }}</option>
+                }
+              </select>
+            } @else {
+              <div class="p-2 border rounded bg-light text-muted fw-semibold">
+                {{ editForm.get('requirement_type')?.value | titlecase }}
+              </div>
+            }
+          </div>
+          <div class="col-md-3">
+            <span class="d-block small fw-bold mb-2">Tipo Gestión</span>
+            @if (isEditing()) {
+              <select
+                class="form-select border-brand"
+                formControlName="management_type"
+              >
+                <option value="">Seleccione...</option>
+                @for (mt of managementTypes(); track mt.id) {
+                  <option [value]="mt.name">{{ mt.name }}</option>
+                }
+              </select>
+            } @else {
+              <div class="p-2 border rounded bg-light text-muted fw-semibold">
+                {{ editForm.get('management_type')?.value }}
+              </div>
+            }
+          </div>
+        </div>
+        <div class="row mb-4">
+          <div class="col-12">
+            <span class="d-block small fw-bold mb-2"
+              >Descripción del Requerimiento</span
+            >
+            @if (isEditing()) {
+              <textarea
+                class="form-control border-brand"
+                formControlName="description"
+                rows="3"
+              ></textarea>
+            } @else {
+              <div
+                class="p-3 border rounded bg-light text-muted"
+                style="min-height: 80px"
+              >
+                {{ editForm.get('description')?.value }}
+              </div>
+            }
           </div>
         </div>
 
-        <div class="col-md-6">
-          <span class="d-block small text-muted fw-bold mb-2"
-            >Consultor Funcional</span
-          >
-          @if (isEditing()) {
-            <select
-              class="form-select border-brand"
-              formControlName="persona_id"
+        <div class="row g-4 mb-4 border-top pt-3">
+          <div class="col-12 mb-2">
+            <span class="d-block small text-muted fw-bold mb-2"
+              ><i class="fa-solid fa-sitemap me-2 text-brand"></i>Jerarquía
+              Organizacional Histórica</span
             >
-              @for (c of functionalConsultants(); track c.id) {
-                <option [value]="c.persona_id">{{ c.full_name }}</option>
-              }
-            </select>
-          } @else {
             <div
-              class="p-2 border rounded bg-light text-muted fw-semibold border-start border-4"
-              style="border-left-color: #d500f9 !important"
+              class="d-flex flex-wrap gap-2 align-items-center p-3 rounded border"
+              style="background-color: #fcf8ff"
             >
-              {{ selectedConsultantName() }}
+              <span class="badge badge-soft-brand fs-6">{{
+                organizationalData()?.society_name
+              }}</span>
+              <i
+                class="fa-solid fa-chevron-right text-brand opacity-50 mx-1"
+              ></i>
+              <span class="badge badge-soft-brand fs-6">{{
+                organizationalData()?.system_name
+              }}</span>
+              <i
+                class="fa-solid fa-chevron-right text-brand opacity-50 mx-1"
+              ></i>
+              <span class="badge brand-gradient fs-6 text-white">{{
+                organizationalData()?.requesting_unit_name
+              }}</span>
             </div>
-          }
-        </div>
+          </div>
 
-        <div class="col-md-6">
-          <span class="d-block small text-muted fw-bold mb-2"
-            >Consultores CSPE Asignados</span
-          >
-          <div
-            class="p-3 border rounded bg-light cspe-container"
-            [class.input-locked]="!isEditing()"
-          >
-            <div class="row g-2">
-              @for (cspe of cspeConsultants(); track cspe.cspe_id) {
-                <div class="col-6">
-                  <div class="form-check custom-checkbox">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      [id]="'cspe_' + cspe.cspe_id"
-                      [checked]="isCspeSelected(cspe.cspe_id)"
-                      [disabled]="!isEditing()"
-                      (change)="onCspeChange(cspe.cspe_id, $event)"
-                    />
-                    <label
-                      class="form-check-label small"
-                      [for]="'cspe_' + cspe.cspe_id"
-                    >
-                      {{ cspe.full_name }}
-                    </label>
+          <div class="col-md-6">
+            <span class="d-block small text-muted fw-bold mb-2"
+              >Consultor Funcional</span
+            >
+            @if (isEditing()) {
+              <select
+                class="form-select border-brand"
+                formControlName="persona_id"
+              >
+                @for (c of functionalConsultants(); track c.id) {
+                  <option [value]="c.persona_id">{{ c.full_name }}</option>
+                }
+              </select>
+            } @else {
+              <div
+                class="p-2 border rounded bg-light text-muted fw-semibold border-start border-4"
+                style="border-left-color: #d500f9 !important"
+              >
+                {{ selectedConsultantName() }}
+              </div>
+            }
+          </div>
+
+          <div class="col-md-6">
+            <span class="d-block small text-muted fw-bold mb-2"
+              >Consultores CSPE Asignados</span
+            >
+            <div
+              class="p-3 border rounded bg-light cspe-container"
+              [class.input-locked]="!isEditing()"
+            >
+              <div class="row g-2">
+                @for (cspe of cspeConsultants(); track cspe.cspe_id) {
+                  <div class="col-6">
+                    <div class="form-check custom-checkbox">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        [id]="'cspe_' + cspe.cspe_id"
+                        [checked]="isCspeSelected(cspe.cspe_id)"
+                        [disabled]="!isEditing()"
+                        (change)="onCspeChange(cspe.cspe_id, $event)"
+                      />
+                      <label
+                        class="form-check-label small"
+                        [for]="'cspe_' + cspe.cspe_id"
+                      >
+                        {{ cspe.full_name }}
+                      </label>
+                    </div>
                   </div>
-                </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row g-4 border-top pt-3">
+          <div class="col-12">
+            <h6 class="fw-bold text-muted mb-3">
+              <i class="fa-solid fa-paperclip me-2 text-brand"></i>Documentos
+              Adjuntos
+            </h6>
+          </div>
+
+          <div class="col-md-6">
+            <span class="d-block small text-muted fw-bold mb-2"
+              >Solicitud TI (PDF)</span
+            >
+            @if (isEditing()) {
+              <input
+                type="file"
+                class="form-control form-control-sm border-brand mb-2"
+                accept=".pdf"
+                (change)="onFileChange($event, 'itReq')"
+              />
+            }
+            <div class="mt-1">
+              @if (attachedDocs().itReq) {
+                <a
+                  [href]="getDocumentUrl(attachedDocs().itReq)"
+                  target="_blank"
+                  class="btn btn-outline-brand btn-sm rounded-pill px-3"
+                >
+                  <i class="fa-solid fa-file-pdf me-2"></i> Ver Solicitud Actual
+                </a>
+              } @else {
+                <span class="text-muted small"
+                  >No se adjuntó archivo previo.</span
+                >
+              }
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <span class="d-block small text-muted fw-bold mb-2"
+              >Planilla de Necesidades (Excel/PDF)</span
+            >
+            @if (isEditing()) {
+              <input
+                type="file"
+                class="form-control form-control-sm border-brand mb-2"
+                accept=".pdf,.xls,.xlsx"
+                (change)="onFileChange($event, 'needsSpread')"
+              />
+            }
+            <div class="mt-1">
+              @if (attachedDocs().needsSpread) {
+                <a
+                  [href]="getDocumentUrl(attachedDocs().needsSpread)"
+                  target="_blank"
+                  class="btn btn-outline-brand btn-sm rounded-pill px-3"
+                >
+                  <i class="fa-solid fa-file-excel me-2"></i> Ver Planilla
+                  Actual
+                </a>
+              } @else {
+                <span class="text-muted small"
+                  >No se adjuntó archivo previo.</span
+                >
               }
             </div>
           </div>
         </div>
-      </div>
-      <div class="row g-4 border-top pt-3">
-        <div class="col-12">
-          <h6 class="fw-bold text-muted mb-3">
-            <i class="fa-solid fa-paperclip me-2 text-brand"></i>Documentos
-            Adjuntos
-          </h6>
-        </div>
-
-        <div class="col-md-6">
-          <span class="d-block small text-muted fw-bold mb-2"
-            >Solicitud TI (PDF)</span
-          >
-          @if (isEditing()) {
-            <input
-              type="file"
-              class="form-control form-control-sm border-brand mb-2"
-              accept=".pdf"
-              (change)="onFileChange($event, 'itReq')"
-            />
-          }
-          <div class="mt-1">
-            @if (attachedDocs().itReq) {
-              <a
-                [href]="getDocumentUrl(attachedDocs().itReq)"
-                target="_blank"
-                class="btn btn-outline-brand btn-sm rounded-pill px-3"
-              >
-                <i class="fa-solid fa-file-pdf me-2"></i> Ver Solicitud Actual
-              </a>
-            } @else {
-              <span class="text-muted small"
-                >No se adjuntó archivo previo.</span
-              >
-            }
-          </div>
-        </div>
-
-        <div class="col-md-6">
-          <span class="d-block small text-muted fw-bold mb-2"
-            >Planilla de Necesidades (Excel/PDF)</span
-          >
-          @if (isEditing()) {
-            <input
-              type="file"
-              class="form-control form-control-sm border-brand mb-2"
-              accept=".pdf,.xls,.xlsx"
-              (change)="onFileChange($event, 'needsSpread')"
-            />
-          }
-          <div class="mt-1">
-            @if (attachedDocs().needsSpread) {
-              <a
-                [href]="getDocumentUrl(attachedDocs().needsSpread)"
-                target="_blank"
-                class="btn btn-outline-brand btn-sm rounded-pill px-3"
-              >
-                <i class="fa-solid fa-file-excel me-2"></i> Ver Planilla Actual
-              </a>
-            } @else {
-              <span class="text-muted small"
-                >No se adjuntó archivo previo.</span
-              >
-            }
-          </div>
-        </div>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </div>

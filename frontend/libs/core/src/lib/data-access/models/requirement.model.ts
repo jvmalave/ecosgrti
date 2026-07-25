@@ -17,6 +17,8 @@ export interface RequirementDashboard {
   first_name: string;
   last_name: string;
   snapshot_unit_name: string; 
+  has_atf_agreements: boolean;
+  tipo_gestion?: string;
 }
 
 export interface RequirementDetail {
@@ -29,6 +31,8 @@ export interface RequirementDetail {
   functional_consultant_id: string; 
   status: string;
   is_locked: boolean;
+
+  progress_percentage: number;
   
   it_request_doc_path?: string;
   needs_spreadsheet_path?: string;

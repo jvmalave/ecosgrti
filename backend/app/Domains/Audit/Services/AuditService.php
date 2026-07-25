@@ -5,6 +5,7 @@ namespace App\Domains\Audit\Services;
 use App\Domains\Audit\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 
 class AuditService
@@ -25,27 +26,32 @@ class AuditService
 
       // Esto detendrá la ejecución y nos mostrará el objeto creado en Postman
       $log = AuditLog::create($data);
-      Log::info("Auditoría guardada con ID: " . $log->id);; 
+      Log::info("Auditoría guardada con ID: " . $log->id);
   }
 
   /**
      * Registra un evento automático de cambio de modelo.
      */
-    public function logModelChange(string $action, string $description, array $payload, ?string $userId = null): void
+    public function logModelChange(string $action, string $description, array $payload, ?string $userId = null, $targetId = null): void
     {
-        // 1. Forzamos la conversión a String puro ANTES de tocar el modelo
+    //      1. Forzamos la conversión a String puro ANTES de tocar el modelo
         $jsonPayload = json_encode($payload);
 
-        // 2. Guardamos pasando exclusivamente strings
+        $userId = auth()->id() ?? ($payload['user_id'] ?? null);
+
+    //      2. Guardamos pasando exclusivamente strings
         $log = AuditLog::create([
             'user_id'     => $userId,
             'action'      => $action,
             'description' => $description,
+            'target_id'   => $payload['record_id'] ?? null, 
             'ip_address'  => request()->ip(), 
-            'user_agent'  => request()->userAgent(), // 🟢 Más seguro que header()
-            'payload'     => $jsonPayload,           // 🟢 El string ya procesado
+            'user_agent'  => request()->userAgent(),
+            'payload'     => $jsonPayload, 
         ]);
 
         Log::info("Auditoría de modelo guardada con ID: " . $log->id);
     }
+
+    
 }

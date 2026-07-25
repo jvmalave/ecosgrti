@@ -10,6 +10,7 @@ use App\Domains\Core\Models\RequirementCspePivot;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Domains\Core\Models\ScheduleEstimation;
+use App\Domains\Workflow\Models\RequirementPhaseHistory;
 
 class Requirement extends Model
 {
@@ -42,7 +43,14 @@ class Requirement extends Model
       'snapshot_society_name',
       'snapshot_system_name',
       'snapshot_unit_name',
+      'progress_percentage'
     ];
+
+
+    protected static function newFactory()
+    {
+        return \Database\Factories\Core\RequirementFactory::new(); 
+    }
 
     /**
      * Relación: Un requerimiento pertenece a un Consultor Funcional
@@ -72,5 +80,10 @@ class Requirement extends Model
     public function scheduleEstimation()
     {
         return $this->hasOne(ScheduleEstimation::class, 'requirement_id');
+    }
+
+    public function phaseHistories()
+    {
+        return $this->hasMany(RequirementPhaseHistory::class, 'requirement_id');
     }
 }

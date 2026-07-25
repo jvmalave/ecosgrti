@@ -1,212 +1,226 @@
+<!-- Fondo oscuro del modal -->
+<div class="modal-backdrop fade show" style="z-index: 1050 !important"></div>
 
-<div class="container-fluid py-5 bg-light">
-  <div class="row justify-content-center">
-    <div class="col-12 col-lg-10 col-xl-8">
-      <div class="container-fluid py-4">
-        <div class="card shadow-sm border-0 rounded-3">
-          <div class="card-header brand-gradient text-white py-3">
-            <h5 class="card-title mb-0 d-flex align-items-center">
-              <i class="bi bi-file-earmark-plus-fill me-2"></i>
-              ECOSGRTI - Registro de Nuevo Requerimiento TI
-            </h5>
+<!-- Contenedor principal del modal -->
+<div
+  class="modal fade show d-block"
+  tabindex="-1"
+  style="z-index: 1060 !important"
+  aria-modal="true"
+  role="dialog"
+>
+  <!-- Utilizamos modal-xl para dar amplitud al formulario y dialog-scrollable para contenido extenso -->
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow-lg border-0 rounded-3">
+      
+      <!-- Cabecera del Modal -->
+      <div class="modal-header brand-gradient text-white py-3 border-bottom-0">
+        <h5 class="modal-title mb-0 d-flex align-items-center fw-bold">
+          <i class="bi bi-file-earmark-plus-fill me-2"></i>
+          ECOSGRTI - Registro de Nuevo Requerimiento TI
+        </h5>
+        <!-- Botón de cierre enlazado a la alerta de cancelación -->
+        <button
+          type="button"
+          class="btn-close btn-close-white shadow-none"
+          aria-label="Cerrar"
+          (click)="onCancel()"
+        ></button>
+      </div>
+
+      <!-- Cuerpo del Modal -->
+      <div class="modal-body p-4 bg-light">
+        @if (isLoadingData()) {
+          <div class="d-flex flex-column justify-content-center align-items-center py-5">
+            <div class="spinner-border text-brand" role="status" style="width: 3rem; height: 3rem;">
+              <span class="visually-hidden">Cargando catálogos...</span>
+            </div>
+            <p class="text-muted mt-3 fw-semibold">Sincronizando catálogos del ecosistema...</p>
           </div>
-          
-          <div class="card-body p-4">
-            
-            @if (isLoadingData()) {
-              <div class="d-flex flex-column justify-content-center align-items-center py-5">
-                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                  <span class="visually-hidden">Cargando catálogos...</span>
-                </div>
-                <p class="text-muted mt-3 fw-semibold">Sincronizando catálogos del ecosistema...</p>
-              </div>
-            } @else {
+        } @else {
+          <form [formGroup]="requirementForm" (ngSubmit)="onSubmit()" novalidate>
+            <div class="row g-3">
               
-              <form [formGroup]="requirementForm" (ngSubmit)="onSubmit()" novalidate>
-                
-                <div class="row g-3">
-                  
-                  <div class="col-md-4">
-                    <label for="rrti" class="form-label fw-semibold">Número Único RRTI</label>
-                    <input type="text" id="rrti" formControlName="rrti" class="form-control"
-                      [class.is-invalid]="requirementForm.get('rrti')?.touched && requirementForm.get('rrti')?.invalid"
-                      placeholder="Ej. 20261023">
-                    <div class="invalid-feedback">Requerido. Solo caracteres numéricos.</div>
-                  </div>
+              <!-- RRTI -->
+              <div class="col-md-4">
+                <label for="rrti" class="form-label fw-semibold">Número Único RRTI <span class="text-danger">*</span></label>
+                <input type="text" id="rrti" formControlName="rrti" class="form-control"
+                  [class.is-invalid]="requirementForm.get('rrti')?.touched && requirementForm.get('rrti')?.invalid"
+                  placeholder="Ej. 20261023">
+                <div class="invalid-feedback">Requerido. Solo caracteres numéricos.</div>
+              </div>
 
-                  <div class="col-md-4">
-                    <label for="requirement_type" class="form-label fw-semibold">Tipo de Requerimiento</label>
-                    <select id="requirement_type" formControlName="requirement_type" class="form-select"
-                      [class.is-invalid]="requirementForm.get('requirement_type')?.touched && requirementForm.get('requirement_type')?.invalid">
-                      <option value="" disabled selected>Seleccione una opción...</option>
-                      @for (type of requirementTypes(); track type.id) {
-                        <option [value]="type.name">{{ type.name }}</option>
-                      }
-                    </select>
-                    <div class="invalid-feedback">Debe seleccionar el tipo de requerimiento.</div>
-                  </div>
-
-                  <div class="col-md-4">
-                    <label for="creation_date" class="form-label fw-semibold">Fecha de Creación</label>
-                    <input type="date" id="creation_date" formControlName="creation_date" class="form-control"
-                      [class.is-invalid]="requirementForm.get('creation_date')?.touched && requirementForm.get('creation_date')?.invalid">
-                    <div class="invalid-feedback">La fecha es obligatoria.</div>
-                  </div>
-
-                  <div class="col-md-4">
-                    <label for="management_type" class="form-label fw-semibold">Tipo de Gestión</label>
-                    <select id="management_type" formControlName="management_type" class="form-select"
-                      [class.is-invalid]="requirementForm.get('management_type')?.touched && requirementForm.get('management_type')?.invalid">
-                      <option value="" disabled selected>Seleccione una opción...</option>
-                      @for (type of managementTypes(); track type.id) {
-                        <option [value]="type.name">{{ type.name }}</option>
-                      }
-                    </select>
-                    <div class="invalid-feedback">Debe seleccionar el tipo de gestión.</div>
-                  </div>
-
-                  <div class="col-md-8 position-relative">
-                    <label for="persona_id" class="form-label fw-semibold">Consultor Funcional (Solicitante)</label>
-                    
-                    <input type="text" 
-                          class="form-control bg-white" 
-                          placeholder="Escriba para buscar o haga clic para ver la lista..."
-                          [class.border-danger]="requirementForm.get('persona_id')?.touched && requirementForm.get('persona_id')?.invalid"
-                          [value]="getSelectedConsultantName() || searchTerm()"
-                          (input)="onSearchConsultant($event)"
-                          (click)="isDropdownOpen.set(true)">
-
-                    @if (isDropdownOpen()) {
-                      
-                      <div class="position-fixed top-0 start-0 w-100 h-100" 
-                          style="z-index: 998;" 
-                          role="button"
-                          tabindex="0"
-                          (click)="isDropdownOpen.set(false)"
-                          (keydown.enter)="isDropdownOpen.set(false)"
-                          (keydown.space)="isDropdownOpen.set(false)">
-                      </div>
-                      
-                      <div class="dropdown-menu show w-100 shadow p-0 border-brand position-absolute mt-1" style="max-height: 250px; overflow-y: auto; z-index: 999;">
-                        @for (consultant of filteredConsultants(); track consultant.persona_id) {
-                          <button type="button" class="dropdown-item py-2 border-bottom" (click)="selectConsultant(consultant.persona_id)">
-                            <i class="bi bi-person me-2 text-brand"></i>{{ consultant.full_name }}
-                          </button>
-                        } @empty {
-                          <div class="text-center text-muted py-3 small">No se encontraron consultores.</div>
-                        }
-                      </div>
-                    }
-
-                    @if (requirementForm.get('persona_id')?.touched && requirementForm.get('persona_id')?.invalid) {
-                      <div class="text-danger small mt-1">Debe seleccionar un consultor válido de la lista.</div>
-                    }
-                  </div>
-
-                  @if (isLoading()) {
-                    <div class="col-12 text-center my-3">
-                      <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                      <span class="text-muted small">Consultando estructura organizacional...</span>
-                    </div>
+              <!-- Tipo de Requerimiento -->
+              <div class="col-md-4">
+                <label for="requirement_type" class="form-label fw-semibold">Tipo de Requerimiento <span class="text-danger">*</span></label>
+                <select id="requirement_type" formControlName="requirement_type" class="form-select"
+                  [class.is-invalid]="requirementForm.get('requirement_type')?.touched && requirementForm.get('requirement_type')?.invalid">
+                  <option value="" disabled selected>Seleccione una opción...</option>
+                  @for (type of requirementTypes(); track type.id) {
+                    <option [value]="type.name">{{ type.name }}</option>
                   }
+                </select>
+                <div class="invalid-feedback">Debe seleccionar el tipo de requerimiento.</div>
+              </div>
 
-                  @if (organizationalData(); as graph) {
-                    <div class="col-12 animate__animated animate__fadeIn">
-                      <div class="card bg-light border-start border-brand border-4 shadow-sm">
-                        <div class="card-body py-3">
-                          <h6 class="text-brand fw-bold mb-2"><i class="bi bi-diagram-3-fill me-2"></i>Grafo Organizacional Validado</h6>
-                          <div class="row g-2 text-dark small">
-                            <div class="col-md-4"><strong>Unidad Solicitante:</strong> {{ graph.requesting_unit_name }}</div>
-                            <div class="col-md-4"><strong>Sistema:</strong> {{ graph.system_name }}</div>
-                            <div class="col-md-4"><strong>Sociedad:</strong> {{ graph.society_name }}</div>
-                          </div>
+              <!-- Fecha de Creación -->
+              <div class="col-md-4">
+                <label for="creation_date" class="form-label fw-semibold">Fecha de Creación <span class="text-danger">*</span></label>
+                <input type="date" id="creation_date" formControlName="creation_date" class="form-control"
+                  [class.is-invalid]="requirementForm.get('creation_date')?.touched && requirementForm.get('creation_date')?.invalid">
+                <div class="invalid-feedback">La fecha es obligatoria.</div>
+              </div>
+
+              <!-- Tipo de Gestión -->
+              <div class="col-md-4">
+                <label for="management_type" class="form-label fw-semibold">Tipo de Gestión <span class="text-danger">*</span></label>
+                <select id="management_type" formControlName="management_type" class="form-select"
+                  [class.is-invalid]="requirementForm.get('management_type')?.touched && requirementForm.get('management_type')?.invalid">
+                  <option value="" disabled selected>Seleccione una opción...</option>
+                  @for (type of managementTypes(); track type.id) {
+                    <option [value]="type.name">{{ type.name }}</option>
+                  }
+                </select>
+                <div class="invalid-feedback">Debe seleccionar el tipo de gestión.</div>
+              </div>
+
+              <!-- Consultor Funcional (Buscador Reactivo) -->
+              <div class="col-md-8 position-relative">
+                <label for="persona_id" class="form-label fw-semibold">Consultor Funcional (Solicitante) <span class="text-danger">*</span></label>
+                
+                <input type="text" 
+                      id="persona_id"
+                      class="form-control bg-white" 
+                      placeholder="Escriba para buscar o haga clic para ver la lista..."
+                      [class.is-invalid]="requirementForm.get('persona_id')?.touched && requirementForm.get('persona_id')?.invalid"
+                      [value]="getSelectedConsultantName() || searchTerm()"
+                      (input)="onSearchConsultant($event)"
+                      (click)="isDropdownOpen.set(true)">
+
+                @if (isDropdownOpen()) {
+                  <div class="position-fixed top-0 start-0 w-100 h-100" 
+                      style="z-index: 1070;" 
+                      role="button"
+                      tabindex="0"
+                      (click)="isDropdownOpen.set(false)"
+                      (keydown.enter)="isDropdownOpen.set(false)"
+                      (keydown.space)="isDropdownOpen.set(false)">
+                  </div>
+                  
+                  <div class="dropdown-menu show w-100 shadow p-0 border-brand position-absolute mt-1" style="max-height: 250px; overflow-y: auto; z-index: 1075;">
+                    @for (consultant of filteredConsultants(); track consultant.persona_id) {
+                      <button type="button" class="dropdown-item py-2 border-bottom" (click)="selectConsultant(consultant.persona_id)">
+                        <i class="bi bi-person me-2 text-brand"></i>{{ consultant.full_name }}
+                      </button>
+                    } @empty {
+                      <div class="text-center text-muted py-3 small">No se encontraron consultores.</div>
+                    }
+                  </div>
+                }
+
+                @if (requirementForm.get('persona_id')?.touched && requirementForm.get('persona_id')?.invalid) {
+                  <div class="invalid-feedback d-block mt-1">Debe seleccionar un consultor válido de la lista.</div>
+                }
+              </div>
+
+              <!-- Loader Organizacional -->
+              @if (isLoading()) {
+                <div class="col-12 text-center my-3">
+                  <div class="spinner-border text-brand spinner-border-sm me-2" role="status"></div>
+                  <span class="text-muted small">Consultando estructura organizacional...</span>
+                </div>
+              }
+
+              <!-- Grafo Organizacional -->
+              @if (organizationalData(); as graph) {
+                <div class="col-12 animate__animated animate__fadeIn">
+                  <div class="card bg-white border-start border-brand border-4 shadow-sm">
+                    <div class="card-body py-3">
+                      <h6 class="text-brand fw-bold mb-2"><i class="bi bi-diagram-3-fill me-2"></i>Grafo Organizacional Validado</h6>
+                      <div class="row g-2 text-dark small">
+                        <div class="col-md-4"><strong>Unidad Solicitante:</strong> {{ graph.requesting_unit_name }}</div>
+                        <div class="col-md-4"><strong>Sistema:</strong> {{ graph.system_name }}</div>
+                        <div class="col-md-4"><strong>Sociedad:</strong> {{ graph.society_name }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Descripción -->
+              <div class="col-12 mt-4">
+                <label for="description" class="form-label fw-semibold">Descripción Detallada <span class="text-danger">*</span></label>
+                <textarea id="description" formControlName="description" rows="3" class="form-control"
+                  [class.is-invalid]="requirementForm.get('description')?.touched && requirementForm.get('description')?.invalid"
+                  placeholder="Describa el alcance tecnológico del requerimiento..."></textarea>
+                <div class="invalid-feedback">Obligatorio (mínimo 10 caracteres).</div>
+              </div>
+
+              <!-- Consultores CSPE -->
+              <div class="col-md-12 mt-4">
+                <span class="d-block form-label fw-semibold mb-2">Consultores CSPE Asignados <span class="text-danger">*</span></span>
+                <div class="card border-0 bg-white p-3 shadow-sm rounded-3" [class.border]="requirementForm.get('cspe_consultants')?.touched && requirementForm.get('cspe_consultants')?.invalid" [class.border-danger]="requirementForm.get('cspe_consultants')?.touched && requirementForm.get('cspe_consultants')?.invalid">
+                  <div class="row g-2">
+                    @for (cspe of cspeConsultants(); track cspe.cspe_id) {
+                      <div class="col-md-6 col-lg-4">
+                        <div class="form-check custom-checkbox">
+                          <input class="form-check-input" type="checkbox" [id]="'cspe_' + cspe.cspe_id"
+                                [checked]="isCspeSelected(cspe.cspe_id)"
+                                (change)="onCspeChange($event, cspe.cspe_id)">
+                          <label class="form-check-label text-dark" [for]="'cspe_' + cspe.cspe_id">
+                            {{ cspe.full_name }}
+                          </label>
                         </div>
                       </div>
-                    </div>
-                  }
-
-                  <!-- <div class="col-md-12">
-                    <label for="cspe_consultants" class="form-label fw-semibold">Consultores CSPE Asignados</label>
-                    <select multiple id="cspe_consultants" formControlName="cspe_consultants" class="form-select" style="height: 100px;"
-                      [class.is-invalid]="requirementForm.get('cspe_consultants')?.touched && requirementForm.get('cspe_consultants')?.invalid">
-                      @for (cspe of cspeConsultants(); track cspe.cspe_id) {
-                        <option [value]="cspe.cspe_id">{{ cspe.full_name }}</option>
-                      }
-                    </select>
-                    <div class="small text-muted mt-1"><i class="bi bi-info-circle me-1"></i>Mantenga presionada la tecla Ctrl (o Cmd) para seleccionar múltiples consultores.</div>
-                    <div class="invalid-feedback">Debe seleccionar al menos un consultor CSPE.</div>
-                  </div> -->
-
-                  <div class="col-12">
-                    <label for="description" class="form-label fw-semibold">Descripción Detallada</label>
-                    <textarea id="description" formControlName="description" rows="3" class="form-control"
-                      [class.is-invalid]="requirementForm.get('description')?.touched && requirementForm.get('description')?.invalid"
-                      placeholder="Describa el alcance tecnológico del requerimiento..."></textarea>
-                    <div class="invalid-feedback">Obligatorio (mínimo 10 caracteres).</div>
-                  </div>
-
-                  <div class="col-md-12 mt-4">
-                    <label for="cspe_consultants" class="form-label fw-semibold mb-2">Consultores CSPE Asignados</label>
-                    <div class="card border-0 bg-light p-3 shadow-sm rounded-3">
-                      <div class="row g-2">
-                        @for (cspe of cspeConsultants(); track cspe.cspe_id) {
-                          <div class="col-md-6 col-lg-4">
-                            <div class="form-check custom-checkbox">
-                              <input class="form-check-input" type="checkbox" [id]="'cspe_' + cspe.cspe_id"
-                                    [checked]="isCspeSelected(cspe.cspe_id)"
-                                    (change)="onCspeChange($event, cspe.cspe_id)">
-                              <label class="form-check-label text-dark" [for]="'cspe_' + cspe.cspe_id">
-                                {{ cspe.full_name }}
-                              </label>
-                            </div>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                    @if (requirementForm.get('cspe_consultants')?.touched && requirementForm.get('cspe_consultants')?.invalid) {
-                      <div class="text-danger small mt-1">Debe seleccionar al menos un consultor CSPE.</div>
                     }
                   </div>
-
-                  <hr class="my-4 text-muted">
-
-                  <h6 class="text-secondary fw-bold mb-3"><i class="bi bi-paperclip me-2"></i>Documentación Obligatoria</h6>
-
-                  <div class="col-md-6">
-                    <label for="solicitud_ti" class="form-label fw-semibold">Documento de Solicitud TI (PDF)</label>
-                    <input type="file" id="solicitud_ti" accept="application/pdf" (change)="onFileSelected($event, 'solicitud')" class="form-control"
-                      [class.is-invalid]="requirementForm.get('rrti')?.touched && !solicitudTiFile">
-                  </div>
-
-                  <div class="col-md-6">
-                    <label for="planilla_necesidades" class="form-label fw-semibold">Matriz de Necesidades (PDF/Excel)</label>
-                    <input type="file" id="planilla_necesidades" accept="application/pdf,.xlsx,.xls" (change)="onFileSelected($event, 'planilla')" class="form-control"
-                      [class.is-invalid]="requirementForm.get('rrti')?.touched && !planillaNecesidadesFile">
-                  </div>
-
                 </div>
+                @if (requirementForm.get('cspe_consultants')?.touched && requirementForm.get('cspe_consultants')?.invalid) {
+                  <div class="text-danger small mt-2">Debe seleccionar al menos un consultor CSPE.</div>
+                }
+              </div>
 
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                  <!-- <button type="button" class="btn btn-outline-secondary px-4">Cancelar</button> -->
-                  <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" (click)="onCancel()">Cancelar</button>
-                  <button type="submit" class="btn btn-brand rounded-pill px-4" [disabled]="requirementForm.invalid || !solicitudTiFile || !planillaNecesidadesFile || isLoading()">
-                    @if (isLoading()) {
-                      <span class="spinner-border spinner-border-sm me-2"></span> Procesando...
-                    } @else {
-                      <i class="bi bi-cloud-arrow-up-fill me-2"></i>Registrar Requerimiento
-                    }
-                  </button>
-                </div>
+              <hr class="my-4 text-muted">
 
-              </form>
-            }
-          </div>
-        </div>
+              <h6 class="text-secondary fw-bold mb-3"><i class="bi bi-paperclip me-2"></i>Documentación Obligatoria</h6>
+
+              <!-- Archivos Físicos -->
+              <div class="col-md-6">
+                <label for="solicitud_ti" class="form-label fw-semibold small">Documento de Solicitud TI (PDF) <span class="text-danger">*</span></label>
+                <input type="file" id="solicitud_ti" accept="application/pdf" (change)="onFileSelected($event, 'solicitud')" class="form-control form-control-sm"
+                  [class.is-invalid]="requirementForm.get('rrti')?.touched && !solicitudTiFile">
+              </div>
+
+              <div class="col-md-6">
+                <label for="planilla_necesidades" class="form-label fw-semibold small">Matriz de Necesidades (PDF/Excel) <span class="text-danger">*</span></label>
+                <input type="file" id="planilla_necesidades" accept="application/pdf,.xlsx,.xls" (change)="onFileSelected($event, 'planilla')" class="form-control form-control-sm"
+                  [class.is-invalid]="requirementForm.get('rrti')?.touched && !planillaNecesidadesFile">
+              </div>
+
+            </div>
+          </form>
+        }
       </div>
+
+      <!-- Pie del Modal (Action Buttons) -->
+      @if (!isLoadingData()) {
+        <div class="modal-footer bg-light border-top-0 px-4 py-3 justify-content-end">
+          <button type="button" class="btn btn-sm btn-outline-secondary px-4 rounded-pill" (click)="onCancel()">
+            <i class="bi bi-x-circle me-1"></i>Cancelar
+          </button>
+          <!-- El (click)="onSubmit()" es necesario porque sacamos el botón fuera del <form> -->
+          <button type="button" class="btn btn-sm btn-brand rounded-pill px-4 shadow-sm" 
+                  (click)="onSubmit()"
+                  [disabled]="requirementForm.invalid || !solicitudTiFile || !planillaNecesidadesFile || isLoading()">
+            @if (isLoading()) {
+              <span class="spinner-border spinner-border-sm me-2"></span> Procesando...
+            } @else {
+              <i class="bi bi-cloud-arrow-up-fill me-2"></i>Registrar Requerimiento
+            }
+          </button>
+        </div>
+      }
+
     </div>
   </div>
 </div>
-
-
-
-

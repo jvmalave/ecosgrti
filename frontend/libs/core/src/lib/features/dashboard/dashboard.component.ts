@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef, computed } from '@angular/core';
 import { CommonModule, UpperCasePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -12,12 +12,16 @@ import { RequirementService } from '../../data-access/services/requirement.servi
 import { RequirementDashboard } from '../../data-access/models/requirement.model'; 
 import { RequirementModalComponent } from '../requirement-modal/requirement-modal.component';
 import { ApiResponse } from '../../data-access/models/api-response.model';
+import { WorkflowStateService, AtfAgreementsModalComponent, AtfAgreementsListModalComponent, AtfAgreementDetail } from '@ecosgrti/workflow';
+import { EstimationFormComponent } from '../estimation-form/estimation-form.component';
+import { RequirementCreateComponent } from '../requirement-create/requirement-create.component';
+
 
 @Component({
   selector: 'lib-dashboard',
   standalone: true,
   // 4. Inyectamos ReactiveFormsModule aquí para poder usar [formControl] en el HTML
-  imports: [CommonModule, UpperCasePipe, ReactiveFormsModule, RequirementModalComponent], 
+  imports: [CommonModule, UpperCasePipe, ReactiveFormsModule, RequirementModalComponent, AtfAgreementsModalComponent, AtfAgreementsListModalComponent, EstimationFormComponent, RequirementCreateComponent], 
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -31,10 +35,27 @@ export class DashboardComponent implements OnInit {
   private router = inject(Router);
   private requirementService = inject(RequirementService);
   private destroyRef = inject(DestroyRef); // Inyectado para gestionar la limpieza de suscripciones
+  public readonly workflowState = inject(WorkflowStateService);
 
   // ==========================================
   // 2. ESTADO REACTIVO (SIGNALS Y FORM CONTROLS)
   // ==========================================
+
+  public selectedReqCodeForAtf = signal<string>('');
+  public atfModalMode = signal<'create' | 'view'>('create');
+  public selectedAgreementData = signal<AtfAgreementDetail | null>(null);
+  public isSelectedReqAtfOpen = signal<boolean>(false);
+
+  // Signals para el control del Modal ATF
+  public isAtfModalOpen = signal<boolean>(false);
+  public selectedReqForAtf = signal<string | null>(null);
+
+  //  signals para el control del Modal de Detalle del Requerimiento
+  isDetailModalOpen = signal<boolean>(false);
+  selectedRequirementId = signal<string>('');
+
+  // Signals para el control del Modal ATF List
+  public isAtfListModalOpen = signal<boolean>(false);
   
   public user = this.authService.currentUser;
 
@@ -44,9 +65,85 @@ export class DashboardComponent implements OnInit {
   
   currentOffset = signal<number>(0);
   hasMore = signal<boolean>(false);
+  public readonly pageSize = 10; 
 
-  // 5. NUEVO: Control Reactivo para el Buscador
+  //Controlar el modal de estimación
+  public isEstimationModalOpen = signal<boolean>(false);
+
+  // Señal para controlar la visibilidad del modal de creación
+  public isCreateModalOpen = signal<boolean>(false);
+
+  // Control Reactivo para el Buscador
   searchControl = new FormControl('');
+
+  public selectedReqManagementType = computed(() => {
+    const reqId = this.selectedReqForAtf();
+    const allReqs = this.requirements();
+    
+    if (!reqId || !allReqs.length) {
+        return 'Cargando...'; 
+    }
+    
+    const foundReq = allReqs.find(req => req.id === reqId);
+    
+    if (foundReq) {
+        return foundReq.management_type || foundReq.tipo_gestion || 'No Definido';
+    }
+
+    return 'No Definido';
+  });
+
+  public selectedReqCreationDate = computed(() => {
+    const reqId = this.selectedReqForAtf();
+    const allReqs = this.requirements();
+    
+    if (!reqId || !allReqs.length) {
+        return ''; 
+    }
+    
+    const foundReq = allReqs.find(req => req.id === reqId);
+    
+    if (foundReq && foundReq.creation_date) {
+        // Cortamos por espacio o por la 'T' para extraer únicamente la fecha (YYYY-MM-DD)
+        // Esto previene errores si Laravel envía "2026-07-16 21:17:40" o "2026-07-16T21:17:40.000Z"
+        return foundReq.creation_date.split(' ')[0].split('T')[0];
+    }
+
+    return '';
+  });
+
+  public isSelectedReqPlanningClosed = computed(() => {
+    const reqId = this.selectedReqForAtf();
+    const allReqs = this.requirements();
+    const foundReq = allReqs.find(req => req.id === reqId);
+    
+    if (foundReq) {
+        // Verifica que 'Req. Creado' o 'REQ_CREADO' coincida con tu base de datos
+        return foundReq.status !== 'RC'; 
+    }
+    return true; 
+  });
+
+  /**
+ * Evalúa si el botón de "Gestión de Acuerdos (ATF)" debe estar habilitado.
+ * Se habilita a partir del estatus 'ES-R' (Planificación Cerrada).
+ */
+public isAtfEnabled(status: string): boolean {
+    // Array con los estados válidos donde ATF debe estar accesible
+    const allowedStatuses = ['ES-R', 'ATF-I', 'ATF-C'];
+    return allowedStatuses.includes(status);
+}
+
+/**
+ * Evalúa si el botón de "Gestión de Requerimiento (GR)" debe estar habilitado.
+ * Se habilita ESTRICTAMENTE a partir del estatus 'ATF-C'.
+ */
+public isGrEnabled(status: string): boolean {
+    // Array con los estados válidos donde GR debe estar accesible
+    const allowedStatuses = ['ATF-C']; 
+    // Nota: Deberás agregar aquí los estados futuros como 'PROCESO-DT', 'CERRADO-DT', etc.
+    return allowedStatuses.includes(status);
+}
 
   // ==========================================
   // 3. CICLO DE VIDA
@@ -58,7 +155,7 @@ export class DashboardComponent implements OnInit {
       this.context.set(savedContext);
     }
 
-    // NUEVO: Suscripción Reactiva al Buscador
+    // Suscripción Reactiva al Buscador
     this.searchControl.valueChanges.pipe(
       debounceTime(500),         // Espera 500ms sin teclear
       distinctUntilChanged(),    // Solo avanza si el texto realmente cambió
@@ -92,7 +189,12 @@ export class DashboardComponent implements OnInit {
     const searchTerm = this.searchControl.value || undefined;
 
     // 8. Pasamos el searchTerm al servicio
-    this.requirementService.getDashboardRequirements(apiStatus, 10, this.currentOffset(), searchTerm).subscribe({
+    this.requirementService.getDashboardRequirements(
+      apiStatus, 
+      this.pageSize, 
+      this.currentOffset(), 
+      searchTerm
+    ).subscribe({
       next: (response: ApiResponse<RequirementDashboard[]>) => {
         this.requirements.set(response.data);
         if (response.meta) {
@@ -120,10 +222,86 @@ export class DashboardComponent implements OnInit {
     this.loadRequirements();
   }
 
+  /**
+   * Evalúa si abre el formulario directo o la lista de gestión.
+   */
+  // public gestionarAcuerdos(req: RequirementDashboard): void {
+  //   // 1. Guardamos el contexto
+  //   this.selectedReqForAtf.set(req.id);
+  //   this.selectedReqCodeForAtf.set(req.rrti);
+  //   this.isSelectedReqAtfOpen.set(req.status === 'ATF');
+    
+  //   // 2. Reseteamos el formulario por si acaso
+  //   this.atfModalMode.set('create');
+  //   this.selectedAgreementData.set(null);
 
-  //  SIGNALS PARA CONTROL DEL MODAL
-  isDetailModalOpen = signal<boolean>(false);
-  selectedRequirementId = signal<string>('');
+  //   // 3. SIEMPRE abrimos la lista primero (¡Adiós if/else!)
+  //   this.isAtfListModalOpen.set(true);
+  // }
+
+  public gestionarAcuerdos(req: RequirementDashboard): void {
+    // 1. Guardamos el contexto
+    this.selectedReqForAtf.set(req.id);
+    this.selectedReqCodeForAtf.set(req.rrti);
+    
+    // 🚀 CORRECCIÓN: Arreglo de estados válidos de "Apertura"
+    // Incluimos los estados previos o en progreso que permiten modificar acuerdos.
+    // (Asegúrate de agregar aquí el texto exacto que envía tu Backend)
+    const openStatuses = [
+      'ATF-I',
+      'ES-R', // Planificación Cerrada, listo para iniciar ATF
+    ];
+    
+    this.isSelectedReqAtfOpen.set(openStatuses.includes(req.status));
+    
+    // 2. Reseteamos el formulario por si acaso
+    this.atfModalMode.set('create');
+    this.selectedAgreementData.set(null);
+
+    // 3. SIEMPRE abrimos la lista primero (¡Adiós if/else!)
+    this.isAtfListModalOpen.set(true);
+  }
+
+  public closeAtfModal(): void {
+    this.isAtfModalOpen.set(false);
+    this.selectedAgreementData.set(null);
+    this.atfModalMode.set('create'); 
+    
+    // Como siempre entramos desde la lista, siempre regresamos a la lista
+    this.isAtfListModalOpen.set(true);
+  }
+
+  public openAgreementCreate(): void {
+    this.atfModalMode.set('create');
+    this.selectedAgreementData.set(null);
+    this.isAtfListModalOpen.set(false);
+    this.isAtfModalOpen.set(true);
+  }
+
+  public openAgreementView(agreement: AtfAgreementDetail): void {
+    this.atfModalMode.set('view');
+    this.selectedAgreementData.set(agreement);
+    this.isAtfListModalOpen.set(false); // Cerramos la lista
+    this.isAtfModalOpen.set(true); // Abrimos el detalle
+  }
+
+  /**
+   * Cierra el modal que contiene la lista de acuerdos ATF
+   */
+  public closeAtfListModal(): void {
+    this.isAtfListModalOpen.set(false);
+    this.selectedReqForAtf.set(null); // Limpiamos la selección
+  }
+  
+
+  /**
+   * Se ejecuta cuando el formulario emite que un acuerdo se guardó o actualizó exitosamente
+   */
+  public onAgreementSaved(): void {
+    this.isAtfModalOpen.set(false);
+    this.selectedAgreementData.set(null);
+    this.isAtfListModalOpen.set(true);
+  }
 
   /**
    * Abre el modal asignando el ID del requerimiento seleccionado.
@@ -155,7 +333,85 @@ export class DashboardComponent implements OnInit {
   /**
    * Navega a la vista de estimación del requerimiento seleccionado.
    */
-  goToEstimation(requirementId: string): void {
-    this.router.navigate(['/requerimientos', requirementId, 'estimacion']); 
+  // goToEstimation(requirementId: string): void {
+  //   this.router.navigate(['/requerimientos', requirementId, 'estimacion']); 
+  // }
+
+
+  public openAtfModal(req: RequirementDashboard): void {
+    console.log('Abriendo modal para el requerimiento:', req);
+    this.selectedReqForAtf.set(req.id);
+    this.selectedReqCodeForAtf.set(req.rrti); 
+    this.isAtfListModalOpen.set(true); 
+  }
+
+  /**
+   * Actualiza el estado local del requerimiento sin necesidad de recargar la página
+   */
+  public onRequirementMutated(event: { tipo_gestion: string, progreso_global: number }): void {
+    const reqId = this.selectedReqForAtf();
+    if (!reqId) return;
+
+    // 🚀 Mutamos el Signal maestro inyectando los nuevos datos del backend
+    this.requirements.update(reqs => 
+      reqs.map(req => 
+        req.id === reqId 
+          ? { 
+              ...req, 
+              management_type: event.tipo_gestion, // Traducimos a la propiedad en inglés
+              progress_percentage: event.progreso_global 
+            } 
+          : req
+      )
+    );
+  }
+
+  /**
+ * Avanza a la siguiente página de resultados sumando el tamaño de página al offset actual.
+ */
+  public nextPage(): void {
+    // Solo avanzamos si el backend nos confirmó que hay más registros
+    if (this.hasMore()) {
+      this.currentOffset.update(offset => offset + this.pageSize);
+      this.loadRequirements();
+    }
+  }
+
+  /**
+   * Retrocede a la página anterior restando el tamaño de página al offset actual.
+   */
+  public previousPage(): void {
+    // Solo retrocedemos si no estamos en la primera página (offset > 0)
+    if (this.currentOffset() > 0) {
+      // Usamos Math.max para garantizar que el offset jamás sea negativo
+      this.currentOffset.update(offset => Math.max(0, offset - this.pageSize));
+      this.loadRequirements();
+    }
+  }
+/**
+   * Abre el modal de estimación para el requerimiento seleccionado.
+   */
+  public openEstimationModal(req: RequirementDashboard): void {
+    
+    // Almacenamos los datos necesarios en las señales existente
+    this.selectedReqForAtf.set(req.id);
+    this.selectedReqCodeForAtf.set(req.rrti); 
+    
+    // Abrimos el nuevo modal
+    this.isEstimationModalOpen.set(true);
+  }
+
+  public closeEstimationModal(): void {
+    this.isEstimationModalOpen.set(false);
+  }
+
+  // Método para abrir el modal desde el botón principal
+  public openCreateModal(): void {
+    this.isCreateModalOpen.set(true);
+  }
+
+  // Método para cerrarlo
+  public closeCreateModal(): void {
+    this.isCreateModalOpen.set(false);
   }
 }

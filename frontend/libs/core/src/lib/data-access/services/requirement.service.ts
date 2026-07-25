@@ -90,18 +90,18 @@ export class RequirementService {
     search?: string // <-- NUEVO: Parámetro opcional para el término de búsqueda
   ): Observable<ApiResponse<RequirementDashboard[]>> {
     
-    // 1. Usamos 'let' porque HttpParams es inmutable y necesitamos reasignarlo
+    // Se usa 'let' porque HttpParams es inmutable y necesitamos reasignarlo
     let params = new HttpParams()
       .set('status', status)
       .set('limit', limit.toString())
       .set('offset', offset.toString());
 
-    // 2. Si existe un término de búsqueda válido, lo adjuntamos a los parámetros
+    // Si existe un término de búsqueda válido, se adjunta a los parámetros
     if (search) {
       params = params.set('search', search);
     }
 
-    // 3. Mantenemos tu tipado estricto
+    // Mantener el tipado estricto
     return this.http.get<ApiResponse<RequirementDashboard[]>>(this.coreApiUrl, { params });
   }
 

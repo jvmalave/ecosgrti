@@ -4,8 +4,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-
-// IMPORTANTE: Asegúrate de que estas rutas a tus modelos y servicios sean correctas
+import { ProgressDashboardComponent } from '../progress-dashboard/progress-dashboard.component';
 import { 
   RequirementDetail, 
   OrganizationalGraph, 
@@ -20,28 +19,20 @@ import Swal from 'sweetalert2';
 
 
 
-//  Interfaz para el catálogo de CSPE si no la tienes en tu requirement.model
-// export interface CspeConsultantItem {
-//   cspe_id: string; 
-//   full_name: string;
-// }
-
-// export interface CatalogItem {
-//   id: string | number;
-//   name: string; 
-// }
 
 @Component({
   selector: 'lib-requirement-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ProgressDashboardComponent],
   templateUrl: './requirement-modal.component.html',
   styleUrls: ['./requirement-modal.component.scss']
 })
 export class RequirementModalComponent implements OnInit, OnDestroy {
   // --- ENTRADAS, SALIDAS Y SERVICIOS ---
+  public currentRequirement = signal<RequirementDetail | null>(null);
   requirementId = input<string | null>(null);
   modalClosed = output<void>();
+  
 
   private router = inject(Router);
   
@@ -186,8 +177,15 @@ export class RequirementModalComponent implements OnInit, OnDestroy {
           persona_id: realPersonaId, 
           cspe_consultants: mappedCspe
         });
+        
+        // =========================================================
+        // ALIMENTAR ESTADO REACTIVO (Para la barra de progreso y banner)
+        // =========================================================
+        this.currentRequirement.set(data as RequirementDetail);
 
-        this.editForm.disable();
+        // Como indicaste: Siempre bloqueamos al inicio (Modo Solo Lectura)
+        this.editForm.disable(); 
+        
         this.isLoading.set(false);
       },
       error: () => {
@@ -239,9 +237,17 @@ export class RequirementModalComponent implements OnInit, OnDestroy {
   }
 
   // Activar el modo edición
-  enableEditing(): void {
+public enableEditing(): void {
+    const req = this.currentRequirement();
+    
+    // FAILSAFE HARD GATE: Abortamos la edición si está sellado o no está en fase 'RC'
+    if (req?.is_locked || req?.status !== 'RC') {
+      console.warn('Operación denegada: El requerimiento está sellado o fuera de fase RC.');
+      return; 
+    }
+
     this.isEditing.set(true);
-    this.editForm.enable();
+    this.editForm.enable(); // Solo habilitamos los campos si pasa la validación de seguridad
   }
 
   // Cancelar y revertir cambios
@@ -337,7 +343,7 @@ export class RequirementModalComponent implements OnInit, OnDestroy {
   onCspeChange(cspeId: string, event: Event): void {
     const isChecked = (event.target as HTMLInputElement).checked;
     
-    // 🟢 FIX 2: Extracción segura. Si es undefined, usamos un arreglo vacío []
+    // Extracción segura. Si es undefined, usamos un arreglo vacío []
     const safeValues = this.editForm.get('cspe_consultants')?.value || [];
     const currentCspe = [...safeValues];
 
@@ -541,9 +547,6 @@ export class RequirementModalComponent implements OnInit, OnDestroy {
       });
     }
   }
-
-
-
 
   // ----------------------------------------------------------------------
   //BORRADO LÓGICO Y AUDITORÍA

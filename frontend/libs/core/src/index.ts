@@ -3,6 +3,9 @@ export * from './lib/data-access/services/requirement.service';
 export * from './lib/features/requirement-create/requirement-create.component';
 export * from './lib/features/estimation-form/estimation-form.component';
 export * from './lib/data-access/services/estimation';
+export * from './lib/features/progress-dashboard/progress-dashboard.component';
+
+
 
 
 
