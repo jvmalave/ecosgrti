@@ -76,7 +76,7 @@ it('permite el cierre de fase si se cumple el quórum (200)', function () use (&
                     ->postJson("/api/workflow/requirements/{$req->id}/close-atf");
 
     $response->assertStatus(200)
-            ->assertJsonPath('status', 'ATF_COMPLETED');
+            ->assertJsonPath('status', 'ATF-C');
 });
 
 

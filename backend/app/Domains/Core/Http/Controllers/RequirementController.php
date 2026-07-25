@@ -148,6 +148,48 @@ class RequirementController extends Controller implements RequirementDocs
   /**
    * Guardar Borrador de Estimación
    */
+  // public function saveEstimationDraft(StoreEstimationRequest $request, string $id): JsonResponse
+  // {
+  //   try {
+  //     $userId = (string) auth()->id();
+
+  //     $estimation = $this->requirementService->saveEstimationDraft(
+  //       $id,
+  //       $request->validated('phases'),
+  //       $userId
+  //     );
+
+  //     return response()->json([
+  //       'success' => true,
+  //       'message' => 'Borrador de estimación guardado exitosamente.',
+  //       'data' => $estimation->load('estimatedPhases')
+  //     ], 200); // 200 OK en lugar de 201 si es un upsert
+
+  //   } catch (SequentialityViolationException $e) {
+  //     return response()->json([
+  //       'success' => false,
+  //       'message' => 'Error de coherencia cronológica.',
+  //       'errors' => ['secuencia' => $e->getMessage()]
+  //     ], 422);
+  //   } catch (\InvalidArgumentException $e) {
+  //     return response()->json([
+  //       'success' => false,
+  //       'message' => 'Operación denegada.',
+  //       'errors' => ['estado' => $e->getMessage()]
+  //     ], 422);
+  //   } catch (Exception $e) {
+  //     return response()->json([
+  //       'success' => false,
+  //       'message' => 'No se pudo procesar la estimación.',
+  //       'errors' => ['sistema' => $e->getMessage()]
+  //     ], 500);
+  //   }
+  // }
+
+  /**
+   * US23 - Registrar Estimación (Momento 2)
+   * Guardar Borrador de Estimación
+   */
   public function saveEstimationDraft(StoreEstimationRequest $request, string $id): JsonResponse
   {
     try {
@@ -163,21 +205,34 @@ class RequirementController extends Controller implements RequirementDocs
         'success' => true,
         'message' => 'Borrador de estimación guardado exitosamente.',
         'data' => $estimation->load('estimatedPhases')
-      ], 200); // 200 OK en lugar de 201 si es un upsert
+      ], 200);
 
     } catch (SequentialityViolationException $e) {
+      // 💡 Captura la excepción específica del Dominio de Estimaciones
       return response()->json([
         'success' => false,
         'message' => 'Error de coherencia cronológica.',
         'errors' => ['secuencia' => $e->getMessage()]
       ], 422);
+
     } catch (\InvalidArgumentException $e) {
+      // 💡 Captura violaciones de fechas e inmutabilidad enviadas desde el servicio
       return response()->json([
         'success' => false,
-        'message' => 'Operación denegada.',
-        'errors' => ['estado' => $e->getMessage()]
+        'message' => 'Error de coherencia cronológica.',
+        'errors' => ['secuencia' => $e->getMessage(), 'estado' => $e->getMessage()]
       ], 422);
+
     } catch (Exception $e) {
+      // Si la excepción del servicio contiene en su mensaje alguna regla de secuencia/fechas
+      if (str_contains($e->getMessage(), 'Ruptura de secuencia') || str_contains($e->getMessage(), 'no puede ser anterior')) {
+        return response()->json([
+          'success' => false,
+          'message' => 'Error de coherencia cronológica.',
+          'errors' => ['secuencia' => $e->getMessage()]
+        ], 422);
+      }
+
       return response()->json([
         'success' => false,
         'message' => 'No se pudo procesar la estimación.',

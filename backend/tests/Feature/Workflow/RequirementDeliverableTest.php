@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Domains\Core\Models\Requirement;
 use App\Domains\Workflow\Models\Deliverable;
+use App\Domains\Security\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -11,12 +12,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 $consultantId = '';
+$user = null;
 
-beforeEach(function () use (&$consultantId) {
+beforeEach(function () use (&$consultantId, &$user) {
     config(['logging.default' => 'stderr']);
     config(['logging.channels.audit' => ['driver' => 'null']]);
 
-    // 1. Recrear Jerarquía Organizacional Base (Obligatorio por Foreign Keys)
+    // 1. Recrear Jerarquía Organizacional Base
     $societyId = Str::uuid()->toString();
     $systemId = Str::uuid()->toString();
     $unitId = Str::uuid()->toString();
@@ -28,8 +30,11 @@ beforeEach(function () use (&$consultantId) {
     DB::table('catalogs.requesting_units')->insert(['id' => $unitId, 'system_id' => $systemId, 'name' => 'CSPE', 'created_at' => now(), 'updated_at' => now()]);
     DB::table('security.persons')->insert(['id' => $personId, 'first_name' => 'Jane', 'last_name' => 'Doe', 'email' => 'jane.doe@cantv.com.ve', 'created_at' => now(), 'updated_at' => now()]);
     DB::table('security.functional_consultants')->insert(['id' => $consultantId, 'person_id' => $personId, 'requesting_unit_id' => $unitId, 'created_at' => now(), 'updated_at' => now()]);
-});
 
+    // 2. Crear y Autenticar Usuario
+    $user = User::factory()->create();
+    $this->actingAs($user);
+});
 
 it('registra un entregable exitosamente', function () use (&$consultantId) {
     $req = Requirement::factory()->create(['functional_consultant_id' => $consultantId]);
@@ -65,6 +70,10 @@ it('rechaza el update si el nuevo nombre colisiona con otro entregable existente
     Deliverable::factory()->create(['requirement_id' => $req->id, 'name' => 'Plan de Pruebas']);
     $aEditar = Deliverable::factory()->create(['requirement_id' => $req->id, 'name' => 'Código Fuente']);
 
-    $this->putJson("/api/workflow/components/deliverables/{$aEditar->id}", ['name' => 'Plan de Pruebas', 'description' => 'Test para las pruebas 2'])
-        ->assertStatus(422);
+    // 💡 Ajustado: /api/workflow/deliverables/{id} (Removido /components)
+    $this->putJson("/api/workflow/deliverables/{$aEditar->id}", [
+        'name' => 'Plan de Pruebas', 
+        'description' => 'Test para las pruebas 2'
+    ])
+    ->assertStatus(422);
 });

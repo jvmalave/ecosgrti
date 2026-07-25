@@ -12,7 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('workflow.atf_agreements', function (Blueprint $table) {
+        if (!Schema::hasTable('workflow.atf_agreements')) {
+          Schema::create('workflow.atf_agreements', function (Blueprint $table) {
             // Clave Primaria basada estrictamente en UUID v4 para alineación de microservicios
             $table->uuid('id')->primary();
             
@@ -28,6 +29,10 @@ return new class extends Migration
             $table->softDeletes();
         });
     }
+    
+}
+
+        
 
     /**
      * Revierte la migración.
