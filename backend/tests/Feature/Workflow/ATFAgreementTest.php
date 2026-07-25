@@ -12,11 +12,6 @@ use Illuminate\Support\Str;
 beforeEach(function () {
 
   // 0. FORZAR LA MIGRACIÓN DEL MÓDULO WORKFLOW EN EL ENTORNO DE PRUEBAS
-    \Illuminate\Support\Facades\Artisan::call('migrate', [
-        '--path' => 'database/migrations/workflow',
-    ]);
-
-
     $user = User::factory()->create();
     $this->actingAs($user);
 
