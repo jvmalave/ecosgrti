@@ -25,10 +25,72 @@
               <i class="fas fa-chart-pie"></i> Reportes
             </a>
           </li>
+          <!-- OPCIÓN CONFIGURACIÓN CON SUBMENÚ DESPLEGABLE -->
+          <!-- <li class="nav-item">
+            <a class="nav-link rounded-3 px-3 py-2" 
+              (click)="toggleConfigMenu()" 
+              (keydown.enter)="toggleConfigMenu()"
+              tabindex="0"
+              style="cursor: pointer;">
+              <div class="d-flex w-100 justify-content-between align-items-center">
+                <span><i class="fas fa-cog me-2"></i> Configuración</span>
+                <i class="fas fa-chevron-down transition-transform" [class.rotate-180]="isConfigMenuOpen()"></i>
+              </div>
+            </a> -->
+
+          <!-- Submenú MDM (Solo se renderiza si isConfigMenuOpen es true) -->
+          <!-- @if (isConfigMenuOpen()) {
+              <ul class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition">
+                <li class="nav-item">
+                  <a class="nav-link rounded-3 px-3 py-2 small" 
+                    (click)="openConfigModal('UNIFIED_PERSON')" 
+                    (keydown.enter)="openConfigModal('UNIFIED_PERSON')"
+                    tabindex="0"
+                    style="cursor: pointer;">
+                    <i class="fas fa-id-card me-2"></i> Ficha Unificada de Persona
+                  </a>
+                </li>
+              </ul>
+            }
+          </li> -->
+
           <li class="nav-item">
-            <a href="#" class="nav-link rounded-3 px-3 py-2">
-              <i class="fas fa-cog"></i> Configuración
+            <a
+              class="nav-link rounded-3 px-3 py-2 text-white"
+              (click)="toggleConfigMenu()"
+              (keydown.enter)="toggleConfigMenu()"
+              tabindex="0"
+              style="cursor: pointer"
+            >
+              <div
+                class="d-flex w-100 justify-content-between align-items-center"
+              >
+                <span><i class="fas fa-cog me-2"></i> Configuración</span>
+                <i
+                  class="fas fa-chevron-down transition-transform"
+                  [class.rotate-180]="isConfigMenuOpen()"
+                ></i>
+              </div>
             </a>
+
+            <!-- Submenú MDM (Se renderiza si isConfigMenuOpen es true) -->
+            @if (isConfigMenuOpen()) {
+              <ul
+                class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition"
+              >
+                <li class="nav-item">
+                  <a
+                    class="nav-link rounded-3 px-3 py-2 small text-white"
+                    (click)="openUnifiedPersonListModal()"
+                    (keydown.enter)="openUnifiedPersonListModal()"
+                    tabindex="0"
+                    style="cursor: pointer"
+                  >
+                    <i class="fas fa-id-card me-2"></i> Directorio de Fichas
+                  </a>
+                </li>
+              </ul>
+            }
           </li>
         </ul>
       </nav>
@@ -379,6 +441,22 @@
             (requirementCreated)="loadRequirements()"
           >
           </lib-requirement-create-modal>
+        }
+
+        <!-- ======================================================= -->
+        <!-- MODALES DEL MÓDULO DE CONFIGURACIÓN (MDM)               -->
+        <!-- ======================================================= -->
+
+        @if (activeConfigModal() === 'UNIFIED_PERSON') {
+          <lib-unified-person-modal (modalClosed)="closeConfigModal()">
+          </lib-unified-person-modal>
+        }
+
+        @if (showUnifiedPersonListModal()) {
+          <lib-unified-person-list-modal
+            (modalClosed)="closeUnifiedPersonListModal()"
+          >
+          </lib-unified-person-list-modal>
         }
       </section>
     </main>

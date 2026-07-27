@@ -1,0 +1,249 @@
+<div class="modal-overlay">
+  <div class="modal-container">
+    <!-- Header Reactivo al Modo de Edición -->
+    <header class="modal-header">
+      <h2 class="d-flex align-items-center gap-2">
+        <i class="fas fa-id-card"></i> 
+        @if (isEditMode()) {
+          Actualizar Ficha Unificada
+        } @else {
+          Nueva Ficha Unificada de Persona
+        }
+      </h2>
+      <button class="close-btn" type="button" (click)="onClose()" title="Cerrar modal">
+        &times;
+      </button>
+    </header>
+
+    <form [formGroup]="personForm" (ngSubmit)="onSubmit()" class="modal-body">
+      <fieldset class="form-section">
+        <legend>Datos Personales</legend>
+        <div class="grid-2-cols">
+          
+          <!-- NOMBRES -->
+          <div class="form-group">
+            <label for="first_name_input">Nombres *</label>
+            <input
+              id="first_name_input"
+              type="text"
+              formControlName="first_name"
+              class="form-control"
+              placeholder="Ingrese los nombres"
+              [class.is-invalid]="personForm.get('first_name')?.invalid && personForm.get('first_name')?.touched"
+            />
+            @if (personForm.get('first_name')?.invalid && personForm.get('first_name')?.touched) {
+              <div class="invalid-feedback">
+                @if (personForm.get('first_name')?.hasError('required')) { <span>Los nombres son obligatorios.</span> }
+                @if (personForm.get('first_name')?.hasError('maxlength')) { <span>No puede exceder los 255 caracteres.</span> }
+                @if (personForm.get('first_name')?.hasError('serverError')) { <span>{{ personForm.get('first_name')?.getError('serverError') }}</span> }
+              </div>
+            }
+          </div>
+
+          <!-- APELLIDOS -->
+          <div class="form-group">
+            <label for="last_name_input">Apellidos *</label>
+            <input
+              id="last_name_input"
+              type="text"
+              formControlName="last_name"
+              class="form-control"
+              placeholder="Ingrese los apellidos"
+              [class.is-invalid]="personForm.get('last_name')?.invalid && personForm.get('last_name')?.touched"
+            />
+            @if (personForm.get('last_name')?.invalid && personForm.get('last_name')?.touched) {
+              <div class="invalid-feedback">
+                @if (personForm.get('last_name')?.hasError('required')) { <span>Los apellidos son obligatorios.</span> }
+                @if (personForm.get('last_name')?.hasError('maxlength')) { <span>No puede exceder los 255 caracteres.</span> }
+                @if (personForm.get('last_name')?.hasError('serverError')) { <span>{{ personForm.get('last_name')?.getError('serverError') }}</span> }
+              </div>
+            }
+          </div>
+
+          <!-- CORREO ELECTRÓNICO -->
+          <div class="form-group">
+            <label for="email">Correo Electrónico *</label>
+            <input
+              type="email"
+              id="email"
+              class="form-control"
+              formControlName="email"
+              placeholder="usuario@cantv.com.ve"
+              [class.is-invalid]="personForm.get('email')?.invalid && personForm.get('email')?.touched"
+            />
+            @if (personForm.get('email')?.invalid && personForm.get('email')?.touched) {
+              <div class="invalid-feedback">
+                @if (personForm.get('email')?.hasError('required')) { <span>El correo electrónico es obligatorio.</span> }
+                @if (personForm.get('email')?.hasError('email')) { <span>Debe ingresar un formato de correo válido.</span> }
+                @if (personForm.get('email')?.hasError('maxlength')) { <span>El correo no puede exceder los 255 caracteres.</span> }
+                @if (personForm.get('email')?.hasError('serverError')) { <span>{{ personForm.get('email')?.getError('serverError') }}</span> }
+              </div>
+            }
+          </div>
+
+          <!-- TELÉFONO -->
+          <div class="form-group">
+            <label for="phone_input">Teléfono</label>
+            <input
+              id="phone_input"
+              type="text"
+              formControlName="phone"
+              class="form-control"
+              placeholder="+58 412 0000000"
+              [class.is-invalid]="personForm.get('phone')?.invalid && personForm.get('phone')?.touched"
+            />
+            @if (personForm.get('phone')?.invalid && personForm.get('phone')?.touched) {
+              <div class="invalid-feedback">
+                @if (personForm.get('phone')?.hasError('maxlength')) { <span>El teléfono no puede exceder los 255 caracteres.</span> }
+                @if (personForm.get('phone')?.hasError('serverError')) { <span>{{ personForm.get('phone')?.getError('serverError') }}</span> }
+              </div>
+            }
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- TOGGLES -->
+      <fieldset class="form-section toggles-section">
+        <legend>Perfiles y Accesos</legend>
+        <div class="toggles-grid">
+          <label for="is_functional_toggle" class="toggle-control">
+            <input id="is_functional_toggle" type="checkbox" formControlName="is_functional" />
+            <span class="toggle-slider"></span> Es Consultor Funcional
+          </label>
+          <label for="is_cspe_toggle" class="toggle-control">
+            <input id="is_cspe_toggle" type="checkbox" formControlName="is_cspe" />
+            <span class="toggle-slider"></span> Es Consultor CSPE
+          </label>
+          <label for="has_system_access_toggle" class="toggle-control">
+            <!-- Bloqueamos visualmente el toggle de sistema si es CSPE (Regla de negocio) -->
+            <input 
+              id="has_system_access_toggle" 
+              type="checkbox" 
+              formControlName="has_system_access" 
+            />
+            <span class="toggle-slider"></span> Posee Acceso al Sistema
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- UNIDAD SOLICITANTE -->
+      @if (isFunctional()) {
+        <fieldset class="form-section highlight-section">
+          <legend>Asignación Organizacional</legend>
+          <div class="form-group">
+            <label for="requesting_unit_select">Unidad Solicitante *</label>
+            <select
+              id="requesting_unit_select"
+              formControlName="requesting_unit_id"
+              class="form-control"
+              [class.is-invalid]="personForm.get('requesting_unit_id')?.invalid && personForm.get('requesting_unit_id')?.touched"
+            >
+              <option [ngValue]="null">Seleccione una unidad...</option>
+              @for (unit of requestingUnits(); track unit.id) {
+                <option [value]="unit.id">{{ unit.name }}</option>
+              }
+            </select>
+            @if (personForm.get('requesting_unit_id')?.invalid && personForm.get('requesting_unit_id')?.touched) {
+              <div class="invalid-feedback">
+                @if (personForm.get('requesting_unit_id')?.hasError('required')) { <span>Debe seleccionar una unidad solicitante.</span> }
+                @if (personForm.get('requesting_unit_id')?.hasError('serverError')) { <span>{{ personForm.get('requesting_unit_id')?.getError('serverError') }}</span> }
+              </div>
+            }
+          </div>
+        </fieldset>
+      }
+
+      <!-- ACCESO AL SISTEMA -->
+      @if (hasSystemAccess()) {
+        <fieldset class="form-section highlight-section">
+          <legend>Credenciales de Acceso</legend>
+          <div class="grid-2-cols">
+            
+            <!-- USUARIO (NAME) -->
+            <div class="form-group">
+              <label for="username_input">Nombre del Usuario *</label>
+              <input
+                id="username_input"
+                type="text"
+                formControlName="name"
+                class="form-control"
+                autocomplete="new-password"
+                [class.is-invalid]="personForm.get('name')?.invalid && personForm.get('name')?.touched"
+              />
+              @if (personForm.get('name')?.invalid && personForm.get('name')?.touched) {
+                <div class="invalid-feedback">
+                  @if (personForm.get('name')?.hasError('required')) { <span>El identificador de usuario es obligatorio.</span> }
+                  @if (personForm.get('name')?.hasError('maxlength')) { <span>No puede exceder los 255 caracteres.</span> }
+                  @if (personForm.get('name')?.hasError('serverError')) { <span>{{ personForm.get('name')?.getError('serverError') }}</span> }
+                </div>
+              }
+            </div>
+
+            <!-- CONTRASEÑA (Dinámica: Opcional en Update, Obligatoria en Create) -->
+            <div class="form-group">
+              <label for="password_input">
+                Contraseña
+                @if (!isEditMode()) {
+                  *
+                } @else {
+                  <small class="text-muted" style="font-weight: normal; margin-left: 5px;">(Opcional)</small>
+                }
+              </label>
+              <input
+                id="password_input"
+                type="password"
+                formControlName="password"
+                class="form-control"
+                autocomplete="new-password"
+                [placeholder]="isEditMode() ? 'Dejar en blanco para mantener la actual' : 'Ingrese una contraseña segura'"
+                [class.is-invalid]="personForm.get('password')?.invalid && personForm.get('password')?.touched"
+              />
+              @if (personForm.get('password')?.invalid && personForm.get('password')?.touched) {
+                <div class="invalid-feedback">
+                  @if (personForm.get('password')?.hasError('required')) { <span>La contraseña es obligatoria.</span> }
+                  @if (personForm.get('password')?.hasError('minlength')) { <span>Debe contener al menos 8 caracteres.</span> }
+                  @if (personForm.get('password')?.hasError('serverError')) { <span>{{ personForm.get('password')?.getError('serverError') }}</span> }
+                </div>
+              }
+            </div>
+
+            <!-- ROLES -->
+            <div class="form-group span-full">
+              <label for="roles_select">Roles de Sistema *</label>
+              <select
+                id="roles_select"
+                formControlName="roles"
+                class="form-control"
+                multiple
+                [class.is-invalid]="personForm.get('roles')?.invalid && personForm.get('roles')?.touched"
+              >
+                @for (role of systemRoles; track role) {
+                  <option [value]="role">{{ role }}</option>
+                }
+              </select>
+              @if (personForm.get('roles')?.invalid && personForm.get('roles')?.touched) {
+                <div class="invalid-feedback">
+                  @if (personForm.get('roles')?.hasError('required')) { <span>Debe asignar al menos un rol.</span> }
+                  @if (personForm.get('roles')?.hasError('serverError')) { <span>{{ personForm.get('roles')?.getError('serverError') }}</span> }
+                </div>
+              }
+              <small class="help-text">Presione Ctrl (o Cmd) para seleccionar múltiples roles.</small>
+            </div>
+          </div>
+        </fieldset>
+      }
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onClose()">Cancelar</button>
+        <!-- Botón de Confirmación Reactivo -->
+        <button type="submit" class="btn btn-primary" [disabled]="personForm.invalid">
+          @if (isEditMode()) {
+            Guardar Cambios
+          } @else {
+            Registrar Identidad
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

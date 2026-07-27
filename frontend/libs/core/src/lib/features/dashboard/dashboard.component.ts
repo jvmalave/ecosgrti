@@ -13,6 +13,7 @@ import { RequirementDashboard } from '../../data-access/models/requirement.model
 import { RequirementModalComponent } from '../requirement-modal/requirement-modal.component';
 import { ApiResponse } from '../../data-access/models/api-response.model';
 import { WorkflowStateService, AtfAgreementsModalComponent, AtfAgreementsListModalComponent, AtfAgreementDetail } from '@ecosgrti/workflow';
+import { UnifiedPersonModalComponent, UnifiedPersonListModalComponent } from '@ecosgrti/security';
 import { EstimationFormComponent } from '../estimation-form/estimation-form.component';
 import { RequirementCreateComponent } from '../requirement-create/requirement-create.component';
 
@@ -21,7 +22,18 @@ import { RequirementCreateComponent } from '../requirement-create/requirement-cr
   selector: 'lib-dashboard',
   standalone: true,
   // 4. Inyectamos ReactiveFormsModule aquí para poder usar [formControl] en el HTML
-  imports: [CommonModule, UpperCasePipe, ReactiveFormsModule, RequirementModalComponent, AtfAgreementsModalComponent, AtfAgreementsListModalComponent, EstimationFormComponent, RequirementCreateComponent], 
+  imports: [
+    CommonModule, 
+    UpperCasePipe, 
+    ReactiveFormsModule, 
+    RequirementModalComponent, 
+    AtfAgreementsModalComponent, 
+    AtfAgreementsListModalComponent, 
+    EstimationFormComponent, 
+    RequirementCreateComponent,
+    UnifiedPersonModalComponent,
+    UnifiedPersonListModalComponent
+  ], 
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -45,6 +57,8 @@ export class DashboardComponent implements OnInit {
   public atfModalMode = signal<'create' | 'view'>('create');
   public selectedAgreementData = signal<AtfAgreementDetail | null>(null);
   public isSelectedReqAtfOpen = signal<boolean>(false);
+
+  
 
   // Signals para el control del Modal ATF
   public isAtfModalOpen = signal<boolean>(false);
@@ -72,6 +86,49 @@ export class DashboardComponent implements OnInit {
 
   // Señal para controlar la visibilidad del modal de creación
   public isCreateModalOpen = signal<boolean>(false);
+
+  // ==========================================
+  // SIGNALS PARA MÓDULO DE CONFIGURACIÓN (MDM)
+  // ==========================================
+  public isConfigMenuOpen = signal<boolean>(false);
+  public showUnifiedPersonListModal = signal<boolean>(false);
+  // Verifica que tienes esta señal declarada
+  public activeConfigModal = signal<'NONE' | 'UNIFIED_PERSON'>('NONE');
+
+  // public toggleConfigMenu(): void {
+  //   this.isConfigMenuOpen.update(current => !current);
+  // }
+
+  /**
+   * Alterna la visibilidad del submenú de configuración en el aside.
+   */
+  public toggleConfigMenu(): void {
+    this.isConfigMenuOpen.update(open => !open);
+  }
+  /**
+   * Abre el modal del listado de fichas unificadas y cierra el submenú lateral.
+   */
+  public openUnifiedPersonListModal(): void {
+    this.showUnifiedPersonListModal.set(true);
+    this.isConfigMenuOpen.set(false);
+  }
+
+  /**
+   * Cierra el modal del listado de fichas unificadas.
+   */
+  public closeUnifiedPersonListModal(): void {
+    this.showUnifiedPersonListModal.set(false);
+  }
+
+  public openConfigModal(modalType: 'NONE' | 'UNIFIED_PERSON'): void {
+    this.activeConfigModal.set(modalType);
+    this.isConfigMenuOpen.set(false); // Cierra el menú lateral tras elegir
+  }
+
+  public closeConfigModal(): void {
+    //console.log('2. [Padre] Evento recibido en el Dashboard. Destruyendo el modal...');
+    this.activeConfigModal.set('NONE');
+  }
 
   // Control Reactivo para el Buscador
   searchControl = new FormControl('');
@@ -414,4 +471,8 @@ public isGrEnabled(status: string): boolean {
   public closeCreateModal(): void {
     this.isCreateModalOpen.set(false);
   }
+
+  
+
+  
 }
