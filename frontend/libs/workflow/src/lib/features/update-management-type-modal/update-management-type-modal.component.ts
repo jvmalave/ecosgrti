@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import Swal from 'sweetalert2';
 import { WorkflowApiService } from '../../data-access/services/atf.service';
-import { NotificationService } from '../../data-access/services/notitication.services';
+import { NotificationService } from '../../data-access/services/notification.services';
 
 
 @Component({

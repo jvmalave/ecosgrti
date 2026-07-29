@@ -19,7 +19,7 @@ jobs:
         run: |
           docker compose -f docker-compose.ci.yml run --entrypoint="" backend sh -c "
             composer install --no-interaction &&
-            cp .env.example .env.testing &&
+            cp  .example .env.testing &&
             php artisan key:generate --env=testing &&
             php artisan jwt:secret --env=testing --force &&
             # 💡 TRUCO: Forzamos a que la tabla de control de migraciones no se guarde en public

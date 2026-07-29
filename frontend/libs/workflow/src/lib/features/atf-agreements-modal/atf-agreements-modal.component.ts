@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { WorkflowApiService } from '../../data-access/services/atf.service';
 import { AtfAgreementPayload, AtfAgreementResponse, AtfAgreementDetail } from '../../data-access/models/atf-agreement.model';
 import { HttpErrorResponse } from '@angular/common/http';
-import { NotificationService } from '../../data-access/services/notitication.services';
+import { NotificationService } from '../../data-access/services/notification.services';
 
 @Component({
   selector: 'lib-atf-agreements-modal',

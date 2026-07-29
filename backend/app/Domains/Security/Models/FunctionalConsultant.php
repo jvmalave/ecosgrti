@@ -5,13 +5,13 @@ namespace App\Domains\Security\Models;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class FunctionalConsultant extends Model
 {
     use HasFactory;
     use HasUuid;
-    use SoftDeletes;
+
 
     // 1. Le decimos que NO es autoincremental
     public $incrementing = false;

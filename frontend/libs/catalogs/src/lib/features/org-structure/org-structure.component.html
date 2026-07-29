@@ -1,0 +1,243 @@
+<!-- ========================================== -->
+<!-- MODAL MAESTRO: Estructura Organizacional   -->
+<!-- ========================================== -->
+<div class="modal-overlay">
+  <div class="modal-container modal-xl">
+    
+    <!-- Cabecera Corporativa -->
+    <div class="modal-header brand-gradient">
+      <h2><i class="fas fa-sitemap me-2"></i> Estructura Organizacional</h2>
+      <button type="button" class="close-btn" (click)="closeMainModal()" aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Cuerpo del Modal -->
+    <div class="modal-body position-relative">
+      
+      <!-- Botones de Acción Principales -->
+      <div class="d-flex justify-content-end gap-2 mb-4">
+        <button class="btn btn-outline-brand rounded-pill" (click)="openSocietyModal()">
+          <i class="fas fa-plus me-1"></i> Sociedad
+        </button>
+        <button class="btn btn-outline-brand rounded-pill" (click)="openSystemModal()">
+          <i class="fas fa-plus me-1"></i> Sistema
+        </button>
+        <button class="btn btn-outline-brand rounded-pill" (click)="openUnitModal()">
+          <i class="fas fa-plus me-1"></i> Unidad Solicitante
+        </button>
+      </div>
+
+      <!-- Estado de Carga -->
+      @if (isLoading()) {
+        <div class="d-flex justify-content-center align-items-center my-5" style="min-height: 200px;">
+          <div class="spinner-border text-brand" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+        </div>
+      } @else {
+        <!-- Visualización del Árbol Jerárquico -->
+        <div class="card shadow-sm border-0 border-brand" style="border-top: 3px solid #d500f9 !important;">
+          <div class="card-body">
+            <h5 class="card-title text-brand fw-bold">Catálogos de la Organización</h5>
+            <hr class="opacity-25">
+            <div class="row">
+              
+              <!-- COLUMNA 1: SOCIEDADES -->
+              <div class="col-md-4">
+                <h6 class="text-secondary fw-bold">Sociedades ({{ societiesMaster().length }})</h6>
+                <ul class="list-group">
+                  @for (soc of societiesMaster(); track soc.id) {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      <div>
+                        <span class="d-block fw-semibold" [class.text-muted]="!soc.is_active">{{ soc.name }}</span>
+                        <small class="text-muted">{{ soc.acronym || 'N/A' }}</small>
+                      </div>
+                      <div class="d-flex align-items-center gap-1">
+                        <span class="badge rounded-pill" [ngClass]="soc.is_active ? 'bg-success' : 'bg-danger'">
+                          {{ soc.is_active ? 'Activo' : 'Inactivo' }}
+                        </span>
+                        <button class="btn btn-sm btn-link px-1" style="color: #d500f9" (click)="openSocietyModal(soc)" title="Editar">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-link p-0" [ngClass]="soc.is_active ? 'text-danger' : 'text-success'" 
+                                (click)="toggleStatus('societies', soc.id, soc.is_active, soc.name)" 
+                                [title]="soc.is_active ? 'Desactivar' : 'Activar'">
+                          <i class="fas" [ngClass]="soc.is_active ? 'fa-power-off' : 'fa-check-circle'"></i>
+                        </button>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              </div>
+
+              <!-- COLUMNA 2: SISTEMAS -->
+              <div class="col-md-4">
+                <h6 class="text-secondary fw-bold">Sistemas ({{ systemsMaster().length }})</h6>
+                <ul class="list-group">
+                  @for (sys of systemsMaster(); track sys.id) {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      <span class="fw-semibold" [class.text-muted]="!sys.is_active">{{ sys.name }}</span>
+                      <div class="d-flex align-items-center gap-1">
+                        <span class="badge rounded-pill" [ngClass]="sys.is_active ? 'bg-success' : 'bg-danger'">
+                          {{ sys.is_active ? 'Activo' : 'Inactivo' }}
+                        </span>
+                        <button class="btn btn-sm btn-link px-1" style="color: #d500f9" (click)="openSystemModal(sys)" title="Editar">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-link p-0" [ngClass]="sys.is_active ? 'text-danger' : 'text-success'" 
+                                (click)="toggleStatus('systems', sys.id, sys.is_active, sys.name)"
+                                [title]="sys.is_active ? 'Desactivar' : 'Activar'">
+                          <i class="fas" [ngClass]="sys.is_active ? 'fa-power-off' : 'fa-check-circle'"></i>
+                        </button>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              </div>
+
+              <!-- COLUMNA 3: UNIDADES SOLICITANTES -->
+              <div class="col-md-4">
+                <h6 class="text-secondary fw-bold">Unidades Solicitantes ({{ unitsMaster().length }})</h6>
+                <ul class="list-group">
+                  @for (unit of unitsMaster(); track unit.id) {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      <span class="fw-semibold" [class.text-muted]="!unit.is_active">{{ unit.name }}</span>
+                      <div class="d-flex align-items-center gap-1">
+                        <span class="badge rounded-pill" [ngClass]="unit.is_active ? 'bg-success' : 'bg-danger'">
+                          {{ unit.is_active ? 'Activo' : 'Inactivo' }}
+                        </span>
+                        <button class="btn btn-sm btn-link px-1" style="color: #d500f9;" (click)="openUnitModal(unit)" title="Editar">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-link p-0" [ngClass]="unit.is_active ? 'text-danger' : 'text-success'" 
+                                (click)="toggleStatus('requesting-units', unit.id, unit.is_active, unit.name)"
+                                [title]="unit.is_active ? 'Desactivar' : 'Activar'">
+                          <i class="fas" [ngClass]="unit.is_active ? 'fa-power-off' : 'fa-check-circle'"></i>
+                        </button>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- SUB-MODALES DE GESTIÓN (CRUD)              -->
+<!-- ========================================== -->
+
+<!-- MODAL: SOCIEDAD -->
+@if (isAddSocietyModalOpen()) {
+  <div class="modal-overlay" style="z-index: 1060; background-color: rgba(0, 0, 0, 0.7);">
+    <div class="modal-container" style="max-width: 500px;">
+      <div class="modal-header brand-gradient">
+        <h3>{{ editingNodeId() ? 'Editar' : 'Nueva' }} Sociedad</h3>
+        <button type="button" class="close-btn" (click)="closeSocietyModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <form [formGroup]="societyForm" (ngSubmit)="onSubmitSociety()">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="societyNameInput" class="form-label fw-bold text-secondary">Nombre de la Sociedad</label>
+            <input id="societyNameInput" type="text" class="form-control border-brand" formControlName="name" placeholder="Ej. CANTV"
+                  [class.is-invalid]="societyForm.get('name')?.invalid && societyForm.get('name')?.touched">
+          </div>
+          <div class="mb-3">
+            <label for="societyAcronymInput" class="form-label fw-bold text-secondary">Acrónimo (Opcional)</label>
+            <input id="societyAcronymInput" type="text" class="form-control border-brand" formControlName="acronym" placeholder="Ej. C.A.">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeSocietyModal()">Cancelar</button>
+          <button type="submit" class="btn btn-brand" [disabled]="societyForm.invalid">
+            <i class="fas fa-save me-1"></i> {{ editingNodeId() ? 'Actualizar' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- MODAL: SISTEMA -->
+@if (isAddSystemModalOpen()) {
+  <div class="modal-overlay" style="z-index: 1060; background-color: rgba(0, 0, 0, 0.7);">
+    <div class="modal-container" style="max-width: 500px;">
+      <div class="modal-header brand-gradient">
+        <h3>{{ editingNodeId() ? 'Editar' : 'Nuevo' }} Sistema</h3>
+        <button type="button" class="close-btn" (click)="closeSystemModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <form [formGroup]="systemForm" (ngSubmit)="onSubmitSystem()">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="systemSocietySelect" class="form-label fw-bold text-secondary">1. Sociedad Padre</label>
+            <select id="systemSocietySelect" class="form-select border-brand" formControlName="society_id"
+                    [class.is-invalid]="systemForm.get('society_id')?.invalid && systemForm.get('society_id')?.touched">
+              <option value="">Seleccione...</option>
+              @for (soc of societiesMaster(); track soc.id) { <option [value]="soc.id">{{ soc.name }}</option> }
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="systemNameInput" class="form-label fw-bold text-secondary">2. Nombre del Sistema</label>
+            <input id="systemNameInput" type="text" class="form-control border-brand" formControlName="name" placeholder="Ej. ERP Core"
+                  [class.is-invalid]="systemForm.get('name')?.invalid && systemForm.get('name')?.touched">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeSystemModal()">Cancelar</button>
+          <button type="submit" class="btn btn-brand" [disabled]="systemForm.invalid">
+            <i class="fas fa-save me-1"></i> {{ editingNodeId() ? 'Actualizar' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- MODAL: UNIDAD SOLICITANTE -->
+@if (isAddUnitModalOpen()) {
+  <div class="modal-overlay" style="z-index: 1060; background-color: rgba(0, 0, 0, 0.7);">
+    <div class="modal-container" style="max-width: 650px;">
+      <div class="modal-header brand-gradient">
+        <h3>{{ editingNodeId() ? 'Editar' : 'Nueva' }} Unidad Solicitante</h3>
+        <button type="button" class="close-btn" (click)="closeUnitModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <form [formGroup]="unitForm" (ngSubmit)="onSubmitUnit()">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="unitSocietySelect" class="form-label fw-bold text-secondary">1. Sociedad Padre</label>
+            <select id="unitSocietySelect" class="form-select border-brand" formControlName="society_id" (change)="onSocietySelectionChange($event)"
+                    [class.is-invalid]="unitForm.get('society_id')?.invalid && unitForm.get('society_id')?.touched">
+              <option value="">Seleccione...</option>
+              @for (soc of societiesMaster(); track soc.id) { <option [value]="soc.id">{{ soc.name }}</option> }
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="unitSystemSelect" class="form-label fw-bold text-secondary">2. Sistema Padre</label>
+            <select id="unitSystemSelect" class="form-select border-brand" formControlName="system_id"
+                    [class.is-invalid]="unitForm.get('system_id')?.invalid && unitForm.get('system_id')?.touched">
+              <option value="">Seleccione...</option>
+              @for (sys of sistemasFiltrados(); track sys.id) { <option [value]="sys.id">{{ sys.name }}</option> }
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="unitNameInput" class="form-label fw-bold text-secondary">3. Nombre de la Unidad</label>
+            <input id="unitNameInput" type="text" class="form-control border-brand" formControlName="name" placeholder="Ej. Gerencia de Operaciones"
+                  [class.is-invalid]="unitForm.get('name')?.invalid && unitForm.get('name')?.touched">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeUnitModal()">Cancelar</button>
+          <button type="submit" class="btn btn-brand" [disabled]="unitForm.invalid">
+            <i class="fas fa-save me-1"></i> {{ editingNodeId() ? 'Actualizar' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

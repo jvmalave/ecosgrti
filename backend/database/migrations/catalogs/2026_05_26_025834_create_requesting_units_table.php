@@ -10,10 +10,12 @@ return new class extends Migration
     {
         Schema::create('catalogs.requesting_units', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            // Llave foránea hacia la tabla systems dentro del mismo esquema
-            $table->foreignUuid('system_id')->constrained('catalogs.systems')->onDelete('cascade');
+            $table->foreignUuid('system_id')->constrained('catalogs.systems')->onDelete('restrict');
             $table->string('name');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
+
+            $table->unique(['system_id', 'name'], 'uk_units_system_name');
         });
     }
 

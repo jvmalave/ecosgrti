@@ -3,6 +3,6 @@ export * from './lib/features/atf-agreements-list-modal/atf-agreements-list-moda
 export * from './lib/data-access/models/workflow-state.interface';
 export * from './lib/data-access/services/workflow-state.service';
 export * from './lib/data-access/models/atf-agreement.model'
-export * from './lib/data-access/services/notitication.services';
+export * from './lib/data-access/services/notification.services';
 
 

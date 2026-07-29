@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Movido al esquema 'catalogs'
         Schema::create('catalogs.societies', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name')->unique(); 
-            $table->string('acronym')->nullable(); 
+            $table->string('name')->unique();
+            $table->string('acronym')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

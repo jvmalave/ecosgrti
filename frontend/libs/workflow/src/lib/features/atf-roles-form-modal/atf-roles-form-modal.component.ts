@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RequirementRole } from '../../data-access/models/requirement-role.model';
 import { RequirementRoleService } from '../../data-access/services/requirement-role.service';
-import { NotificationService } from '../../data-access/services/notitication.services';
+import { NotificationService } from '../../data-access/services/notification.services';
 
 
 @Component({

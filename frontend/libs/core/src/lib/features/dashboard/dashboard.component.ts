@@ -14,6 +14,7 @@ import { RequirementModalComponent } from '../requirement-modal/requirement-moda
 import { ApiResponse } from '../../data-access/models/api-response.model';
 import { WorkflowStateService, AtfAgreementsModalComponent, AtfAgreementsListModalComponent, AtfAgreementDetail } from '@ecosgrti/workflow';
 import { UnifiedPersonModalComponent, UnifiedPersonListModalComponent } from '@ecosgrti/security';
+import { OrgStructureComponent } from '@ecosgrti/catalogs';
 import { EstimationFormComponent } from '../estimation-form/estimation-form.component';
 import { RequirementCreateComponent } from '../requirement-create/requirement-create.component';
 
@@ -32,7 +33,8 @@ import { RequirementCreateComponent } from '../requirement-create/requirement-cr
     EstimationFormComponent, 
     RequirementCreateComponent,
     UnifiedPersonModalComponent,
-    UnifiedPersonListModalComponent
+    UnifiedPersonListModalComponent,
+    OrgStructureComponent
   ], 
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -87,6 +89,9 @@ export class DashboardComponent implements OnInit {
   // Señal para controlar la visibilidad del modal de creación
   public isCreateModalOpen = signal<boolean>(false);
 
+  // Señal para controlar la visibilidad del modal de estructura de organización
+  public showOrgStructureModal = signal<boolean>(false);
+
   // ==========================================
   // SIGNALS PARA MÓDULO DE CONFIGURACIÓN (MDM)
   // ==========================================
@@ -95,10 +100,7 @@ export class DashboardComponent implements OnInit {
   // Verifica que tienes esta señal declarada
   public activeConfigModal = signal<'NONE' | 'UNIFIED_PERSON'>('NONE');
 
-  // public toggleConfigMenu(): void {
-  //   this.isConfigMenuOpen.update(current => !current);
-  // }
-
+  
   /**
    * Alterna la visibilidad del submenú de configuración en el aside.
    */
@@ -112,27 +114,24 @@ export class DashboardComponent implements OnInit {
     this.showUnifiedPersonListModal.set(true);
     this.isConfigMenuOpen.set(false);
   }
-
   /**
    * Cierra el modal del listado de fichas unificadas.
    */
   public closeUnifiedPersonListModal(): void {
     this.showUnifiedPersonListModal.set(false);
   }
-
+// Abre el modal de configuración listando la ficha unificada
   public openConfigModal(modalType: 'NONE' | 'UNIFIED_PERSON'): void {
     this.activeConfigModal.set(modalType);
     this.isConfigMenuOpen.set(false); // Cierra el menú lateral tras elegir
   }
-
+// Cierra el modal de configuración listando la ficha unificada
   public closeConfigModal(): void {
     //console.log('2. [Padre] Evento recibido en el Dashboard. Destruyendo el modal...');
     this.activeConfigModal.set('NONE');
   }
-
   // Control Reactivo para el Buscador
   searchControl = new FormControl('');
-
   public selectedReqManagementType = computed(() => {
     const reqId = this.selectedReqForAtf();
     const allReqs = this.requirements();
@@ -140,7 +139,6 @@ export class DashboardComponent implements OnInit {
     if (!reqId || !allReqs.length) {
         return 'Cargando...'; 
     }
-    
     const foundReq = allReqs.find(req => req.id === reqId);
     
     if (foundReq) {
@@ -149,7 +147,7 @@ export class DashboardComponent implements OnInit {
 
     return 'No Definido';
   });
-
+  //
   public selectedReqCreationDate = computed(() => {
     const reqId = this.selectedReqForAtf();
     const allReqs = this.requirements();
@@ -471,6 +469,21 @@ public isGrEnabled(status: string): boolean {
   public closeCreateModal(): void {
     this.isCreateModalOpen.set(false);
   }
+
+  /**
+ * Abre el modal de Estructura Organizacional y cierra el submenú lateral.
+ */
+public openOrgStructureModal(): void {
+  this.showOrgStructureModal.set(true);
+  this.isConfigMenuOpen.set(false);
+}
+
+/**
+ * Cierra el modal de Estructura Organizacional.
+ */
+public closeOrgStructureModal(): void {
+  this.showOrgStructureModal.set(false);
+}
 
   
 

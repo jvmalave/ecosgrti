@@ -21,7 +21,8 @@
       "@sgrti/core": ["./libs/core/src/index.ts"],
       "@app/workflow": ["./libs/workflow/src/index.ts"],
       "@ecosgrti/workflow": ["./libs/workflow/src/index.ts"],
-      "@ecosgrti/shared/interfaces": ["./libs/shared/interfaces/src/index.ts"]
+      "@ecosgrti/shared/interfaces": ["./libs/shared/interfaces/src/index.ts"],
+      "@ecosgrti/catalogs": ["./libs/catalogs/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
