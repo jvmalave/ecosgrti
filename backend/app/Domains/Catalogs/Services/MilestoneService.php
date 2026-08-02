@@ -18,7 +18,7 @@ class MilestoneService
             $query->where('management_type', $managementType);
         }
 
-        return $query->orderBy('phase_code', 'asc')->get();
+        return $query->orderBy('sort_order', 'asc')->get();
     }
 
     // REGISTRA UN NUEVO HITO TÉCNICO EN EL CATÁLOGO MAESTRO

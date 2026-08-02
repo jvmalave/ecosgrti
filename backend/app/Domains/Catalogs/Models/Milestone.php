@@ -28,6 +28,7 @@ class Milestone extends Model
         'status_code',
         'default_weight',
         'management_type',
+        'sort_order'
     ];
 
     

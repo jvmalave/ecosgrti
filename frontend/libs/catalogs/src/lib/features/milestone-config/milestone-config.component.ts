@@ -37,7 +37,8 @@ export class MilestoneConfigComponent implements OnInit {
     name: ['', [Validators.required, Validators.maxLength(255)]],
     status_code: ['', [Validators.required, Validators.maxLength(50)]],
     default_weight: [0, [Validators.required, Validators.min(0)]],
-    management_type: ['ROLES', [Validators.required]]
+    management_type: ['ROLES', [Validators.required]],
+    sort_order: [1, [Validators.required, Validators.min(1)]]
   });
 
   ngOnInit(): void {

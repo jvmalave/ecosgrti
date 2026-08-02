@@ -142,22 +142,28 @@
             </div>
           }
         </div>
-        @if (matrixForm.invalid && currentTotalSum() === 100) {
+        <!-- @if (matrixForm.invalid && currentTotalSum() === 100) {
           <div class="text-danger small fw-bold text-end mb-2">
             * Existen campos inválidos en la tabla (verifique que ningún peso
             haya quedado vacío).
           </div>
-        }
+        } -->
       </form>
     </div>
 
     <!-- Pie del Modal -->
     <div class="modal-footer d-flex flex-column align-items-end">
       <!-- Chivato Visual: Si la suma da 100 pero hay un campo vacío o en cero -->
-      @if (matrixForm.invalid && currentTotalSum() === 100) {
+      <!-- @if (matrixForm.invalid && currentTotalSum() === 100) {
         <div class="text-danger small fw-bold mb-2">
           <i class="bi bi-x-circle-fill me-1"></i> Existen campos vacíos o con
           valor menor a 0.01% en la tabla superior.
+        </div>
+      } -->
+
+      @if (!isSumValid) {
+        <div class="text-danger small fw-bold mb-2">
+          <i class="bi bi-exclamation-triangle me-1"></i> Existen campos vacíos, inválidos o la sumatoria total no es exactamente 100.00%.
         </div>
       }
 

@@ -25,7 +25,8 @@ class MilestoneRequest extends FormRequest
             'name'            => ['required', 'string', 'max:255'],
             'status_code'     => ['required', 'string', 'max:50'],
             'default_weight'  => ['required', 'numeric', 'min:0'],
-            'management_type' => ['required', 'string', 'in:ROLES,ENTREGABLES,MIXTO']
+            'management_type' => ['required', 'string', 'in:ROLES,ENTREGABLES,MIXTO'],
+            'sort_order'      => ['required', 'integer', 'min:1'],
         ];
     }
 
@@ -42,6 +43,9 @@ class MilestoneRequest extends FormRequest
             'name.required' => 'El nombre es obligatorio.',
             'status_code.required' => 'El código de estado es obligatorio.',
             'default_weight.required' => 'El peso es obligatorio.',
+            'sort_order.required' => 'El orden es obligatorio.',
+            'sort_order.integer' => 'El orden debe ser un número entero.',
+            'sort_order.min' => 'El orden debe ser un número positivo.',
         ];
     }
 }

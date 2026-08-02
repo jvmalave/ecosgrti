@@ -8,4 +8,5 @@ export interface Milestone {
   management_type: 'ROLES' | 'ENTREGABLES' | 'MIXTO';
   created_at?: string;
   updated_at?: string;
+  sort_order: number;
 }
