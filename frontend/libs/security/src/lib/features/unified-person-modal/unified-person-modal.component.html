@@ -10,8 +10,9 @@
           Nueva Ficha Unificada de Persona
         }
       </h2>
-      <button class="close-btn" type="button" (click)="onClose()" title="Cerrar modal">
-        &times;
+      <button class="close-btn" type="button" 
+        (click)="onClose()" title="Cerrar modal">
+        <i class="bi bi-x"></i>
       </button>
     </header>
 
@@ -234,12 +235,18 @@
       }
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="onClose()">Cancelar</button>
+        <button type="button" class="btn btn-secondary" 
+          (click)="onClose()">
+          <i class="bi bi-x-circle me-1"></i>
+          Cancelar</button>
         <!-- Botón de Confirmación Reactivo -->
-        <button type="submit" class="btn btn-primary" [disabled]="personForm.invalid">
+        <button type="submit" class="btn btn-primary" 
+          [disabled]="personForm.invalid">
           @if (isEditMode()) {
+            <i class="bi bi-save me-1"></i>
             Guardar Cambios
           } @else {
+            <i class="bi bi-person-plus me-1"></i>
             Registrar Identidad
           }
         </button>

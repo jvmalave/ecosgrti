@@ -74,6 +74,28 @@
                     Organizacional
                   </a>
                 </li>
+                <li class="nav-item">
+                  <a
+                    class="nav-link rounded-3 px-3 py-2 small text-white"
+                    (click)="openProgressMatrixModal()"
+                    (keydown.enter)="openProgressMatrixModal()"
+                    tabindex="0"
+                    style="cursor: pointer"
+                  >
+                    <i class="fas fa-sliders-h me-2"></i> Matrices de Progreso
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a
+                    class="nav-link rounded-3 px-3 py-2 small text-white"
+                    (click)="openMilestoneConfigModal()"
+                    (keydown.enter)="openMilestoneConfigModal()"
+                    tabindex="0"
+                    style="cursor: pointer"
+                  >
+                    <i class="fas fa-list-check me-2"></i> Hitos Técnicos (MDM)
+                  </a>
+                </li>
               </ul>
             }
           </li>
@@ -433,7 +455,9 @@
         <!-- ======================================================= -->
 
         @if (activeConfigModal() === 'UNIFIED_PERSON') {
-          <lib-unified-person-modal (modalClosed)="closeConfigModal()">
+          <lib-unified-person-modal 
+            (modalClosed)="closeConfigModal()"
+          >
           </lib-unified-person-modal>
         }
 
@@ -445,8 +469,20 @@
         }
 
         @if (showOrgStructureModal()) {
-          <lib-org-structure (modalClosed)="closeOrgStructureModal()">
+          <lib-org-structure 
+            (modalClosed)="closeOrgStructureModal()">
           </lib-org-structure>
+        }
+        @if (showProgressMatrixModal()) {
+          <lib-progress-matrix-config
+            (closeModal)="closeProgressMatrixModal()">
+          </lib-progress-matrix-config>
+        }
+
+        @if (showMilestoneConfigModal()) {
+          <lib-milestone-config 
+            (closeModal)="closeMilestoneConfigModal()">
+          </lib-milestone-config>
         }
       </section>
     </main>

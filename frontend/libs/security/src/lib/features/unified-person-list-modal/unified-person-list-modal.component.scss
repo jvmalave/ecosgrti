@@ -2,6 +2,13 @@
   IDENTIDAD VISUAL CANTV (ECOSGRTI) - AJUSTE MODAL DIRECTORIO
    ======================================================== */
 
+$color-magenta: #e91e63;
+$color-purple: #9c27b0;
+$gradient-end: #d500f9; 
+$gradient-start: #9c27b0;
+$text-dark: #2d3748;
+
+
 // Color de fondo corporativo para la aplicación
 body {
   background-color: #f8f3f8 !important;
@@ -176,5 +183,58 @@ body {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+.modal-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid #eaeaea;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background-color: #fcfcfc;
+
+  .btn {
+    padding: 0.25rem 1.65rem;
+    border-radius: 50px; // Estilo pill corporativo
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    &.btn-secondary {
+      background: transparent;
+      border: 2px solid #cbd5e0;
+      color: #4a5568;
+
+      &:hover {
+        background: #a0aec0;
+        border-color: #a0aec0;
+        color: white;
+      }
+    }
+
+    &.btn-primary {
+      background: $gradient-end;
+      border: 2px solid $gradient-end;
+      color: white;
+
+      &:hover:not(:disabled) {
+        box-shadow: 0 4px 12px rgba($gradient-end, 0.4);
+        transform: translateY(-1px);
+      }
+
+      &:disabled {
+        background: #e1bee7;
+        border-color: #e1bee7;
+        color: #a0aec0;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+    }
   }
 }

@@ -1,0 +1,185 @@
+<!-- frontend/libs/catalogs/src/lib/features/progress-matrix-config/progress-matrix-config.component.html -->
+
+<div class="modal-overlay">
+  <div class="modal-container modal-xl">
+    <!-- Encabezado Corporativo -->
+    <div class="modal-header">
+      <h5 class="mb-0 fw-bold d-flex align-items-center">
+        <i class="bi bi-sliders me-2"></i>
+        Configuración de Matrices de Progreso
+      </h5>
+      <div class="d-flex align-items-center gap-3">
+        <!-- Indicador de Versión Activa utilizando @if -->
+        @if (activeMatrix()) {
+          <span class="badge bg-light text-brand fs-6 shadow-sm rounded-pill px-3 py-2">
+            Versión Activa: V{{ activeMatrix()?.version_number }}
+          </span>
+        }
+        <button 
+          type="button" class="close-btn" aria-label="Cerrar"
+          (click)="closeComponent()"
+          title="Cerrar modal"
+          >
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Cuerpo del Modal -->
+    <div class="modal-body p-4">
+      <form [formGroup]="matrixForm" (ngSubmit)="publishNewVersion()">
+        <!-- Selector de Tipo de Gestión -->
+        <div class="row mb-4">
+          <div class="col-md-5">
+            <label
+              for="managementType"
+              class="form-label fw-bold text-secondary"
+              >Tipo de Gestión</label
+            >
+            <select
+              id="managementType"
+              class="form-select form-select-lg border-brand"
+              formControlName="management_type"
+            >
+              <option value="ENTREGABLES">Entregables</option>
+              <option value="ROLES">Roles</option>
+              <option value="MIXTO">Mixto</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tabla de Ponderación de Hitos (FormArray)  -->
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="ps-4" style="width: 60%">
+                      Componente / Hito Técnico
+                    </th>
+                    <th scope="col" class="pe-4" style="width: 40%">
+                      Peso Porcentual (%)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody formArrayName="milestones">
+                  @for (
+                    ctrl of milestonesFormArray.controls;
+                    track ctrl;
+                    let i = $index
+                  ) {
+                    <tr [formGroupName]="i" class="list-group-item-row">
+                      <td class="ps-4">
+                        <span class="fw-semibold text-dark">{{
+                          ctrl.get('name')?.value
+                        }}</span>
+                      </td>
+                      <td class="pe-4 py-3">
+                        <div class="input-group">
+                          <input
+                            type="number"
+                            class="form-control text-end border-brand"
+                            formControlName="weight"
+                            step="0.01"
+                            min="0.01"
+                            [class.is-invalid]="
+                              ctrl.get('weight')?.invalid &&
+                              (ctrl.get('weight')?.touched ||
+                                ctrl.get('weight')?.dirty)
+                            "
+                          />
+                          <span
+                            class="input-group-text bg-light text-brand fw-bold"
+                            >%</span
+                          >
+                        </div>
+                        @if (
+                          ctrl.get('weight')?.invalid &&
+                          (ctrl.get('weight')?.touched ||
+                            ctrl.get('weight')?.dirty)
+                        ) {
+                          <div class="text-danger small mt-1 fw-semibold">
+                            El peso mínimo permitido es 0.01%.
+                          </div>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel de Validación Matemática Reactiva utilizando @if -->
+        <div
+          class="alert d-flex justify-content-between align-items-center shadow-sm"
+          [ngClass]="{
+            'alert-success border-success': currentTotalSum() === 100,
+            'alert-danger border-danger': currentTotalSum() !== 100,
+          }"
+        >
+          <div>
+            <span class="fw-bold">Sumatoria Total:</span>
+            <span class="fs-5 ms-2"
+              >{{ currentTotalSum() | number: '1.2-2' }}%</span
+            >
+          </div>
+
+          @if (currentTotalSum() !== 100) {
+            <div class="text-danger fw-bold">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i>
+              Diferencia: {{ differenceSignal() > 0 ? '+' : ''
+              }}{{ differenceSignal() | number: '1.2-2' }}%
+            </div>
+          }
+
+          @if (currentTotalSum() === 100) {
+            <div class="text-success fw-bold">
+              <i class="bi bi-check-circle-fill me-1"></i> Cierre Matemático
+              Perfecto
+            </div>
+          }
+        </div>
+        @if (matrixForm.invalid && currentTotalSum() === 100) {
+          <div class="text-danger small fw-bold text-end mb-2">
+            * Existen campos inválidos en la tabla (verifique que ningún peso
+            haya quedado vacío).
+          </div>
+        }
+      </form>
+    </div>
+
+    <!-- Pie del Modal -->
+    <div class="modal-footer d-flex flex-column align-items-end">
+      <!-- Chivato Visual: Si la suma da 100 pero hay un campo vacío o en cero -->
+      @if (matrixForm.invalid && currentTotalSum() === 100) {
+        <div class="text-danger small fw-bold mb-2">
+          <i class="bi bi-x-circle-fill me-1"></i> Existen campos vacíos o con
+          valor menor a 0.01% en la tabla superior.
+        </div>
+      }
+
+      <div class="d-flex gap-2">
+        <button 
+        type="button" 
+        class="btn-sm btn-outline-secondary rounded-pill px-4"
+        (click)="closeComponent()" title="Cerrar modal">
+          <i class="bi bi-x-circle me-1"></i>
+          Cerrar
+        </button>
+
+
+        <button
+          type="button"
+          class="btn-sm btn-outline-brand rounded-pill px-5"
+          (click)="publishNewVersion()"
+          [disabled]="matrixForm.invalid || currentTotalSum() !== 100"
+        >
+          <i class="bi bi-cloud-arrow-up-fill me-2"></i> Publicar Versión
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
