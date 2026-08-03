@@ -54,7 +54,9 @@ it('aplica el failsafe al 100 por ciento', function () use (&$consultantId) {
     RequirementPhaseHistory::factory()->create(['requirement_id' => $requirement->id, 'phase_status_code' => 'ATF-I']);
     RequirementPhaseHistory::factory()->create(['requirement_id' => $requirement->id, 'phase_status_code' => 'OVERFLOW']);
 
+    // Configuración de expectativas para la Facade Log
     Log::shouldReceive('channel')->with('audit')->andReturnSelf();
+    Log::shouldReceive('info')->zeroOrMoreTimes()->andReturnNull(); // 💡 Permite llamadas a Log::info()
     Log::shouldReceive('warning')->once()->withArgs(function ($message, $context) {
         return $context['calculated_raw'] === 106.0 && $context['normalized'] === 100.0;
     });

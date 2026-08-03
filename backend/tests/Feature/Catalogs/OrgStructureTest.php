@@ -6,11 +6,11 @@ use App\Domains\Catalogs\Models\RequestingUnit;
 use App\Domains\Security\Models\Person;
 use App\Domains\Security\Models\User;
 use App\Domains\Security\Models\FunctionalConsultant;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
-uses(DatabaseTransactions::class);
+uses(RefreshDatabase::class);
 
 /**
  * Helper: Crea y retorna un usuario Administrador aislado.
@@ -179,7 +179,6 @@ test('CACHE & AUDIT: El cambio de estatus de un nodo invalida Redis y registra l
     Cache::shouldHaveReceived('forget')->with('catalogs_org_tree');
     Cache::shouldHaveReceived('forget')->with('catalogs_active_units');
 
-    // Aserción corregida mapeando a las columnas reales del AuditService
     $this->assertDatabaseHas('audit.audit_logs', [
         'user_id' => $adminUser->id,
         'action' => 'DEACTIVATE',
