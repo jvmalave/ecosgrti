@@ -1,0 +1,241 @@
+// Variables corporativas CANTV
+$color-magenta: #e91e63;
+$color-purple: #9c27b0;
+$gradient-end: #d500f9; 
+$gradient-start: #9c27b0;
+$text-dark: #2d3748;
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  backdrop-filter: blur(4px);
+}
+
+.modal-container {
+  background: #ffffff;
+  width: 100%;
+  max-width: 850px;
+  border-radius: 12px; // Bordes más redondeados corporativos
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  max-height: 95vh;
+  overflow: hidden;
+}
+
+// Estilo de encabezado idéntico a image_8eccfa.png
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(90deg, $gradient-start 0%, $gradient-end 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #ffffff;
+    
+    i {
+      font-size: 1.2rem;
+    }
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #ffffff;
+    opacity: 0.8;
+    transition: opacity 0.2s, transform 0.2s;
+
+    &:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.form-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  background-color: #ffffff;
+
+  legend {
+    padding: 0 0.75rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: $gradient-start; // Tono corporativo para los títulos de sección
+  }
+}
+
+.highlight-section {
+  background-color: rgba($color-purple, 0.03); // Fondo púrpura muy sutil
+  border-color: rgba($color-purple, 0.15);
+}
+
+.grid-2-cols {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  
+  &.span-full {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    margin-bottom: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: $text-dark;
+  }
+
+  .form-control {
+    padding: 0.65rem 0.75rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: $text-dark;
+    background-color: #fff;
+    transition: all 0.2s ease;
+    
+    &:focus {
+      border-color: $gradient-end;
+      box-shadow: 0 0 0 3px rgba($gradient-end, 0.15);
+      outline: none;
+    }
+  }
+
+  .help-text {
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+    color: #718096;
+  }
+}
+
+/* Toggles interactivos con color de marca */
+.toggles-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.toggle-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: $text-dark;
+  user-select: none;
+
+  input[type="checkbox"] {
+    display: none;
+
+    &:checked + .toggle-slider {
+      background-color: $gradient-end; // Magenta/Púrpura al estar activo
+      &::before {
+        transform: translateX(18px);
+      }
+    }
+  }
+
+  .toggle-slider {
+    width: 40px;
+    height: 22px;
+    background-color: #cbd5e0;
+    border-radius: 20px;
+    position: relative;
+    transition: background-color 0.3s;
+
+    &::before {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+  }
+}
+
+.modal-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid #eaeaea;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background-color: #fcfcfc;
+
+  .btn {
+    padding: 0.25rem 1.5rem;
+    border-radius: 50px; // Estilo pill corporativo
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    &.btn-secondary {
+      background: transparent;
+      border: 2px solid #cbd5e0;
+      color: #4a5568;
+
+      &:hover {
+        background: #a0aec0;
+        border-color: #a0aec0;
+        color: white;
+      }
+    }
+
+    &.btn-primary {
+      background: $gradient-end;
+      border: 2px solid $gradient-end;
+      color: white;
+
+      &:hover:not(:disabled) {
+        box-shadow: 0 4px 12px rgba($gradient-end, 0.4);
+        transform: translateY(-1px);
+      }
+
+      &:disabled {
+        background: #e1bee7 !important;
+        border-color: #e1bee7 !important;
+        color: #a0aec0;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+    }
+  }
+}

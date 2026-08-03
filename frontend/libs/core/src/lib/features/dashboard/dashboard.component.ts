@@ -13,15 +13,32 @@ import { RequirementDashboard } from '../../data-access/models/requirement.model
 import { RequirementModalComponent } from '../requirement-modal/requirement-modal.component';
 import { ApiResponse } from '../../data-access/models/api-response.model';
 import { WorkflowStateService, AtfAgreementsModalComponent, AtfAgreementsListModalComponent, AtfAgreementDetail } from '@ecosgrti/workflow';
+import { UnifiedPersonModalComponent, UnifiedPersonListModalComponent } from '@ecosgrti/security';
+import { OrgStructureComponent, ProgressMatrixConfigComponent, MilestoneConfigComponent  } from '@ecosgrti/catalogs';
 import { EstimationFormComponent } from '../estimation-form/estimation-form.component';
 import { RequirementCreateComponent } from '../requirement-create/requirement-create.component';
+
 
 
 @Component({
   selector: 'lib-dashboard',
   standalone: true,
   // 4. Inyectamos ReactiveFormsModule aquí para poder usar [formControl] en el HTML
-  imports: [CommonModule, UpperCasePipe, ReactiveFormsModule, RequirementModalComponent, AtfAgreementsModalComponent, AtfAgreementsListModalComponent, EstimationFormComponent, RequirementCreateComponent], 
+  imports: [
+    CommonModule, 
+    UpperCasePipe, 
+    ReactiveFormsModule, 
+    RequirementModalComponent, 
+    AtfAgreementsModalComponent, 
+    AtfAgreementsListModalComponent, 
+    EstimationFormComponent, 
+    RequirementCreateComponent,
+    UnifiedPersonModalComponent,
+    UnifiedPersonListModalComponent,
+    OrgStructureComponent,
+    ProgressMatrixConfigComponent,
+    MilestoneConfigComponent
+  ], 
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -36,6 +53,7 @@ export class DashboardComponent implements OnInit {
   private requirementService = inject(RequirementService);
   private destroyRef = inject(DestroyRef); // Inyectado para gestionar la limpieza de suscripciones
   public readonly workflowState = inject(WorkflowStateService);
+  
 
   // ==========================================
   // 2. ESTADO REACTIVO (SIGNALS Y FORM CONTROLS)
@@ -45,6 +63,8 @@ export class DashboardComponent implements OnInit {
   public atfModalMode = signal<'create' | 'view'>('create');
   public selectedAgreementData = signal<AtfAgreementDetail | null>(null);
   public isSelectedReqAtfOpen = signal<boolean>(false);
+
+  
 
   // Signals para el control del Modal ATF
   public isAtfModalOpen = signal<boolean>(false);
@@ -73,9 +93,57 @@ export class DashboardComponent implements OnInit {
   // Señal para controlar la visibilidad del modal de creación
   public isCreateModalOpen = signal<boolean>(false);
 
+  // Señal para controlar la visibilidad del modal de estructura de organización
+  public showOrgStructureModal = signal<boolean>(false);
+
+  // Señal para controlar la visibilidad del modal de matriz de progreso
+  public showProgressMatrixModal = signal<boolean>(false);
+
+  // ==========================================
+  // SIGNALS PARA MÓDULO DE CONFIGURACIÓN (MDM)
+  // ==========================================
+  public isConfigMenuOpen = signal<boolean>(false);
+  public showUnifiedPersonListModal = signal<boolean>(false);
+  // Verifica que tienes esta señal declarada
+  public activeConfigModal = signal<'NONE' | 'UNIFIED_PERSON'>('NONE');
+
+  public showMilestoneConfigModal = signal<boolean>(false);
+
+  
+  /**
+   * Alterna la visibilidad del submenú de configuración en el aside.
+   */
+  public toggleConfigMenu(): void {
+    this.isConfigMenuOpen.update(open => !open);
+  }
+  /**
+   * Abre el modal del listado de fichas unificadas y cierra el submenú lateral.
+   */
+  public openUnifiedPersonListModal(): void {
+    this.showUnifiedPersonListModal.set(true);
+    this.isConfigMenuOpen.set(false);
+  }
+  /**
+   * Cierra el modal del listado de fichas unificadas.
+   */
+  public closeUnifiedPersonListModal(): void {
+    this.showUnifiedPersonListModal.set(false);
+  }
+
+  
+
+// Abre el modal de configuración listando la ficha unificada
+  public openConfigModal(modalType: 'NONE' | 'UNIFIED_PERSON'): void {
+    this.activeConfigModal.set(modalType);
+    this.isConfigMenuOpen.set(false); // Cierra el menú lateral tras elegir
+  }
+// Cierra el modal de configuración listando la ficha unificada
+  public closeConfigModal(): void {
+    //console.log('2. [Padre] Evento recibido en el Dashboard. Destruyendo el modal...');
+    this.activeConfigModal.set('NONE');
+  }
   // Control Reactivo para el Buscador
   searchControl = new FormControl('');
-
   public selectedReqManagementType = computed(() => {
     const reqId = this.selectedReqForAtf();
     const allReqs = this.requirements();
@@ -83,7 +151,6 @@ export class DashboardComponent implements OnInit {
     if (!reqId || !allReqs.length) {
         return 'Cargando...'; 
     }
-    
     const foundReq = allReqs.find(req => req.id === reqId);
     
     if (foundReq) {
@@ -92,7 +159,7 @@ export class DashboardComponent implements OnInit {
 
     return 'No Definido';
   });
-
+  //
   public selectedReqCreationDate = computed(() => {
     const reqId = this.selectedReqForAtf();
     const allReqs = this.requirements();
@@ -181,6 +248,7 @@ public isGrEnabled(status: string): boolean {
   // 4. LÓGICA DE NEGOCIO (MÉTODOS)
   // ==========================================
 
+  // MÉTODO PARA CARGAR REQUERIMIENTOS
   loadRequirements(): void {
     this.isLoading.set(true);
     const apiStatus = this.context() === 'PROCESO' ? 'active' : 'finalized';
@@ -209,6 +277,7 @@ public isGrEnabled(status: string): boolean {
     });
   }
 
+  // METODO PARA CAMBIAR EL CONTEXTO
   switchContext(newContext: 'PROCESO' | 'HISTORICO'): void {
     if (this.context() === newContext) return;
 
@@ -222,23 +291,7 @@ public isGrEnabled(status: string): boolean {
     this.loadRequirements();
   }
 
-  /**
-   * Evalúa si abre el formulario directo o la lista de gestión.
-   */
-  // public gestionarAcuerdos(req: RequirementDashboard): void {
-  //   // 1. Guardamos el contexto
-  //   this.selectedReqForAtf.set(req.id);
-  //   this.selectedReqCodeForAtf.set(req.rrti);
-  //   this.isSelectedReqAtfOpen.set(req.status === 'ATF');
-    
-  //   // 2. Reseteamos el formulario por si acaso
-  //   this.atfModalMode.set('create');
-  //   this.selectedAgreementData.set(null);
-
-  //   // 3. SIEMPRE abrimos la lista primero (¡Adiós if/else!)
-  //   this.isAtfListModalOpen.set(true);
-  // }
-
+  // METODO PARA GESTIONAR ACUERDOS
   public gestionarAcuerdos(req: RequirementDashboard): void {
     // 1. Guardamos el contexto
     this.selectedReqForAtf.set(req.id);
@@ -262,6 +315,7 @@ public isGrEnabled(status: string): boolean {
     this.isAtfListModalOpen.set(true);
   }
 
+  // METODO QUE CIERRA EL MODAL DE  CREACION DE ACUERDO
   public closeAtfModal(): void {
     this.isAtfModalOpen.set(false);
     this.selectedAgreementData.set(null);
@@ -271,6 +325,7 @@ public isGrEnabled(status: string): boolean {
     this.isAtfListModalOpen.set(true);
   }
 
+  // METODO QUE ABRIR EL MODAL DE CREACIÓN DE ACUERDO
   public openAgreementCreate(): void {
     this.atfModalMode.set('create');
     this.selectedAgreementData.set(null);
@@ -278,6 +333,7 @@ public isGrEnabled(status: string): boolean {
     this.isAtfModalOpen.set(true);
   }
 
+  // METODO QUE ABRIR EL MODAL DEL LISTA DE ACUERDO
   public openAgreementView(agreement: AtfAgreementDetail): void {
     this.atfModalMode.set('view');
     this.selectedAgreementData.set(agreement);
@@ -285,35 +341,26 @@ public isGrEnabled(status: string): boolean {
     this.isAtfModalOpen.set(true); // Abrimos el detalle
   }
 
-  /**
-   * Cierra el modal que contiene la lista de acuerdos ATF
-   */
+  // METODO QUE CIERRA EL MODAL DE LISTA DE ACUERDOS
   public closeAtfListModal(): void {
     this.isAtfListModalOpen.set(false);
     this.selectedReqForAtf.set(null); // Limpiamos la selección
   }
   
-
-  /**
-   * Se ejecuta cuando el formulario emite que un acuerdo se guardó o actualizó exitosamente
-   */
+  // METODO QUE EMITE CUANDO SE GUARDA O ACTUALIZA UN ACUERDO
   public onAgreementSaved(): void {
     this.isAtfModalOpen.set(false);
     this.selectedAgreementData.set(null);
     this.isAtfListModalOpen.set(true);
   }
 
-  /**
-   * Abre el modal asignando el ID del requerimiento seleccionado.
-   */
+  // METODO PARA ABRIR EL MODAL DE DETALLE DE REQUERIMIENTO
   openDetailModal(id: string): void {
     this.selectedRequirementId.set(id);
     this.isDetailModalOpen.set(true);
   }
 
-  /**
-   * Cierra el modal y refresca el dashboard si hubo cambios o borrados.
-   */
+  // METODO PARA CERRAR EL MODAL DE DETALLE DE REQUERIMIENTO
   closeDetailModal(refreshDashboard = false): void {
     this.isDetailModalOpen.set(false);
     if (refreshDashboard) {
@@ -330,14 +377,7 @@ public isGrEnabled(status: string): boolean {
     });
   }
 
-  /**
-   * Navega a la vista de estimación del requerimiento seleccionado.
-   */
-  // goToEstimation(requirementId: string): void {
-  //   this.router.navigate(['/requerimientos', requirementId, 'estimacion']); 
-  // }
-
-
+  // METODO PARA ABRIR EL MODAL DE LISTA DE ACUERDOS
   public openAtfModal(req: RequirementDashboard): void {
     console.log('Abriendo modal para el requerimiento:', req);
     this.selectedReqForAtf.set(req.id);
@@ -345,9 +385,7 @@ public isGrEnabled(status: string): boolean {
     this.isAtfListModalOpen.set(true); 
   }
 
-  /**
-   * Actualiza el estado local del requerimiento sin necesidad de recargar la página
-   */
+  // METODO PARA MANEJAR LA ACTUALIZACIÓN DE UN REQUERIMIENTO
   public onRequirementMutated(event: { tipo_gestion: string, progreso_global: number }): void {
     const reqId = this.selectedReqForAtf();
     if (!reqId) return;
@@ -366,9 +404,7 @@ public isGrEnabled(status: string): boolean {
     );
   }
 
-  /**
- * Avanza a la siguiente página de resultados sumando el tamaño de página al offset actual.
- */
+  // MÉTODO PARA AVANZAR A LA PÁGINA SIGUIENTE
   public nextPage(): void {
     // Solo avanzamos si el backend nos confirmó que hay más registros
     if (this.hasMore()) {
@@ -377,9 +413,7 @@ public isGrEnabled(status: string): boolean {
     }
   }
 
-  /**
-   * Retrocede a la página anterior restando el tamaño de página al offset actual.
-   */
+  // MÉTODO PARA RETROCEDER A LA PÁGINA ANTERIOR
   public previousPage(): void {
     // Solo retrocedemos si no estamos en la primera página (offset > 0)
     if (this.currentOffset() > 0) {
@@ -388,9 +422,8 @@ public isGrEnabled(status: string): boolean {
       this.loadRequirements();
     }
   }
-/**
-   * Abre el modal de estimación para el requerimiento seleccionado.
-   */
+
+  // MÉTODO PARA ABRIR EL MODAL DE ESTIMACIÓN
   public openEstimationModal(req: RequirementDashboard): void {
     
     // Almacenamos los datos necesarios en las señales existente
@@ -401,17 +434,52 @@ public isGrEnabled(status: string): boolean {
     this.isEstimationModalOpen.set(true);
   }
 
+  // MÉTODO PARA CERRAR EL MODAL DE ESTIMACIÓN
   public closeEstimationModal(): void {
     this.isEstimationModalOpen.set(false);
   }
 
-  // Método para abrir el modal desde el botón principal
+  // MÉTODO PARA ABRIR EL MODAL DE CREACIÓN DE REQUERIMIENTO
   public openCreateModal(): void {
     this.isCreateModalOpen.set(true);
   }
 
-  // Método para cerrarlo
+  // MÉTODO PARA CERRAR EL MODAL DE CREACIÓN DE REQUERIMIENTO
   public closeCreateModal(): void {
     this.isCreateModalOpen.set(false);
   }
+
+  // MÉTODO PARA ABRIR EL MODAL DE ESTRUCTURA ORGANIZACIONAL
+  public openOrgStructureModal(): void {
+    this.showOrgStructureModal.set(true);
+    this.isConfigMenuOpen.set(false);
+  }
+
+  // MÉTODO PARA CERRAR EL MODAL DE ESTRUCTURA ORGANIZACIONAL
+  public closeOrgStructureModal(): void {
+    this.showOrgStructureModal.set(false);
+  }
+
+  // MÉTODO PARA ABRIR EL MODAL DE CONFIGURACIÓN DE MATRIZ DE PROGRESO
+  public openProgressMatrixModal(): void {
+    this.showProgressMatrixModal.set(true);
+    this.isConfigMenuOpen.set(false);
+  }
+
+  // MÉTODO PARA CERRAR EL MODAL DE CONFIGURACIÓN DE MATRIZ DE PROGRESO
+  public closeProgressMatrixModal(): void {
+    this.showProgressMatrixModal.set(false);
+  }
+
+  // MÉTODO PARA ABRIR EL MODAL DE CONFIGURACIÓN DE HITOS
+  public openMilestoneConfigModal(): void {
+    this.showMilestoneConfigModal.set(true);
+    this.isConfigMenuOpen.set(false); // Cierra el menú lateral al abrir
+  }
+  
+  // MÉTODO PARA CERRAR EL MODAL DE CONFIGURACIÓN DE HITOS
+  public closeMilestoneConfigModal(): void {
+    this.showMilestoneConfigModal.set(false);
+  }
+
 }

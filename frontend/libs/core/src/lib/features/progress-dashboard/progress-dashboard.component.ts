@@ -2,6 +2,7 @@
 
 import { Component, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Requirement } from '../../data-access/models/requirement.model';
 
 @Component({
   selector: 'lib-progress-dashboard', 
@@ -15,6 +16,8 @@ export class ProgressDashboardComponent {
   // 1. Entradas (Inputs) reactivas usando Signals para el avance global
   public globalProgress = input.required<number>();
   public globalStatus = input<string>('PL');
+  readonly requirement = input<Requirement | null>(null);
+  
 
 
   // Definición del diccionario de datos centralizado

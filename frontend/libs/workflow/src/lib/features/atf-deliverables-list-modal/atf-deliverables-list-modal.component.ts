@@ -4,7 +4,7 @@ import { Component, computed, inject, input, output, OnInit, signal } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DeliverableService } from '../../data-access/services/deliverable.service';
-import { NotificationService } from '../../data-access/services/notitication.services';
+import { NotificationService } from '../../data-access/services/notification.services';
 import { Deliverable } from '../../data-access/models/deliverable.model';
 import { DeliverableFormModalComponent } from '../atf-deliverables-form-modal/atf-deliverables-form-modal.component';
 

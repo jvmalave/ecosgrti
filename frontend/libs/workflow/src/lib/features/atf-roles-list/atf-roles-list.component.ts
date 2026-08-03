@@ -4,7 +4,7 @@ import { RequirementRole } from '../../data-access/models/requirement-role.model
 import { AtfRolesFormModalComponent } from '../atf-roles-form-modal/atf-roles-form-modal.component';
 // 🚀 Importamos el servicio
 import { RequirementRoleService } from '../../data-access/services/requirement-role.service';
-import { NotificationService } from '../../data-access/services/notitication.services';
+import { NotificationService } from '../../data-access/services/notification.services';
 
 @Component({
   selector: 'lib-atf-roles-list',

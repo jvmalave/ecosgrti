@@ -10,6 +10,7 @@ use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Domains\Security\Observers\UserObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 
 #[ObservedBy([UserObserver::class])]
@@ -28,9 +29,11 @@ class User extends Authenticatable implements JWTSubject
     protected $keyType = 'string';
 
     protected $fillable = [
+        'id',
         'name',
         'email',
         'password',
+        'roles',
     ];
 
     protected $casts = [
@@ -42,10 +45,17 @@ class User extends Authenticatable implements JWTSubject
         'remember_token',
     ];
 
-
     protected static function newFactory()
     {
         return \Database\Factories\UserFactory::new();
+    }
+
+    /**
+     * Relación inversa con Person.
+     */
+    public function person(): BelongsTo
+    {
+        return $this->belongsTo(Person::class, 'id', 'id');
     }
 
     // Métodos obligatorios para JWT

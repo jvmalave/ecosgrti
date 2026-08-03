@@ -10,7 +10,7 @@ import { AtfRolesListComponent } from '../atf-roles-list/atf-roles-list.componen
 import { AtfDeliverablesListComponent } from '../atf-deliverables-list-modal/atf-deliverables-list-modal.component';
 import { AtfClosureService } from '../../data-access/services/atf-closure.service';
 import { ClosureReadinessResponse } from '../../data-access/models/atf-agreement.model';
-import { NotificationService } from '../../data-access/services/notitication.services';
+import { NotificationService } from '../../data-access/services/notification.services';
 
 
 

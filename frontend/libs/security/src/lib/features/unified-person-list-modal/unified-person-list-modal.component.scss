@@ -1,0 +1,240 @@
+/* ========================================================
+  IDENTIDAD VISUAL CANTV (ECOSGRTI) - AJUSTE MODAL DIRECTORIO
+   ======================================================== */
+
+$color-magenta: #e91e63;
+$color-purple: #9c27b0;
+$gradient-end: #d500f9; 
+$gradient-start: #9c27b0;
+$text-dark: #2d3748;
+
+
+// Color de fondo corporativo para la aplicación
+body {
+  background-color: #f8f3f8 !important;
+}
+
+// Degradado corporativo (Basado en la pantalla de Login y Sidebar)
+.brand-gradient {
+  background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%);
+  border-bottom: 3px solid #ea80fc;
+}
+
+// Color de texto corporativo
+.text-brand {
+  color: #d500f9 !important;
+}
+
+// Bordes corporativos
+.border-brand {
+  border-color: #d500f9 !important;
+}
+
+// Checkbox corporativo
+.custom-checkbox .form-check-input:checked {
+  background-color: #d500f9;
+  border-color: #d500f9;
+}
+
+// Estilo hover para el dropdown
+.dropdown-item:hover {
+  background-color: rgba(213, 0, 249, 0.1);
+  color: #d500f9;
+}
+
+// Botón Primario Corporativo
+.btn-brand {
+  background: linear-gradient(90deg, #aa00ff 0%, #d500f9 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: linear-gradient(90deg, #7b1fa2 0%, #aa00ff 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4);
+    transform: translateY(-1px);
+  }
+  
+  &:disabled {
+    background: #e1bee7;
+    color: #9e9e9e;
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+.btn-outline-brand {
+  border: 1px solid #d500f9;
+  color: #d500f9;
+  font-weight: 600;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+.btn-outline-brand:hover:not(:disabled) {
+  background: rgba(213, 0, 249, 0.1);
+  color: #aa00ff;
+}
+.btn-outline-brand:disabled {
+  border-color: #e1bee7;
+  color: #9e9e9e;
+  cursor: not-allowed;
+}
+
+// Suavizado general de la tarjeta
+.card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+// ========================================================
+// CAPA FLOTANTE Y MODAL SUPERPUESTO (CORRECCIÓN VISUAL)
+// ========================================================
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6); // Fondo semitransparente corporativo
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050; // Superposición garantizada sobre el Dashboard y el Sidebar
+  overflow-y: auto;
+  padding: 20px;
+  backdrop-filter: blur(2px); // Efecto visual moderno
+}
+
+.modal-container {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(98, 0, 234, 0.2);
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(213, 0, 249, 0.2);
+
+  &.modal-xl {
+    max-width: 1250px;
+  }
+}
+
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%);
+  color: white;
+  border-bottom: 3px solid #ea80fc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h2, h3 {
+    color: white !important;
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.1);
+      color: #ea80fc;
+    }
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  max-height: calc(90vh - 140px);
+  background-color: #fff;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e0e0e0;
+  background-color: #f8f9fa;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+// Animación de entrada fluida
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-25px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid #eaeaea;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background-color: #fcfcfc;
+
+  .btn {
+    padding: 0.25rem 1.65rem;
+    border-radius: 50px; // Estilo pill corporativo
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    &.btn-secondary {
+      background: transparent;
+      border: 2px solid #cbd5e0;
+      color: #4a5568;
+
+      &:hover {
+        background: #a0aec0;
+        border-color: #a0aec0;
+        color: white;
+      }
+    }
+
+    &.btn-primary {
+      background: $gradient-end;
+      border: 2px solid $gradient-end;
+      color: white;
+
+      &:hover:not(:disabled) {
+        box-shadow: 0 4px 12px rgba($gradient-end, 0.4);
+        transform: translateY(-1px);
+      }
+
+      &:disabled {
+        background: #e1bee7;
+        border-color: #e1bee7;
+        color: #a0aec0;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+    }
+  }
+}

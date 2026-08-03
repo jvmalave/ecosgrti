@@ -79,7 +79,6 @@ export class RequirementModalComponent implements OnInit, OnDestroy {
     
     return consultant ? consultant.full_name : '⚠️ Consultor no hallado en el catálogo';
   });
- 
 
   constructor() {
     this.editForm = this.fb.group({
@@ -115,6 +114,7 @@ export class RequirementModalComponent implements OnInit, OnDestroy {
       next: (res) => {
         console.log('Data de Consultores desde Laravel:', res.data); 
         this.functionalConsultants.set(res.data);
+        
       }
     });
 

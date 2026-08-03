@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Deliverable } from '../../data-access/models/deliverable.model'; // Asegúrate de tener esta interfaz
 import { DeliverableService } from '../../data-access/services/deliverable.service';
-import { NotificationService } from '../../data-access/services/notitication.services';
+import { NotificationService } from '../../data-access/services/notification.services';
 
 @Component({
   selector: 'lib-atf-deliverable-form-modal',

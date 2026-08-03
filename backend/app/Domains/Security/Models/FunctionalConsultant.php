@@ -6,10 +6,12 @@ use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class FunctionalConsultant extends Model
 {
     use HasFactory;
     use HasUuid;
+
 
     // 1. Le decimos que NO es autoincremental
     public $incrementing = false;
@@ -18,6 +20,12 @@ class FunctionalConsultant extends Model
     protected $keyType = 'string';
 
     protected $table = 'security.functional_consultants';
+
+    protected $fillable = [
+        'id',
+        'person_id',
+        'requesting_unit_id',
+    ];
 
     public function sociedad()
     {
@@ -38,9 +46,5 @@ class FunctionalConsultant extends Model
     {
         return $this->belongsTo(\App\Domains\Security\Models\Person::class, 'person_id');
     }
-
-    // public function persona()
-    // {
-    //     return $this->belongsTo(Person::class, 'person_id');
-    // }
+    
 }

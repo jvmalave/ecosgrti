@@ -138,3 +138,18 @@ export interface EstimationDetailsResponse {
   success: boolean;
   data: EstimationDetailsData;
 }
+
+export interface ProgressMatrix {
+  id?: string;
+  version_number?: number | string;
+  management_type?: string;
+}
+
+export interface Requirement {
+  id?: string;
+  rrti?: string;
+  status?: string;
+  management_type?: string;
+  progress_matrix?: ProgressMatrix | null;
+}
+

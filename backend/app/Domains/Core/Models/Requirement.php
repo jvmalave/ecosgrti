@@ -11,6 +11,7 @@ use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Domains\Core\Models\ScheduleEstimation;
 use App\Domains\Workflow\Models\RequirementPhaseHistory;
+use App\Domains\Catalogs\Models\ProgressMatrix;
 
 class Requirement extends Model
 {
@@ -27,6 +28,8 @@ class Requirement extends Model
     // 2. Le decimos que el ID es un texto (UUID)
     protected $keyType = 'string';
 
+    protected $with = ['progressMatrix'];
+
 
     protected $fillable = [
       'id',
@@ -34,7 +37,8 @@ class Requirement extends Model
       'requirement_type',
       'creation_date',
       'description', 
-      'management_type', 
+      'management_type',
+      'progress_matrix_id',  
       'needs_spreadsheet_path',
       'it_request_doc_path',
       'functional_consultant_id',
@@ -85,5 +89,11 @@ class Requirement extends Model
     public function phaseHistories()
     {
         return $this->hasMany(RequirementPhaseHistory::class, 'requirement_id');
+    }
+
+    
+    public function progressMatrix()
+    {
+        return $this->belongsTo(ProgressMatrix::class, 'progress_matrix_id');
     }
 }
