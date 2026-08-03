@@ -1,3 +1,39 @@
+<!-- <div class="card shadow-sm border-0 mb-3 progress-dashboard-card">
+  <div class="card-body p-3"> -->
+    <!-- Cabecera: Título y Porcentaje Global -->
+    <!-- <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="mb-0 text-muted fw-bold">Avance Global del Requerimiento</h6>
+      <span class="fw-bold fs-5 transition-colors" [ngClass]="textClass()">
+        {{ globalProgress() }}%
+      </span>
+    </div> -->
+
+    <!-- Contenedor de la barra de progreso -->
+    <!-- <div class="progress" style="height: 0.8rem">
+      <div
+        class="progress-bar progress-bar-striped progress-bar-animated transition-width"
+        role="progressbar"
+        [ngClass]="barColorClass()"
+        [style.width.%]="globalProgress()"
+        [attr.aria-valuenow]="globalProgress()"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      ></div>
+    </div> -->
+
+    <!-- Leyenda inferior: Estado global actual -->
+    <!-- <div class="mt-2 text-end">
+      <small class="text-muted fw-semibold">
+        <span class="text-uppercase badge bg-light text-dark border">
+      {{ currentStatusName }}
+    </span>
+      </small>
+    </div>
+  </div>
+</div> -->
+
+
+
 <div class="card shadow-sm border-0 mb-3 progress-dashboard-card">
   <div class="card-body p-3">
     <!-- Cabecera: Título y Porcentaje Global -->
@@ -21,13 +57,30 @@
       ></div>
     </div>
 
-    <!-- Leyenda inferior: Estado global actual -->
-    <div class="mt-2 text-end">
+    <!-- Leyenda inferior: Matriz Activa y Estado global actual -->
+    <div class="mt-2 d-flex justify-content-between align-items-center">
+      <!-- Indicador de la Matriz de Progreso Anclada (MDM) -->
+      <div>
+        @if (requirement()?.progress_matrix) {
+          <span class="badge bg-info text-dark shadow-sm border border-light rounded-pill px-3">
+            <i class="bi bi-diagram-3-fill me-1"></i>
+            Matriz Activa: {{ requirement()?.progress_matrix?.management_type | titlecase }}-V{{ requirement()?.progress_matrix?.version_number }}
+          </span>
+        } @else {
+          <span class="badge bg-warning text-dark shadow-sm border border-light rounded-pill px-3" title="Calculado con archivo de configuración base">
+            <i class="bi bi-clock-history me-1"></i>
+            Matriz: Legacy
+          </span>
+        }
+      </div>
+
+      <!-- Estado global actual -->
       <small class="text-muted fw-semibold">
-        <span class="text-uppercase badge bg-light text-dark border">
-      {{ currentStatusName }}
-    </span>
+        <span class="text-uppercase badge bg-light text-dark border rounded-pill px-3">
+          {{ currentStatusName }}
+        </span>
       </small>
+
     </div>
   </div>
 </div>

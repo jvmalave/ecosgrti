@@ -15,6 +15,9 @@ class ProgressMatrix extends Model
     // RN-Aislamiento Total: Mapeo explícito al esquema correspondiente
     protected $table = 'catalogs.progress_matrices';
 
+    protected $keyType = 'string';
+    public $incrementing = false;
+
     protected $fillable = [
         'management_type',
         'version_number',

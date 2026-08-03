@@ -54,9 +54,11 @@
         <h6 class="text-muted mb-3">
           <i class="fa-solid fa-chart-line me-2"></i> Avance del Requerimiento
         </h6>
+
         <lib-progress-dashboard
           [globalProgress]="currentRequirement()?.progress_percentage ?? 0"
           [globalStatus]="currentRequirement()?.status ?? 'Registrado'"
+          [requirement]="currentRequirement()">
         >
         </lib-progress-dashboard>
       </div>
