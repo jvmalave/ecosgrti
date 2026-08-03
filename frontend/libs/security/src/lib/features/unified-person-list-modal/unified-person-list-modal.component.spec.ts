@@ -1,21 +1,32 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { of } from 'rxjs';
 import { UnifiedPersonListModalComponent } from './unified-person-list-modal.component';
+import { UnifiedPersonService } from '../../data-access/services/unified-person.service';
 
 describe('UnifiedPersonListModalComponent', () => {
-  let component: UnifiedPersonListModalComponent;
-  let fixture: ComponentFixture<UnifiedPersonListModalComponent>;
-
   beforeEach(async () => {
+    // Mock explícito del servicio para evitar solicitar GLOBAL_API_URL e HttpClient
+    const mockUnifiedPersonService = {
+      searchPersons: () => of([]),
+      getPersons: () => of({ data: [], meta: {} }),
+    };
+
     await TestBed.configureTestingModule({
       imports: [UnifiedPersonListModalComponent],
+      providers: [
+        provideAnimationsAsync(),
+        {
+          provide: UnifiedPersonService,
+          useValue: mockUnifiedPersonService,
+        },
+      ],
     }).compileComponents();
-
-    fixture = TestBed.createComponent(UnifiedPersonListModalComponent);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
   });
 
   it('should create', () => {
+    const fixture = TestBed.createComponent(UnifiedPersonListModalComponent);
+    const component = fixture.componentInstance;
     expect(component).toBeTruthy();
   });
 });
