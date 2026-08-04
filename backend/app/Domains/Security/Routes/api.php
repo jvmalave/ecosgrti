@@ -29,7 +29,7 @@ Route::middleware('auth:api')->group(function () {
     })->middleware('role:admin');
 
   // ==============================================================
-  // SECCIÓN MDM - GESTIÓN DE IDENTIDADES (US38)
+  // SECCIÓN MDM - GESTIÓN DE IDENTIDADES 
   // ==============================================================
     Route::prefix('mdm')->group(function () {
         // 1. Listado paginado de todas las identidades (Eager Loading)
@@ -63,11 +63,11 @@ Route::middleware('auth:api')->group(function () {
     });
 
     // ==============================================================
-    // SECCIÓN CONSULTORES (US04 y Selects del Frontend)
+    // SECCIÓN CONSULTORES (Selects del Frontend)
     // ==============================================================
     Route::prefix('consultores')->group(function () {
         
-        // US04: Autocompletado Atómico del Grafo Organizacional (Existente)
+        // Autocompletado Atómico del Grafo Organizacional (Existente)
         Route::get('lookup-organizacional/{personaId}', [FunctionalConsultantController::class, 'lookupOrganizacional']);
         
         // Nuevos Endpoints: Listas para los Selects del Formulario

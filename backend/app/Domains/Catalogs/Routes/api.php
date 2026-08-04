@@ -6,17 +6,30 @@ use App\Domains\Catalogs\Http\Controllers\OrgStructureController;
 use App\Domains\Catalogs\Http\Controllers\ProgressMatrixController;
 use App\Domains\Catalogs\Http\Controllers\MilestoneController;
 
-// Todas las rutas aquí heredan automáticamente el prefijo 'api' desde el proveedor global.
-Route::prefix('catalogs')->group(function () {
 
-    
+/*
+|--------------------------------------------------------------------------
+| API Routes - Dominio Catalogs (Gestión de Catálogos)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('catalogs')->middleware('auth:api')->group(function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Routes - Dominio Catalogs (Gestión de Catálogos) - Para Todos los Roles
+    |--------------------------------------------------------------------------
+    */
     // RUTAS PUBLICAS O DE CONSULTA GENERAL PARA EL FLUJO OPERATIVO
     Route::get('/requirement-types', [CatalogController::class, 'getRequirementTypes']);
     Route::get('/management-types', [CatalogController::class, 'getManagementTypes']);
 
     
-    // MANTENIMIENTO DE ESTRUCTURA JERÁRQUICA
-    Route::middleware(['auth:api', 'role:admin'])->prefix('org-structure')->group(function () {
+    /*
+    |--------------------------------------------------------------------------------------------------
+    | API Routes - Mantenimiento de Estructura Jerárquica (Sociedades, Sistemas, Unidades Solicitantes)
+    |--------------------------------------------------------------------------------------------------
+    */
+    Route::middleware(['role:admin'])->prefix('org-structure')->group(function () {
         
         // OBTENER ESTRUCTURA JERÁRQUICA (REDIS)
         Route::get('/tree', [OrgStructureController::class, 'tree']);
@@ -35,9 +48,13 @@ Route::prefix('catalogs')->group(function () {
         Route::patch('/{nodeType}/{id}/status', [OrgStructureController::class, 'updateStatus']);
     });
 
-  
-    // MANTENIMIENTO DE MATRITCES DE PROGRESO Y  MANEJO DE VERSIONES
-    Route::middleware(['auth:api', 'role:admin'])->prefix('progress-matrices')->group(function () {
+      /*
+    |--------------------------------------------------------------------------------------------------
+    | API Routes - Mantenimiento de Matrices de Progreso y Manejo de Versiones
+    |--------------------------------------------------------------------------------------------------
+    */
+    
+    Route::middleware(['role:admin'])->prefix('progress-matrices')->group(function () {
         
         // OBTENER TODAS LAS MATRICES DE PROGRESO
         Route::get('/active', [ProgressMatrixController::class, 'getActiveMatrix'])->name('matrix.active');
@@ -46,8 +63,13 @@ Route::prefix('catalogs')->group(function () {
         Route::post('/publish', [ProgressMatrixController::class, 'publish'])->name('matrix.publish');
     });
 
-    // MANTENIMIENTO DE HITOS TÉCNICOS 
-    Route::middleware(['auth:api', 'role:admin'])->prefix('milestones')->group(function () {
+    /*
+    |--------------------------------------------------------------------------------------------------
+    | API Routes - Mantenimiento de Hitos Técnicos 
+    |--------------------------------------------------------------------------------------------------
+    */
+
+    Route::middleware(['role:admin'])->prefix('milestones')->group(function () {
         // LISTADO DE HITOS TÉCNICOS 
         Route::get('/', [MilestoneController::class, 'index']);
 

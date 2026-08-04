@@ -1,0 +1,110 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Domains\Workflow\Services;
+
+use App\Domains\Workflow\Models\DtRole;
+use App\Domains\Workflow\Models\RequirementRole;
+use App\Domains\Audit\Services\AuditService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+
+class DtRoleService
+{
+    public function __construct(
+        private readonly AuditService $auditService
+    ) {}
+
+    /**
+     * INICIALIZAR Y RECUPERAR ROLES DE DISEÑO TÉCNICO PARA UN REQUERIMIENTO
+     */
+    public function initializeRoles(string $requirementId): array
+    {
+
+        // VERIFICA LA EXISTENCIA DE ROLES EN ATF (requiere al menos un rol en ATF para poder acceder a la subfase DT )
+        $atfRoles = RequirementRole::where('requirement_id', $requirementId)->get();
+
+        if ($atfRoles->isEmpty()) {
+            abort(403, 'Acceso inhabilitado: Requiere al menos un Rol mapeado en ATF.');
+        }
+
+        // IMPORTACION/SINCRONIZACION DE ROLES DE ATF A DT (IDEMPOTENTE)
+        foreach ($atfRoles as $role) {
+            DtRole::firstOrCreate(
+                ['requirement_role_id' => $role->id],
+                [
+                    'requirement_id' => $requirementId,
+                    'name' => $role->role_name,
+                    'status' => 'IN_PROGRESS'
+                ]
+            );
+        }
+
+        // AUDITORIA FORENCE DE INICIALIZACIÓN DE ROLES
+        $this->auditService->logModelChange(
+            'ACCESS_DT_ROLES',
+            'Sincronización y acceso a la subfase de Diseño Técnico',
+            ['record_id' => $requirementId, 'action' => 'INIT_DT'],
+            auth()->id()
+        );
+        
+        $cacheKey = "req_{$requirementId}_dt_roles_meta";
+        $rolesList = Cache::remember($cacheKey, 600, function () use ($requirementId) {
+            return DtRole::where('requirement_id', $requirementId)->get();
+        });
+
+        return [
+            'requirement_id' => $requirementId,
+            'roles_list' => $rolesList
+        ];
+    }
+
+    /**
+     * GESTIONAR CICLO DE VIDA DEL ROL DE DISEÑO TÉCNICO (CERRAR/ACTIVAR)
+     */
+    public function changeRoleStatus(string $roleId, string $action): DtRole
+    {
+        $role = DtRole::findOrFail($roleId);
+        
+        return DB::transaction(function () use ($role, $action) {
+            if ($action === 'CLOSE') {
+                // VALIDACION DE DOCUMENTACION MINIMA PARA CIERRE DE ROL
+                $registersCount = $role->registers()->count();
+                if ($registersCount === 0) {
+                    abort(422, 'No se puede cerrar un rol sin actividades de diseño documentadas.');
+                }
+                
+                $role->update(['status' => 'CLOSED']);
+                
+                $this->auditService->logModelChange(
+                    'CLOSE_ROLE_DT',
+                    'Cierre técnico de rol en subfase DT',
+                    ['record_id' => $role->id, 'new_status' => 'CLOSED'],
+                    auth()->id()
+                );
+                
+            } elseif ($action === 'REOPEN') {
+                // RESTRICCION: Solo se puede reabrir un rol si la subfase global DT-I o ATF-C está activa (no cerrada)
+                $status = DB::table('core.requirements')->where('id', $role->requirement_id)->value('phase_actual');
+                
+                if ($status !== 'DT-I' && $status !== 'ATF-C') {
+                    abort(403, 'Acceso denegado: La subfase global está cerrada o en etapa superior.');
+                }
+                
+                $role->update(['status' => 'IN_PROGRESS']);
+                
+                $this->auditService->logModelChange(
+                    'REOPEN_ROLE_DT',
+                    'Reapertura técnica de rol en subfase DT',
+                    ['record_id' => $role->id, 'new_status' => 'IN_PROGRESS'],
+                    auth()->id()
+                );
+            }
+            // INVALIDA CACHÉ DE ROLES DE DISEÑO TÉCNICO PARA EL REQUERIMIENTO
+            Cache::forget("req_{$role->requirement_id}_dt_roles_meta");
+
+            return $role;
+        });
+    }
+}
