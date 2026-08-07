@@ -3,11 +3,11 @@ export interface UserSession {
   username: string;
   email: string;
   roles: string[];
-  token: string; // El guard seguirá buscando esta propiedad 🔑
+  token: string; 
 }
 
 export interface AuthResponse {
-  access_token: string; // Coincide exactamente con el JSON de Laravel 🐳
+  access_token: string; 
   token_type: string;
   expires_in: number;
   user: {

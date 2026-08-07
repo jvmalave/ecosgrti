@@ -13,13 +13,15 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use App\Domains\Workflow\Services\ProgressCalculationService;
-use App\Domains\Audit\Services\AuditService; 
+use App\Domains\Audit\Services\AuditService;
+use App\Domains\Workflow\Services\PhaseTransitionService; 
 
 class ATFClosureService
 {
     public function __construct(
         private ProgressCalculationService $progressService,
-        private AuditService $auditService 
+        private AuditService $auditService,
+        private PhaseTransitionService $phaseTransitionService
     ) {}
 
     /**
@@ -82,15 +84,22 @@ class ATFClosureService
             $requirement = Requirement::lockForUpdate()->findOrFail($requirementId);
 
             // 1. Registro inmutable en el historial
-            DB::table('workflow.requirement_phase_history')->insert([
-                'id'                  => (string) Str::uuid(),
-                'requirement_id'      => $requirementId,
-                'phase_status_code'   => 'ATF-C',
-                'transitioned_at'     => now(),
-                'executed_by_user_id' => $userId,
-                'created_at'          => now(),
-                'updated_at'          => now(),
-            ]);
+            // DB::table('workflow.requirement_phase_history')->insert([
+            //     'id'                  => (string) Str::uuid(),
+            //     'requirement_id'      => $requirementId,
+            //     'phase_status_code'   => 'ATF-C',
+            //     'transitioned_at'     => now(),
+            //     'executed_by_user_id' => $userId,
+            //     'created_at'          => now(),
+            //     'updated_at'          => now(),
+            // ]);
+
+            $this->phaseTransitionService->recordTransition(
+                $requirementId,
+                'ATF-C',
+                (string) auth()->id(),
+                'Cierre global exitoso de la subfase ATF'
+            );
 
             // 2. Actualización del Estado Maestro
             $requirement->update(['status' => 'ATF-C']);

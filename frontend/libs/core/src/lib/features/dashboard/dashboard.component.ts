@@ -9,14 +9,21 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop'; // <-- 3. Para 
 // Imports de tus servicios e interfaces
 import { AuthService } from '@ecosgrti/security/data-access';
 import { RequirementService } from '../../data-access/services/requirement.service'; 
-import { RequirementDashboard } from '../../data-access/models/requirement.model'; 
+import { RequirementDashboard, } from '../../data-access/models/requirement.model'; 
 import { RequirementModalComponent } from '../requirement-modal/requirement-modal.component';
 import { ApiResponse } from '../../data-access/models/api-response.model';
-import { WorkflowStateService, AtfAgreementsModalComponent, AtfAgreementsListModalComponent, AtfAgreementDetail } from '@ecosgrti/workflow';
+import { 
+          WorkflowStateService, 
+          AtfAgreementsModalComponent, 
+          AtfAgreementsListModalComponent, 
+          AtfAgreementDetail,
+          LifecycleOrchestratorModalComponent    
+        } from '@ecosgrti/workflow';
 import { UnifiedPersonModalComponent, UnifiedPersonListModalComponent } from '@ecosgrti/security';
 import { OrgStructureComponent, ProgressMatrixConfigComponent, MilestoneConfigComponent  } from '@ecosgrti/catalogs';
 import { EstimationFormComponent } from '../estimation-form/estimation-form.component';
 import { RequirementCreateComponent } from '../requirement-create/requirement-create.component';
+import { ReqStatusPipe } from '../../pipes/req-status-pipe';
 
 
 
@@ -37,7 +44,9 @@ import { RequirementCreateComponent } from '../requirement-create/requirement-cr
     UnifiedPersonListModalComponent,
     OrgStructureComponent,
     ProgressMatrixConfigComponent,
-    MilestoneConfigComponent
+    MilestoneConfigComponent,
+    LifecycleOrchestratorModalComponent,
+    ReqStatusPipe
   ], 
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -64,7 +73,6 @@ export class DashboardComponent implements OnInit {
   public selectedAgreementData = signal<AtfAgreementDetail | null>(null);
   public isSelectedReqAtfOpen = signal<boolean>(false);
 
-  
 
   // Signals para el control del Modal ATF
   public isAtfModalOpen = signal<boolean>(false);
@@ -76,6 +84,9 @@ export class DashboardComponent implements OnInit {
 
   // Signals para el control del Modal ATF List
   public isAtfListModalOpen = signal<boolean>(false);
+
+  // Signals para el control del Modal de Orquestador
+  selectedReqForOrchestrator = signal<RequirementDashboard | null>(null);
   
   public user = this.authService.currentUser;
 
@@ -197,7 +208,7 @@ export class DashboardComponent implements OnInit {
  */
 public isAtfEnabled(status: string): boolean {
     // Array con los estados válidos donde ATF debe estar accesible
-    const allowedStatuses = ['ES-R', 'ATF-I', 'ATF-C'];
+    const allowedStatuses = ['ES-R', 'ATF-I', 'ATF-C', 'DT-I', 'DT-C'];
     return allowedStatuses.includes(status);
 }
 
@@ -207,7 +218,7 @@ public isAtfEnabled(status: string): boolean {
  */
 public isGrEnabled(status: string): boolean {
     // Array con los estados válidos donde GR debe estar accesible
-    const allowedStatuses = ['ATF-C']; 
+    const allowedStatuses = ['ATF-C', 'DT-I', 'DT-C']; 
     // Nota: Deberás agregar aquí los estados futuros como 'PROCESO-DT', 'CERRADO-DT', etc.
     return allowedStatuses.includes(status);
 }
@@ -480,6 +491,16 @@ public isGrEnabled(status: string): boolean {
   // MÉTODO PARA CERRAR EL MODAL DE CONFIGURACIÓN DE HITOS
   public closeMilestoneConfigModal(): void {
     this.showMilestoneConfigModal.set(false);
+  }
+
+  // METODO PARA ABRIR EL MODAL DEL ORCHESTRATOR
+  openLifecycleOrchestrator(req: RequirementDashboard): void {
+    this.selectedReqForOrchestrator.set(req);
+  }
+
+  // MERTODO PARA CERRAR EL MODAL DEL ORCHESTRATOR
+  closeLifecycleOrchestrator(): void {
+    this.selectedReqForOrchestrator.set(null);
   }
 
 }

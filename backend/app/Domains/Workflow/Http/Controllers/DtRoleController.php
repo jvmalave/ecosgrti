@@ -45,4 +45,19 @@ class DtRoleController extends Controller
             'new_status' => $role->status
         ], 200);
     }
+
+    /**
+     * PATCH /workflow/requirements/{id}/dt/close-phase
+     * 
+     * CIERRE DE FASE GLOBAL DE DISEÑO TÉCNICO (DT)
+     */
+    public function closePhase(string $requirementId): JsonResponse
+    {
+        $data = $this->dtRoleService->closeDtPhase($requirementId);
+        
+        return response()->json([
+            'message' => 'Fase de Diseño Técnico cerrada con éxito.',
+            'data' => $data
+        ], 200);
+    }
 }

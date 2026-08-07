@@ -4,6 +4,7 @@ export interface DtRole {
   requirement_role_id: string;
   name: string;
   status: 'IN_PROGRESS' | 'CLOSED';
+  registers_count?: number;
 }
 
 export interface DtRegister {
@@ -14,6 +15,14 @@ export interface DtRegister {
   description: string;
   created_at?: string;
   updated_at?: string;
+}
+
+
+export interface DtRegistersResponse {
+  id_req: string;
+  nombre_rol: string;
+  estado_rol: string;
+  registros: DtRegister[];
 }
 
 export interface DtRoleInitResponse {

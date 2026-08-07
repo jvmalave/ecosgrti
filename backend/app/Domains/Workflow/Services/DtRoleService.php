@@ -9,11 +9,17 @@ use App\Domains\Workflow\Models\RequirementRole;
 use App\Domains\Audit\Services\AuditService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use App\Domains\Workflow\Services\PhaseTransitionService;
+use App\Domains\Core\Models\Requirement;
+use App\Domains\Workflow\Services\ProgressCalculationService;
+
 
 class DtRoleService
 {
     public function __construct(
-        private readonly AuditService $auditService
+        private readonly AuditService $auditService,
+        private readonly PhaseTransitionService $phaseTransitionService,
+        private readonly ProgressCalculationService $progressService
     ) {}
 
     /**
@@ -42,22 +48,40 @@ class DtRoleService
         }
 
         // AUDITORIA FORENCE DE INICIALIZACIÓN DE ROLES
-        $this->auditService->logModelChange(
-            'ACCESS_DT_ROLES',
-            'Sincronización y acceso a la subfase de Diseño Técnico',
-            ['record_id' => $requirementId, 'action' => 'INIT_DT'],
-            auth()->id()
-        );
+        // $this->auditService->logModelChange(
+        //     'ACCESS_DT_ROLES',
+        //     'Sincronización y acceso a la subfase de Diseño Técnico',
+        //     ['record_id' => $requirementId, 'action' => 'INIT_DT'],
+        //     auth()->id()
+        // );
         
         $cacheKey = "req_{$requirementId}_dt_roles_meta";
         $rolesList = Cache::remember($cacheKey, 600, function () use ($requirementId) {
-            return DtRole::where('requirement_id', $requirementId)->get();
+            return DtRole::where('requirement_id', $requirementId)
+                        ->withCount('registers')
+                        ->get()
+                        ->toArray();
         });
 
         return [
             'requirement_id' => $requirementId,
             'roles_list' => $rolesList
         ];
+    }
+
+    /**
+     * RECUPERAR ROLES DE DISEÑO TÉCNICO CON CONTEO DE BITÁCORAS
+     */
+    public function getRoles(string $requirementId)
+    {
+        $cacheKey = "req_{$requirementId}_dt_roles_meta";
+        
+        return Cache::remember($cacheKey, 600, function () use ($requirementId) {
+            return DtRole::where('requirement_id', $requirementId)
+                        ->withCount('registers')
+                        ->get()
+                        ->toArray();
+        });
     }
 
     /**
@@ -79,14 +103,14 @@ class DtRoleService
                 
                 $this->auditService->logModelChange(
                     'CLOSE_ROLE_DT',
-                    'Cierre técnico de rol en subfase DT',
+                    'Cierre técnico de la fase DT del rol: ' . $role->name,
                     ['record_id' => $role->id, 'new_status' => 'CLOSED'],
                     auth()->id()
                 );
                 
             } elseif ($action === 'REOPEN') {
                 // RESTRICCION: Solo se puede reabrir un rol si la subfase global DT-I o ATF-C está activa (no cerrada)
-                $status = DB::table('core.requirements')->where('id', $role->requirement_id)->value('phase_actual');
+                $status = DB::table('core.requirements')->where('id', $role->requirement_id)->value('status');
                 
                 if ($status !== 'DT-I' && $status !== 'ATF-C') {
                     abort(403, 'Acceso denegado: La subfase global está cerrada o en etapa superior.');
@@ -96,7 +120,7 @@ class DtRoleService
                 
                 $this->auditService->logModelChange(
                     'REOPEN_ROLE_DT',
-                    'Reapertura técnica de rol en subfase DT',
+                    'Reapertura técnica de la fase DT del rol: ' . $role->name,
                     ['record_id' => $role->id, 'new_status' => 'IN_PROGRESS'],
                     auth()->id()
                 );
@@ -105,6 +129,79 @@ class DtRoleService
             Cache::forget("req_{$role->requirement_id}_dt_roles_meta");
 
             return $role;
+        });
+    }
+
+
+    
+    /**
+     * CIERRE GLOBAL DE LA SUBFASE DE DISEÑO TÉCNICO (HARD GATE)
+     */
+    public function closeDtPhase(string $requirementId): array
+    {
+        // 1. BLOQUEO ESTRICTO TEMPRANO
+        // Buscamos el requerimiento y verificamos su estado antes de abrir la transacción
+        $requirement = Requirement::findOrFail($requirementId);
+        
+        if ($requirement->status !== 'DT-I') {
+            abort(422, 'La fase de Diseño Técnico ya se encuentra cerrada o no está activa.');
+        }
+
+        
+
+        return DB::transaction(function () use ($requirementId, $requirement) {
+
+            $reqName = $requirement->rrti;
+
+            // 2. HARD GATE: Verificar que NO existan roles en proceso
+            $openRolesCount = DtRole::where('requirement_id', $requirementId)
+                                    ->where('status', '!=', 'CLOSED')
+                                    ->count();
+
+            if ($openRolesCount > 0) {
+                abort(422, 'Validación fallida: Todos los roles técnicos deben estar en estado CERRADO para avanzar de fase.');
+            }
+
+            // 3. RECÁLCULO DEL AVANCE GLOBAL
+            // (Asumiendo que tienes inyectado $this->progressService)
+            $calculatedProgress = $this->progressService->calculateGlobalProgress($requirement);
+
+            // 4. ACTUALIZACIÓN DEL ESTADO MAESTRO Y PROGRESO
+            $requirement->update([
+                'status' => 'DT-C', 
+                'progress_percentage' => $calculatedProgress,
+                'updated_at' => now()
+            ]);
+
+            // 5. REGISTRO HISTÓRICO TRANSACCIONAL
+            $this->phaseTransitionService->recordTransition(
+                $requirementId,
+                'DT-C',
+                (string) auth()->id(),
+                'Cierre global exitoso de la fase DT del requerimiento: ' . $reqName
+            );
+
+            // 6. AUDITORÍA FORENSE
+            $this->auditService->logModelChange(
+                'CLOSE_DT_PHASE',
+                'Cierre de fase de DT del requerimiento: ' . $reqName,
+                [
+                    'record_id' => $requirementId, 
+                    'new_status' => 'DT-C',
+                    'progress_percentage' => $calculatedProgress
+                ],
+                auth()->id()
+            );
+
+            // 7. LIMPIEZA DE CACHÉ
+            Cache::forget("req_{$requirementId}_dt_roles_meta");
+            // Agrega aquí cualquier otra llave de caché global del requerimiento que necesites invalidar
+
+            return [
+                'success' => true,
+                'message' => 'Fase de Diseño Técnico cerrada con éxito.',
+                'progress_percentage' => $calculatedProgress
+            ];
         });
     }
 }

@@ -5,7 +5,8 @@ import {
   DtRoleInitResponse, 
   DtRoleStatusChangeResponse, 
   DtRegister, 
-  ActionMessageResponse 
+  ActionMessageResponse,
+  DtRegistersResponse
 } from '../models/dt.model';
 
 @Injectable({
@@ -39,9 +40,13 @@ export class DtWorkflowService {
 
   /**
    * Consultar Lista de Registros por Rol
-   */
-  getRegisters(roleId: string): Observable<DtRegister[]> {
-    return this.http.get<DtRegister[]>(`${this.workflowApiUrl}/dt/roles/${roleId}/registers`);
+  //  */
+  // getRegisters(roleId: string): Observable<DtRegister[]> {
+  //   return this.http.get<DtRegister[]>(`${this.workflowApiUrl}/dt/roles/${roleId}/registers`);
+  // }
+
+  getRegisters(roleId: string): Observable<DtRegistersResponse> { 
+    return this.http.get<DtRegistersResponse>(`${this.workflowApiUrl}/dt/roles/${roleId}/registers`);
   }
 
   /**
@@ -63,5 +68,16 @@ export class DtWorkflowService {
    */
   deleteRegister(registerId: string): Observable<ActionMessageResponse> {
     return this.http.delete<ActionMessageResponse>(`${this.workflowApiUrl}/dt/registers/${registerId}`);
+  }
+
+  /**
+   * Cerrar la fase global de Diseño Técnico 
+   */
+  closePhase(requirementId: string): Observable<ActionMessageResponse> {
+    // Asumiendo un endpoint RESTful que gestione el estado del requerimiento
+    return this.http.patch<ActionMessageResponse>(
+      `${this.workflowApiUrl}/requirements/${requirementId}/dt/close-phase`, 
+      {}
+    );
   }
 }

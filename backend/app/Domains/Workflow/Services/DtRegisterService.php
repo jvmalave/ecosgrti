@@ -27,7 +27,10 @@ class DtRegisterService
         $cacheKey = "dt_registers_cache_{$roleId}";
         
         return Cache::remember($cacheKey, 600, function () use ($roleId) {
-            return DtRegister::where('role_id', $roleId)->orderBy('date', 'desc')->get();
+            return DtRegister::where('role_id', $roleId)
+                ->orderBy('date', 'desc')
+                ->get()
+                ->toArray();
         });
     }
 
@@ -45,7 +48,7 @@ class DtRegisterService
 
             $this->auditService->logModelChange(
                 'CREATE_DT_REGISTER',
-                'Creación de nuevo registro técnico en DT',
+                'Creación del registro DT:  ' . $data['title'] . '.del rol: ' . $role->name,
                 ['record_id' => $register->id, 'title' => $data['title']],
                 auth()->id()
             );
@@ -111,7 +114,7 @@ class DtRegisterService
 
             $this->auditService->logModelChange(
                 'UPDATE_DT_REG',
-                'Actualización de registro técnico',
+                'Actualización de registro DT: ' . $register->title . ' del rol: ' . $register->role->name,
                 ['record_id' => $register->id, 'changes' => $register->getChanges()],
                 auth()->id()
             );
@@ -135,7 +138,7 @@ class DtRegisterService
             
             $this->auditService->logModelChange(
                 'DELETE_PHYSICAL_DT_REG',
-                'Eliminación física de registro de diseño',
+                'Eliminación física de registro DT ' . $register->title . ' del rol: ' . $register->role->name,
                 ['record_id' => $registerId],
                 auth()->id()
             );

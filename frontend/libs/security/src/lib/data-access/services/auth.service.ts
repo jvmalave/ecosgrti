@@ -14,7 +14,7 @@ export class AuthService {
   private router = inject(Router);
   private readonly http = inject(HttpClient);
   private readonly apiUrl = inject(AUTH_API_URL);
-  //private readonly apiUrl = 'http://localhost:8000/api/auth'; 
+  
 
   private readonly _currentUser = signal<UserSession | null>(
     inject(PLATFORM_ID) && isPlatformBrowser(inject(PLATFORM_ID))

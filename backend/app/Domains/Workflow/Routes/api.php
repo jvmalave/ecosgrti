@@ -92,6 +92,9 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
     // Eliminar Registro de Diseño (Físico)
     Route::delete('/dt/registers/{reg_id}', [DtRegisterController::class, 'destroy']);
 
+    // Cerrar Fase (DT)
+    Route::patch('/requirements/{id}/dt/close-phase', [DtRoleController::class, 'closePhase']);
+
   });
 
     
@@ -104,7 +107,7 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
     // Mostrar Dashboard de Progreso
     Route::get('/requirements/{requirementId}/progress-dashboard', [ProgressDashboardController::class, 'show']);
 
-    Route::middleware(['role:Coord,ConsCSPE'])->group(function () {
+    Route::middleware(['role:Admin,Coord,ConsCSPE'])->group(function () {
       // Actualizar Tipo de Gestión
       Route::patch('/requirements/{requirementId}/management-type', UpdateManagementTypeController::class);
     });
