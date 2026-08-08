@@ -1,6 +1,7 @@
 import { Component, input, output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DtRolesListModalComponent } from '../dt-roles-list-modal/dt-roles-list-modal.component';
+import { PhaseRolesModalComponent } from '../phase-roles-modal/phase-roles-modal.component';
+import { PHASE_CONFIGURATIONS, PhaseConfig } from '../../data-access/models/phase-config.interface';
 
 export interface DashboardRequirement {
   id: string;
@@ -8,7 +9,8 @@ export interface DashboardRequirement {
   management_type: string;
   status: string;
   roles_count: number;
-  has_roles: boolean | number | string; // Contemplamos variaciones del backend
+  has_roles: boolean | number | string;
+  dt_closed_roles_count?: number;
 }
 
 export type PhaseAction = 'DT' | 'COR' | 'COE' | 'CER' | 'CEE' | 'PI' | 'PAP' | 'AU';
@@ -16,7 +18,7 @@ export type PhaseAction = 'DT' | 'COR' | 'COE' | 'CER' | 'CEE' | 'PI' | 'PAP' | 
 @Component({
   selector: 'lib-lifecycle-orchestrator-modal',
   standalone: true,
-  imports: [CommonModule, DtRolesListModalComponent],
+  imports: [CommonModule, PhaseRolesModalComponent],
   templateUrl: './lifecycle-orchestrator-modal.component.html',
   styleUrls: ['./lifecycle-orchestrator-modal.component.scss']
 })
@@ -25,6 +27,9 @@ export class LifecycleOrchestratorModalComponent {
   req = input.required<DashboardRequirement>();
   closeModal = output<void>();
   openPhase = output<PhaseAction>();
+
+  
+  readonly PHASES = PHASE_CONFIGURATIONS;
 
   // ==========================================
   // DIMENSIÓN 1: VISIBILIDAD (Tipo de Gestión)
@@ -47,24 +52,23 @@ export class LifecycleOrchestratorModalComponent {
   // DIMENSIÓN 2: ACTIVACIÓN (Hard-Gates)
   // ==========================================
   
-  // RN-Requisito de Activación: DT habilitado si la variable es verdadera o mayor a 0
-
-
   isDtEnabled = computed(() => {
     const count = this.req().roles_count;
-    
-    // Imprimimos en la consola del navegador para auditar el dato real
     console.log('Auditoría Hard-Gate DT -> roles_count:', count, 'Tipo:', typeof count);
-    
-    // Convertimos de forma segura a número y validamos
     return Number(count) > 0;
   });
 
-  
+  // Habilitar COR solo si hay roles cerrados en DT
+  isCoREnabled = computed(() => {
+    // Extraemos el valor, asegurando que sea un número (fallback a 0)
+    const closedDtRoles = this.req().dt_closed_roles_count || 0;
+    
+    console.log('Auditoría Hard-Gate COR -> Roles cerrados en DT:', closedDtRoles);
+    
+    // El botón solo se habilita si hay al menos 1 rol en estado CLOSED en DT
+    return Number(closedDtRoles) > 0;
+  });
 
-  // Por ahora, cerramos los Hard-Gates de las siguientes fases hasta que 
-  // implementemos sus reglas de negocio en los próximos Sprints.
-  isCoREnabled = computed(() => false);
   isCoEEnabled = computed(() => false);
   isCeREnabled = computed(() => false);
   isCeEEnabled = computed(() => false);
@@ -72,18 +76,22 @@ export class LifecycleOrchestratorModalComponent {
   isPapEnabled = computed(() => false);
   isAuEnabled = computed(() => false);
 
-
-  activePhaseModal = signal<PhaseAction | null>(null);
+  // 5. CAMBIO CLAVE: Esta señal ya no guarda un string ('DT'), sino que guarda el objeto PhaseConfig completo
+  activePhaseConfig = signal<PhaseConfig | null>(null);
 
   triggerClose(): void {
     this.closeModal.emit();
   }
 
-  navigateTo(phase: PhaseAction): void {
-    // Al hacer clic en un botón, activamos el modal correspondiente
-    this.activePhaseModal.set(phase);
-    
-    // Mantenemos la emisión por si el Dashboard necesita registrar el evento
-    this.openPhase.emit(phase);
+  // 6. Modificamos navigateTo para recibir el objeto de configuración
+  navigateTo(config: PhaseConfig): void {
+    this.activePhaseConfig.set(config);
+    // Emitimos el string extraído de la configuración por si el Dashboard lo está escuchando
+    this.openPhase.emit(config.phaseCode as PhaseAction); 
+  }
+
+  // 7. Nuevo método para que el modal hijo pueda avisarle al orquestador que se cerró
+  closeActivePhase(): void {
+    this.activePhaseConfig.set(null);
   }
 }

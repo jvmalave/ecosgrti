@@ -208,7 +208,7 @@ export class DashboardComponent implements OnInit {
  */
 public isAtfEnabled(status: string): boolean {
     // Array con los estados válidos donde ATF debe estar accesible
-    const allowedStatuses = ['ES-R', 'ATF-I', 'ATF-C', 'DT-I', 'DT-C'];
+    const allowedStatuses = ['ES-R', 'ATF-I', 'ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C'];
     return allowedStatuses.includes(status);
 }
 
@@ -218,7 +218,7 @@ public isAtfEnabled(status: string): boolean {
  */
 public isGrEnabled(status: string): boolean {
     // Array con los estados válidos donde GR debe estar accesible
-    const allowedStatuses = ['ATF-C', 'DT-I', 'DT-C']; 
+    const allowedStatuses = ['ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C']; 
     // Nota: Deberás agregar aquí los estados futuros como 'PROCESO-DT', 'CERRADO-DT', etc.
     return allowedStatuses.includes(status);
 }

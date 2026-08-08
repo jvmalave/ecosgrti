@@ -8,17 +8,22 @@ use App\Domains\Workflow\Http\Controllers\DeliverableController;
 use App\Domains\Workflow\Http\Controllers\ATFClosureController;
 use App\Domains\Workflow\Http\Controllers\UpdateManagementTypeController;
 
-// Controladores US29: Diseño Técnico (DT)
+// Controladores Diseño Técnico (DT)
 use App\Domains\Workflow\Http\Controllers\DtRoleController;
 use App\Domains\Workflow\Http\Controllers\DtRegisterController;
 
-// Aplicamos el middleware a todo el grupo de workflow para centralizar la seguridad
+// Controladores Construcción-Roles (COR)
+use App\Domains\Workflow\Http\Controllers\CorRoleController;
+use App\Domains\Workflow\Http\Controllers\CorRegisterController;
+
+// Middleware a todo el grupo de workflow para centralizar la seguridad
 Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
 
+  // Middeleware RBAC para los usuarios autorizados a acceder al modulo workflow
   Route::middleware(['role:Admin,Coord,ConsCSPE'])->group(function () {
     /*
     |--------------------------------------------------------------------------
-    | GESTUON DE ACUERDOS ATF 
+    | GESTION DE ACUERDOS ATF 
     |--------------------------------------------------------------------------
     */
     // Registrar Acuerdo ATF
@@ -61,7 +66,7 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | GESTIÓN DE CIERRE DE FASE (Hard Gate)
+    | GESTIÓN DE CIERRE DE FASE ATF  (Hard Gate)
     |--------------------------------------------------------------------------
     */
     // Verificación de Quórum
@@ -71,15 +76,27 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | GESTIÓN DE DISEÑO TÉCNICO (DT)
+    | GESTIÓN FASE DISEÑO TÉCNICO (DT)
     |--------------------------------------------------------------------------
     */
+
+    // -------------------------------------------------------------------------
+    // GESTIÓN DE ROLES (DtRoleController)
+    // -------------------------------------------------------------------------
+
     // Acceder a Gestión de Diseño Técnico (DT) y sincronizar roles
     Route::get('/requirements/{id}/dt/roles-init', [DtRoleController::class, 'index']);
     
     // Gestionar Ciclo de Vida del Rol en DT (Cerrar/Activar)
     Route::patch('/dt/roles/{role_id}/status', [DtRoleController::class, 'changeStatus']);
     
+    // Cerrar Fase (DT)
+    Route::patch('/requirements/{id}/dt/close-phase', [DtRoleController::class, 'closePhase']);
+
+    // -------------------------------------------------------------------------
+    // GESTIÓN DE BITÁCORAS / REGISTROS (DtRegisterController)
+    // -------------------------------------------------------------------------
+
     // Consultar Lista de Registros por Rol
     Route::get('/dt/roles/{role_id}/registers', [DtRegisterController::class, 'index']);
     
@@ -91,28 +108,56 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
     
     // Eliminar Registro de Diseño (Físico)
     Route::delete('/dt/registers/{reg_id}', [DtRegisterController::class, 'destroy']);
+  
 
-    // Cerrar Fase (DT)
-    Route::patch('/requirements/{id}/dt/close-phase', [DtRoleController::class, 'closePhase']);
-
-  });
-
-    
 
     /*
     |--------------------------------------------------------------------------
-    | OTRAS RUTAS DE GESTIÓN DE REQUERIMIENTOS
+    | GESTIÓN  FASE CONSTRUCCIÓN - ROLES (COR)
     |--------------------------------------------------------------------------
     */
-    // Mostrar Dashboard de Progreso
-    Route::get('/requirements/{requirementId}/progress-dashboard', [ProgressDashboardController::class, 'show']);
 
-    Route::middleware(['role:Admin,Coord,ConsCSPE'])->group(function () {
-      // Actualizar Tipo de Gestión
-      Route::patch('/requirements/{requirementId}/management-type', UpdateManagementTypeController::class);
-    });
+    // -------------------------------------------------------------------------
+    // GESTIÓN DE ROLES (CorRoleController)
+    // -------------------------------------------------------------------------
+    // Inicializar y listar roles de Construcción por Requerimiento
+    Route::get('/requirements/{id}/cor/roles-init', [CorRoleController::class, 'index']);
     
+    // Gestionar ciclo de vida del rol en COR (Cerrar/Activar)
+    Route::patch('/cor/roles/{role_id}/status', [CorRoleController::class, 'changeStatus']);
+    
+    // Cierre de fase global de Construcción - Roles
+    Route::patch('/requirements/{id}/cor/close-phase', [CorRoleController::class, 'closePhase']);
+
+    // -------------------------------------------------------------------------
+    // GESTIÓN DE BITÁCORAS / REGISTROS (CorRegisterController)
+    // -------------------------------------------------------------------------
+    // Consultar lista de registros por Rol
+    Route::get('/cor/roles/{role_id}/registers', [CorRegisterController::class, 'index']);
+    
+    // Agregar registro a Rol del Requerimiento
+    Route::post('/requirements/{id}/cor/roles/{role_id}/registers', [CorRegisterController::class, 'store']);
+    
+    // Actualizar registro
+    Route::put('/cor/registers/{reg_id}/roles/{role_id}', [CorRegisterController::class, 'update']);
+    
+    // Eliminar registro
+    Route::delete('/cor/registers/{reg_id}/roles/{role_id}', [CorRegisterController::class, 'destroy']);
+
+  });
+
+  /*
+  |--------------------------------------------------------------------------
+  | OTRAS RUTAS DE GESTIÓN DE REQUERIMIENTOS
+  |--------------------------------------------------------------------------
+  */
+    // Mostrar Dashboard de Progreso
+  Route::get('/requirements/{requirementId}/progress-dashboard', [ProgressDashboardController::class, 'show']);
+
+  Route::middleware(['role:Admin,Coord,ConsCSPE'])->group(function () {
+    // Actualizar Tipo de Gestión
+    Route::patch('/requirements/{requirementId}/management-type', UpdateManagementTypeController::class);  
+
+  }); 
 
 });
-
-

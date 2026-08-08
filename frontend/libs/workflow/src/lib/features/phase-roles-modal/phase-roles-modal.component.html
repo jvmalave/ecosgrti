@@ -1,0 +1,204 @@
+@if (!selectedRoleForRegisters()) {
+  <div class="modal-overlay">
+    <div class="modal-dialog-custom">
+      <!-- CABECERA -->
+      <div
+        class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center"
+      >
+        <h5 class="m-0 fw-bold">
+          <i class="fa-solid fa-users-gear me-2"></i> {{ modalTitle() }}
+        </h5>
+
+        <!-- Botón de cierre conectado al output -->
+        <button
+          type="button"
+          class="btn text-white fs-5 p-0 border-0 shadow-none"
+          (click)="closeModal.emit()"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class=".modal-body-scroll p-4">
+        <div class="row mb-4">
+          <!-- Buscador Reactivo -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <span
+                class="badge bg-light text-brand ms-3 border border-light rounded-pill fs-6 shadow-sm"
+              >
+                Requerimiento: {{ rrti() }}
+              </span>
+            </div>
+            <div class="col-md-6 offset-md-6">
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="fa-solid fa-magnifying-glass text-muted"></i>
+                </span>
+                <input
+                  type="text"
+                  class="form-control border-start-0 ps-0 shadow-none"
+                  placeholder="Buscar rol técnico por nombre..."
+                  (input)="updateSearch($event)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- BANNER DE FASE CERRADA -->
+          @if (!isPhaseActive()) {
+          <div class="alert alert-success d-flex align-items-center mt-3 shadow-sm" role="alert">
+            <i class="fa-solid fa-lock fs-2 me-3"></i>
+            <div>
+              <h6 class="fw-bold mb-1">Fase de {{ config().phaseName }} Cerrada</h6>
+              <p class="mb-0 small">Esta fase ha concluido. Todos los roles y sus bitácoras se encuentran en estado inmutable.</p>
+            </div>
+          </div>
+          }
+
+          <!-- ROLES EN PROCESO -->
+          <h6 class="text-brand fw-bold mb-3 border-bottom pb-2">
+            <i class="fa-solid fa-spinner fa-spin-pulse me-2"></i> Roles en Proceso
+          </h6>
+
+          <!-- Tabla de roles en proceso -->
+          <div class="table-responsive mb-4">
+            <table class="table table-hover align-middle border">
+              <thead class="table-light text-muted small">
+                <tr>
+                  <th>ROL TÉCNICO</th>
+                  <th class="text-center">ESTADO</th>
+                  <th class="text-end">ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (role of activeRoles(); track role.id) {
+                  <tr>
+                    <td class="fw-medium">
+                      <i class="fa-solid fa-user-tie text-muted me-2"></i>
+                      {{ role.name }}
+                    </td>
+                    <td class="text-center">
+                      <span class="badge badge-in-progress rounded-pill px-3 py-2">EN PROCESO</span>
+                    </td>
+                    <td class="text-end">
+                      <button
+                        class="btn btn-sm btn-outline-brand me-2 rounded-pill px-3"
+                        (click)="openRegisters(role)"
+                      >
+                        <i class="fa-solid fa-book-journal-whills me-1"></i>
+                        Bitácora
+                      </button>
+
+                      <button
+                        class="btn btn-sm btn-outline-brand rounded-pill px-3 shadow-sm"
+                        [disabled]="(role.registers_count || 0) === 0"
+                        (click)="closeRole(role)"
+                      >
+                        <i class="fa-solid fa-lock me-1"></i> Cerrar
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="3" class="text-center text-muted py-4">
+                      <i class="fa-regular fa-folder-open fs-2 mb-2 opacity-50 d-block"></i>
+                      No se encontraron roles en proceso.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ROLES CERRADOS -->
+          <h6 class="text-success fw-bold mb-3 border-bottom pb-2 mt-4">
+            <i class="fa-solid fa-check-double me-2"></i> Roles Cerrados
+          </h6>
+
+          <!-- Tabla de roles cerrados -->
+          <div class="table-responsive mb-4">
+            <table class="table table-hover align-middle border">
+              <thead class="table-light text-muted small">
+                <tr>
+                  <th>ROL TÉCNICO</th>
+                  <th class="text-center">ESTADO</th>
+                  <th class="text-end">ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (role of closedRoles(); track role.id) {
+                  <tr>
+                    <td class="fw-medium text-muted">
+                      <i class="fa-solid fa-user-lock text-muted me-2"></i>
+                      {{ role.name }}
+                    </td>
+                    <td class="text-center">
+                      <span class="badge badge-closed rounded-pill px-3 py-2">CERRADO</span>
+                    </td>
+                    <td class="text-end">
+                      <button
+                        class="btn btn-sm btn-outline-brand me-2 rounded-pill px-3"
+                        (click)="openRegisters(role)"
+                      >
+                        <i class="fa-solid fa-eye me-1"></i> Ver Bitácora
+                      </button>
+                      @if (isPhaseActive()) {
+                        <button
+                          class="btn btn-sm btn-outline-warning text-dark"
+                          (click)="reopenRole(role)"
+                        >
+                          <i class="fa-solid fa-lock-open me-1"></i> Reabrir
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="3" class="text-center text-muted py-4">
+                      <i class="fa-regular fa-folder-closed fs-2 mb-2 opacity-50 d-block"></i>
+                      No hay roles técnicos cerrados.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- FOOTER DEL MODAL PRINCIPAL -->
+        @if (isPhaseActive()) {
+          <div class="modal-footer bg-light d-flex justify-content-between align-items-center w-100">
+            <span class="small text-muted">
+              <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase, todos los roles deben estar cerrados.
+            </span>
+            
+            <button class="btn btn-brand px-4" (click)="closeGlobalPhase()" [disabled]="isLoading() || !isPhaseCloseEnabled()">
+              @if (isLoading()) {
+                <i class="fa-solid fa-circle-notch fa-spin me-2"></i> Cerrando...
+              } @else {
+                <i class="fa-solid fa-flag-checkered me-2"></i> Cerrar Fase {{ config().phaseName }}
+              }
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- RENDERIZADO CONDICIONAL DEL MODAL SUPERPUESTO (CAPA 3: BITÁCORA) -->
+    @if (selectedRoleForRegisters()) {
+      <lib-phase-registers-modal
+        [requirementId]="requirementId()"
+        [rrti]="rrti()"
+        [roleId]="selectedRoleForRegisters()!.id"
+        [roleName]="selectedRoleForRegisters()!.name"
+        [roleStatus]="selectedRoleForRegisters()!.status"
+        [config]="config()"
+        (closeModal)="selectedRoleForRegisters.set(null)"
+      >
+      </lib-phase-registers-modal>
+    }
+
+    
