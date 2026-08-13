@@ -7,6 +7,8 @@ use App\Domains\Workflow\Http\Controllers\RequirementRoleController;
 use App\Domains\Workflow\Http\Controllers\DeliverableController;
 use App\Domains\Workflow\Http\Controllers\ATFClosureController;
 use App\Domains\Workflow\Http\Controllers\UpdateManagementTypeController;
+use App\Domains\Workflow\Http\Controllers\CoeDeliverableController;
+use App\Domains\Workflow\Http\Controllers\CoeActivityController;
 
 // Controladores Diseño Técnico (DT)
 use App\Domains\Workflow\Http\Controllers\DtRoleController;
@@ -102,12 +104,12 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
     
     // Agregar Registro de Diseño Técnico
     Route::post('/requirements/{id}/dt/roles/{role_id}/registers', [DtRegisterController::class, 'store']);
-    
+
     // Actualizar Registro de Diseño
-    Route::put('/dt/registers/{reg_id}', [DtRegisterController::class, 'update']);
+    Route::put('/dt/registers/{reg_id}/roles/{role_id}', [DtRegisterController::class, 'update']);
     
     // Eliminar Registro de Diseño (Físico)
-    Route::delete('/dt/registers/{reg_id}', [DtRegisterController::class, 'destroy']);
+    Route::delete('/dt/registers/{reg_id}/roles/{role_id}', [DtRegisterController::class, 'destroy']);
   
 
 
@@ -143,6 +145,40 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
     
     // Eliminar registro
     Route::delete('/cor/registers/{reg_id}/roles/{role_id}', [CorRegisterController::class, 'destroy']);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GESTIÓN FASE CONSTRUCCIÓN - ENTREGABLES (COE)
+    |--------------------------------------------------------------------------
+    */
+  
+    Route::prefix('requirements/{id}/coe')->group(function () {
+        // Inicializar/Sincronizar entregables desde ATF
+        Route::get('/deliverables-init', [CoeDeliverableController::class, 'index']);
+        
+        // Cierre Global de la Fase COE
+        Route::patch('/close-phase', [CoeDeliverableController::class, 'closePhase']);
+        
+        // Crear una nueva actividad en la bitácora
+        Route::post('/deliverables/{deliverable_id}/activities', [CoeActivityController::class, 'store']);
+    });
+
+    // 2. Transiciones de Estado Individuales (Entregables)
+    // PATCH /workflow/coe/deliverables/{id}/status
+    Route::patch('/coe/deliverables/{id}/status', [CoeDeliverableController::class, 'changeStatus']);
+
+    // 3. Bitácora de Actividades (Operaciones sobre el registro específico)
+    Route::prefix('coe')->group(function () {
+        // Listar actividades de un entregable
+        Route::get('/deliverables/{deliverable_id}/activities', [CoeActivityController::class, 'index']);
+        
+        // Actualizar actividad
+        Route::put('/activities/{activity_id}/deliverables/{deliverable_id}', [CoeActivityController::class, 'update']);
+        
+        // Eliminar actividad (Soft Delete)
+        Route::delete('/activities/{activity_id}/deliverables/{deliverable_id}', [CoeActivityController::class, 'destroy']);
+    });
 
   });
 

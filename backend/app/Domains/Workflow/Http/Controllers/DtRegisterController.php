@@ -41,7 +41,7 @@ class DtRegisterController extends Controller
      * 
      * AGREGAR REGISTRO DE DISEÑO TÉCNICO A ROL DEL REQUERIMIENTO
      */
-    public function store(StoreDtRegisterRequest $request, string $requirementId, string $roleId): JsonResponse
+    public function store(StoreDtRegisterRequest $request, string $requirementId, string $roleId,): JsonResponse
     {
         $role = DtRole::findOrFail($roleId);
         $register = $this->dtRegisterService->storeRegister($role, $request->validated());
@@ -54,7 +54,7 @@ class DtRegisterController extends Controller
      * 
      * ACTUALIZAR REGISTRO DE DISEÑO TÉCNICO DE ROL DEL REQUERIMIENTO
      */
-    public function update(UpdateDtRegisterRequest $request, string $registerId): JsonResponse
+    public function update(UpdateDtRegisterRequest $request, string $registerId, string $roleId): JsonResponse
     {
         $register = DtRegister::findOrFail($registerId);
         $updatedRegister = $this->dtRegisterService->updateRegister($register, $request->validated());
@@ -67,7 +67,7 @@ class DtRegisterController extends Controller
      * 
      * ELIMINAR REGISTRO DE DISEÑO TÉCNICO DE ROL DEL REQUERIMIENTO
      */
-    public function destroy(string $registerId): JsonResponse
+    public function destroy(string $registerId, string $roleId): JsonResponse
     {
         $register = DtRegister::findOrFail($registerId);
         $this->dtRegisterService->deleteRegister($register);

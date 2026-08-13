@@ -1,4 +1,4 @@
-<<div class="modal-overlay">
+<div class="modal-overlay">
   <div class="modal-dialog-custom">
 
     <!-- CABECERA CORPORATIVA POLIMÓRFICA -->
@@ -28,30 +28,31 @@
         <span
           class="badge bg-light text-brand ms-3 border border-light rounded-pill fs-6 shadow-sm"
         >
-          Rol: {{ roleName() }}
+          <!-- 🟢 Polimorfismo inyectado directamente desde el Signal -->
+          {{ parentLabel() }}: {{ parentName() }}
         </span>
       </div>
 
-      <!-- BANNER DE ROL CERRADO -->
-      @if (roleStatus() === 'CLOSED') {
+      <!-- BANNER DE COMPONENTE CERRADO -->
+      @if (parentStatus() === 'CLOSED') {
         <div class="alert alert-success d-flex align-items-center mt-3 shadow-sm" role="alert">
           <i class="fa-solid fa-lock fs-2 me-3"></i>
           <div>
-            <h6 class="fw-bold mb-1">Rol Técnico {{ roleName() }} es Inmutable</h6>
-            <p class="mb-0 small">El ciclo de vida de este rol ha concluido. Por integridad de los datos, no es posible agregar, editar o eliminar registros de su bitácora técnica.</p>
+            <h6 class="fw-bold mb-1">{{ parentLabel() }} "{{ parentName() }}" es Inmutable</h6>
+            <p class="mb-0 small">El ciclo de vida de este elemento ha concluido. Por integridad de los datos, no es posible agregar, editar o eliminar {{ recordNamePlural() }} de su bitácora.</p>
           </div>
         </div>
       }
 
-      <!-- Contenedor del Formulario de Registro (Solo se renderiza si NO está cerrado) -->
-      @if (roleStatus() !== 'CLOSED') {
+      <!-- Contenedor del Formulario de Registro -->
+      @if (parentStatus() !== 'CLOSED') {
           <div class="card border border-light shadow-sm mb-4">
             <div class="card-body bg-white rounded p-4">
               <h6 class="text-brand fw-bold mb-3 border-bottom pb-2">
-                @if (editingRegisterId()) {
-                  <i class="fa-solid fa-pen text-warning me-2"></i> Editando Registro
+                @if (editingRecordId()) {
+                  <i class="fa-solid fa-pen text-warning me-2"></i> Editando {{ recordName() | titlecase }}
                 } @else {
-                  <i class="fa-solid fa-pen-to-square me-2"></i> Agregar Nuevo Registro
+                  <i class="fa-solid fa-pen-to-square me-2"></i> Agregar Nuev{{ isCoePhase() ? 'a' : 'o' }} {{ recordName() | titlecase }}
                 }
               </h6>
     
@@ -61,9 +62,7 @@
                 class="row g-3"
               >
                 <div class="col-md-8">
-                  <label for="reg-tit" class="form-label text-muted small fw-bold"
-                    >Título del Registro</label
-                  >
+                  <label for="reg-tit" class="form-label text-muted small fw-bold">Título</label>
                   <input
                     id="reg-tit"
                     type="text"
@@ -78,9 +77,7 @@
                 </div>
     
                 <div class="col-md-4">
-                  <label for="reg-date" class="form-label text-muted small fw-bold"
-                    >Fecha de Creación</label
-                  >
+                  <label for="reg-date" class="form-label text-muted small fw-bold">Fecha de Creación</label>
                   <input
                     id="reg-date"
                     type="date"
@@ -94,9 +91,7 @@
                 </div>
     
                 <div class="col-12">
-                  <label for="reg-desc" class="form-label text-muted small fw-bold"
-                    >Descripción Detallada</label
-                  >
+                  <label for="reg-desc" class="form-label text-muted small fw-bold">Descripción Detallada</label>
                   <textarea
                     id="reg-desc"
                     formControlName="description"
@@ -111,7 +106,7 @@
                 </div>
     
                 <div class="col-12 text-end mt-3">
-                  @if (editingRegisterId()) {
+                  @if (editingRecordId()) {
                     <button
                       type="button"
                       class="btn btn-sm btn-outline-secondary px-4 rounded-pill me-2"
@@ -127,7 +122,7 @@
                       @if (isSaving()) {
                         <i class="fa-solid fa-circle-notch fa-spin me-2"></i> Actualizando...
                       } @else {
-                        <i class="fa-solid fa-cloud-arrow-up me-2"></i> Actualizar Registro
+                        <i class="fa-solid fa-cloud-arrow-up me-2"></i> Actualizar {{ recordName() | titlecase }}
                       }
                     </button>
                   } @else {
@@ -152,7 +147,7 @@
       <!-- Contenedor del Historial de Registros -->
       <div class="mt-4">
         <h6 class="text-secondary fw-bold border-bottom pb-2 mb-3">
-          <i class="fa-solid fa-clock-rotate-left me-2"></i> Historial de Registros
+          <i class="fa-solid fa-clock-rotate-left me-2"></i> Historial de {{ recordNamePlural() | titlecase }}
         </h6>
 
         @if (isLoading()) {
@@ -172,7 +167,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (reg of registers(); track reg.id) {
+                @for (reg of records(); track reg.id) {
                   <tr>
                     <td class="text-nowrap fw-medium text-secondary">
                       <i class="fa-regular fa-calendar me-1"></i>
@@ -183,20 +178,20 @@
                       <span class="text-truncate-custom">{{ reg.description }}</span>
                     </td>
                     <td class="text-end text-nowrap">
-                      @if (roleStatus() === 'CLOSED') {
+                      @if (parentStatus() === 'CLOSED') {
                         <!-- Botón Solo Lectura -->
-                        <button class="btn btn-sm btn-light border text-brand me-1" title="Ver Detalles del Registro"
-                                (click)="viewRegister(reg)">
+                        <button class="btn btn-sm btn-light border text-brand me-1" title="Ver Detalles"
+                                (click)="viewRecord(reg)">
                           <i class="fa-solid fa-eye"></i> Ver
                         </button>
                       } @else {
                         <!-- Botones de Edición y Borrado Activos -->
                         <button class="btn btn-sm btn-light border text-brand me-1" title="Editar"
-                                (click)="editRegister(reg)">
+                                (click)="editRecord(reg)">
                           <i class="fa-solid fa-pencil"></i>
                         </button>
                         <button class="btn btn-sm btn-light border text-danger" title="Eliminar"
-                                (click)="deleteRegister(reg.id)">
+                                (click)="deleteRecord(reg.id)">
                           <i class="fa-solid fa-trash-can "></i>
                         </button>
                       }
@@ -209,7 +204,6 @@
                       class="text-center text-muted py-5 bg-light border-dashed"
                     >
                       <i class="fa-regular fa-folder-open fs-2 mb-2 opacity-50 d-block"></i>
-                      <!-- Polimorfismo en el Empty State -->
                       {{ config().emptyStateText }}
                     </td>
                   </tr>

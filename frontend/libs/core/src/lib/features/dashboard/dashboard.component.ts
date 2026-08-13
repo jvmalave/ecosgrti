@@ -17,7 +17,8 @@ import {
           AtfAgreementsModalComponent, 
           AtfAgreementsListModalComponent, 
           AtfAgreementDetail,
-          LifecycleOrchestratorModalComponent    
+          LifecycleOrchestratorModalComponent,
+          WorkflowPhaseService    
         } from '@ecosgrti/workflow';
 import { UnifiedPersonModalComponent, UnifiedPersonListModalComponent } from '@ecosgrti/security';
 import { OrgStructureComponent, ProgressMatrixConfigComponent, MilestoneConfigComponent  } from '@ecosgrti/catalogs';
@@ -62,6 +63,7 @@ export class DashboardComponent implements OnInit {
   private requirementService = inject(RequirementService);
   private destroyRef = inject(DestroyRef); // Inyectado para gestionar la limpieza de suscripciones
   public readonly workflowState = inject(WorkflowStateService);
+  readonly phaseService = inject(WorkflowPhaseService);
   
 
   // ==========================================
@@ -141,8 +143,6 @@ export class DashboardComponent implements OnInit {
     this.showUnifiedPersonListModal.set(false);
   }
 
-  
-
 // Abre el modal de configuración listando la ficha unificada
   public openConfigModal(modalType: 'NONE' | 'UNIFIED_PERSON'): void {
     this.activeConfigModal.set(modalType);
@@ -208,7 +208,7 @@ export class DashboardComponent implements OnInit {
  */
 public isAtfEnabled(status: string): boolean {
     // Array con los estados válidos donde ATF debe estar accesible
-    const allowedStatuses = ['ES-R', 'ATF-I', 'ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C'];
+    const allowedStatuses = ['ES-R', 'ATF-I', 'ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C', 'COE-I', 'COE-C', 'CEE-I', 'CEE-C', 'CER-I', 'CER-C', 'PI-I', 'PI-C', 'PAP-I', 'PAP-C', 'AU', 'RF'];
     return allowedStatuses.includes(status);
 }
 
@@ -218,7 +218,7 @@ public isAtfEnabled(status: string): boolean {
  */
 public isGrEnabled(status: string): boolean {
     // Array con los estados válidos donde GR debe estar accesible
-    const allowedStatuses = ['ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C']; 
+    const allowedStatuses = ['ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C', 'COE-I', 'COE-C', 'CEE-I', 'CEE-C', 'CER-I', 'CER-C', 'PI-I', 'PI-C', 'PAP-I', 'PAP-C', 'AU', 'RF']; 
     // Nota: Deberás agregar aquí los estados futuros como 'PROCESO-DT', 'CERRADO-DT', etc.
     return allowedStatuses.includes(status);
 }
@@ -251,6 +251,12 @@ public isGrEnabled(status: string): boolean {
       this.loadRequirements(); 
     });
 
+    this.phaseService.refreshDashboard$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.loadRequirements(); 
+    });
+
     // Carga Inicial
     this.loadRequirements();
   }
@@ -264,7 +270,7 @@ public isGrEnabled(status: string): boolean {
     this.isLoading.set(true);
     const apiStatus = this.context() === 'PROCESO' ? 'active' : 'finalized';
     
-    // 7. NUEVO: Leemos el valor actual del buscador (si está nulo, mandamos undefined)
+    // 7. Leemos el valor actual del buscador (si está nulo, mandamos undefined)
     const searchTerm = this.searchControl.value || undefined;
 
     // 8. Pasamos el searchTerm al servicio
@@ -279,6 +285,25 @@ public isGrEnabled(status: string): boolean {
         if (response.meta) {
           this.hasMore.set(response.meta.has_more);
         }
+
+        // ====================================================================
+        // 🟢 NUEVO: LA MAGIA REACTIVA PARA EL ORQUESTADOR
+        // ====================================================================
+        // NOTA: Reemplaza "selectedRequirement" por el nombre exacto de tu Signal
+        const currentSelected = this.selectedReqForOrchestrator(); 
+        
+        if (currentSelected) {
+          // Buscamos el requerimiento actualizado en los datos recién llegados
+          const freshReq = response.data.find(r => r.id === currentSelected.id);
+          
+          if (freshReq) {
+            // Actualizamos el Signal. Esto empujará los datos frescos al Orquestador
+            // y los botones se iluminarán inmediatamente sin necesidad de F5.
+            this.selectedReqForOrchestrator.set(freshReq);
+          }
+        }
+        // ====================================================================
+
         this.isLoading.set(false);
       },
       error: (err) => {

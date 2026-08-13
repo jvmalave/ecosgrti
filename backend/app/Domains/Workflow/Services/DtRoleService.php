@@ -9,6 +9,7 @@ use App\Domains\Workflow\Models\RequirementRole;
 use App\Domains\Audit\Services\AuditService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 use App\Domains\Workflow\Services\PhaseTransitionService;
 use App\Domains\Core\Models\Requirement;
 use App\Domains\Workflow\Services\ProgressCalculationService;
@@ -127,6 +128,7 @@ class DtRoleService
             }
             // INVALIDA CACHÉ DE ROLES DE DISEÑO TÉCNICO PARA EL REQUERIMIENTO
             Cache::forget("req_{$role->requirement_id}_dt_roles_meta");
+            Redis::incr('dashboard_version');
 
             return $role;
         });
@@ -146,14 +148,12 @@ class DtRoleService
         if ($requirement->status !== 'DT-I') {
             abort(422, 'La fase de Diseño Técnico ya se encuentra cerrada o no está activa.');
         }
-
         
-
         return DB::transaction(function () use ($requirementId, $requirement) {
 
             $reqName = $requirement->rrti;
 
-            // 2. HARD GATE: Verificar que NO existan roles en proceso
+            // HARD GATE: Verificar que NO existan roles en proceso
             $openRolesCount = DtRole::where('requirement_id', $requirementId)
                                     ->where('status', '!=', 'CLOSED')
                                     ->count();
@@ -162,18 +162,17 @@ class DtRoleService
                 abort(422, 'Validación fallida: Todos los roles técnicos deben estar en estado CERRADO para avanzar de fase.');
             }
 
-            // 3. RECÁLCULO DEL AVANCE GLOBAL
-            // (Asumiendo que tienes inyectado $this->progressService)
+            // RECÁLCULO DEL AVANCE GLOBAL
             $calculatedProgress = $this->progressService->calculateGlobalProgress($requirement);
 
-            // 4. ACTUALIZACIÓN DEL ESTADO MAESTRO Y PROGRESO
+            // ACTUALIZACIÓN DEL ESTADO MAESTRO Y PROGRESO
             $requirement->update([
                 'status' => 'DT-C', 
                 'progress_percentage' => $calculatedProgress,
                 'updated_at' => now()
             ]);
 
-            // 5. REGISTRO HISTÓRICO TRANSACCIONAL
+            // REGISTRO HISTÓRICO TRANSACCIONAL
             $this->phaseTransitionService->recordTransition(
                 $requirementId,
                 'DT-C',
@@ -181,7 +180,7 @@ class DtRoleService
                 'Cierre global exitoso de la fase DT del requerimiento: ' . $reqName
             );
 
-            // 6. AUDITORÍA FORENSE
+            // AUDITORÍA FORENSE
             $this->auditService->logModelChange(
                 'CLOSE_DT_PHASE',
                 'Cierre de fase de DT del requerimiento: ' . $reqName,
@@ -193,9 +192,14 @@ class DtRoleService
                 auth()->id()
             );
 
-            // 7. LIMPIEZA DE CACHÉ
+            // LIMPIEZA DE CACHÉ
             Cache::forget("req_{$requirementId}_dt_roles_meta");
-            // Agrega aquí cualquier otra llave de caché global del requerimiento que necesites invalidar
+            
+            // ACTUALIZA LA CACHÉ DE PROGRESO (Para que el modal de detalle muestre el 25%)
+            Cache::put("req_{$requirementId}_progress", $calculatedProgress);
+            
+            // Obliga al Dashboard a consultar la BD de nuevo
+            Redis::incr('dashboard_version');
 
             return [
                 'success' => true,

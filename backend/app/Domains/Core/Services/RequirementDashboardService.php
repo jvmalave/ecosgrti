@@ -15,11 +15,10 @@ class RequirementDashboardService
     {
         $searchHash = $searchTerm ? md5(strtolower($searchTerm)) : 'all';
         
-        // ⚠️ IMPORTANTE: Subimos la versión de caché a 2 para forzar la invalidación 
-        // y asegurar que el frontend reciba la nueva columna 'dt_closed_roles_count'
-        $version = Redis::get('dashboard_version') ?: 2; 
+        // Captura de Parámetros con Valores por Defecto Redis
+        $version = Redis::get('dashboard_version') ?: 3; 
         
-        // Nombrar la llave incluyendo la versión (ej. req_v2_active_0_all)
+        // Nombrar la llave incluyendo la versión (ej. req_v3_active_0_all)
         $cacheKey = "req_v{$version}_{$status}_{$offset}_{$searchHash}";
 
         // Intento de Carga desde Redis
@@ -50,9 +49,12 @@ class RequirementDashboardService
             
             // Inyectar los cálculos booleanos y subconsultas usando selectRaw de forma aislada
             ->selectRaw('COUNT(aa.id) > 0 as has_atf_agreements')
+            // Subconsulta para contar los roles de la fase ATF
             ->selectRaw('(SELECT COUNT(*) FROM workflow.requirements_roles WHERE requirements_roles.requirement_id = r.id) as roles_count')
+            // Subconsulta para contar si la fase ATF tiene roles
             ->selectRaw('(SELECT COUNT(*) FROM workflow.requirements_roles WHERE requirements_roles.requirement_id = r.id) > 0 as has_roles')
-            
+            // Subconsulta para contar los entregables maestros de la fase ATF
+            ->selectRaw('(SELECT COUNT(*) FROM workflow.deliverables WHERE workflow.deliverables.requirement_id = r.id) as deliverables_count')
             // Subconsulta para contar exclusivamente los roles en estado 'CLOSED' de la fase de Diseño Técnico (DT)
             ->selectRaw("(
                 SELECT COUNT(dr.id) 

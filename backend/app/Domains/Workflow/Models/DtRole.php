@@ -59,6 +59,6 @@ class DtRole extends Model
      */
     public function registers(): HasMany
     {
-        return $this->hasMany(DtRegister::class, 'role_id');
+        return $this->hasMany(DtRegister::class, 'role_id', 'id');
     }
 }

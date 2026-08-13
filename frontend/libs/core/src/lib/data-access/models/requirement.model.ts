@@ -20,7 +20,7 @@ export interface RequirementDashboard {
   has_atf_agreements: boolean;
   tipo_gestion?: string;
   roles_count: number, 
-  has_roles: boolean
+  has_roles: boolean,
 }
 
 export interface RequirementDetail {

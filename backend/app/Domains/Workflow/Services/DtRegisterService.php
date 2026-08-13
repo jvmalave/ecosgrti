@@ -33,7 +33,6 @@ class DtRegisterService
                 ->toArray();
         });
     }
-
     /**
      * AGREGAR REGISTRO DE DISEÑO TÉCNICO Y EVALUAR IMPACTO GLOBAL
      */
@@ -48,42 +47,36 @@ class DtRegisterService
 
             $this->auditService->logModelChange(
                 'CREATE_DT_REGISTER',
-                'Creación del registro DT:  ' . $data['title'] . '.del rol: ' . $role->name,
+                'Creación del registro DT:  ' . $data['title'] . ' del rol: ' . $role->name,
                 ['record_id' => $register->id, 'title' => $data['title']],
                 auth()->id()
             );
 
-            // DISPARADOR DE ESTADO INICIAL: 
-            // Si es el primer registro de diseño técnico, se marca la fase global como iniciada (DT-I) 
-            //y se registra el hito en el historial.
+            // DISPARADOR DE ESTADO INICIAL
             $totalRegisters = DB::table('workflow.dt_registers')
-            ->join('workflow.dt_roles', 'dt_registers.role_id', '=', 'dt_roles.id')
-            ->where('dt_roles.requirement_id', $role->requirement_id)
+                ->join('workflow.dt_roles', 'dt_registers.role_id', '=', 'dt_roles.id')
+                ->where('dt_roles.requirement_id', $role->requirement_id)
                 ->count();
 
             if ($totalRegisters === 1) {
                 $requirement = Requirement::findOrFail($role->requirement_id);
                 
-                // Sella el inicio de la fase
                 $requirement->update(['status' => 'DT-I']);
                 
-                // Inserta el hito en el historial para que el algoritmo lo procese
                 RequirementPhaseHistory::create([
                     'requirement_id' => $requirement->id,
                     'phase_status_code' => 'DT-I',
                     'executed_by_user_id' => auth()->id(),
-                    'transitioned_at' => now(), //
+                    'transitioned_at' => now(),
                     'created_at' => now()
                 ]);
                 
-                // Invoca el algoritmo de progreso polimórfico
                 $calculatedProgress = $this->progressService->calculateGlobalProgress($requirement);
                 
                 $requirement->update([
                     'progress_percentage' => $calculatedProgress
                 ]);
 
-                // Propagación en caché para dashboards
                 Cache::put("req_{$requirement->id}_progress", $calculatedProgress);
                 
                 $this->auditService->logModelChange(
@@ -94,11 +87,16 @@ class DtRegisterService
                 );
             }
 
+            // 🟢 INVALIDACIÓN DE CACHÉS
+            // 1. Limpia la caché de la bitácora específica del rol
             Cache::forget("dt_registers_cache_{$role->id}");
+            // 2. Limpia la caché global de la lista de roles para que el frontend reciba el nuevo registers_count
+            Cache::forget("req_{$role->requirement_id}_dt_roles_meta");
 
             return $register;
         });
     }
+
 
     /**
      * ACTUALIZAR REGISTRO DE DISEÑO TÉCNICO
@@ -134,6 +132,9 @@ class DtRegisterService
             $roleId = $register->role_id;
             $registerId = $register->id;
             
+            // Extraemos el ID del requerimiento antes de destruir el registro
+            $requirementId = $register->role->requirement_id;
+            
             $register->delete(); // Dispara ON DELETE CASCADE en PostgreSQL
             
             $this->auditService->logModelChange(
@@ -143,7 +144,11 @@ class DtRegisterService
                 auth()->id()
             );
             
+            // INVALIDACIÓN DE CACHÉS
+            // 1. Limpia la caché de la bitácora
             Cache::forget("dt_registers_cache_{$roleId}");
+            // 2. Limpia la caché global de la lista de roles para que el candado se vuelva a cerrar si el count llega a 0
+            Cache::forget("req_{$requirementId}_dt_roles_meta");
         });
     }
 }

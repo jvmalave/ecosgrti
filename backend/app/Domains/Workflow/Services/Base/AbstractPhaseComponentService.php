@@ -83,7 +83,7 @@ abstract class AbstractPhaseComponentService
 
         return DB::transaction(function () use ($requirementId, $modelClass) {
             // HARD GATE: Verificar que NO existan componentes en proceso
-            $reqColumn = (new $modelClass)->getForeignKey(); // Detecta automáticamente si es req_id o requirement_id
+            $reqColumn = $this->getRequirementColumn();
             
             $openComponents = $modelClass::where($reqColumn, $requirementId)
                   ->where('status', '!=', 'CLOSED')
@@ -133,4 +133,14 @@ abstract class AbstractPhaseComponentService
     {
         // Por defecto no hace nada.
     }
+
+    /**
+     * Define la columna que vincula el componente con el requerimiento padre.
+     */
+    protected function getRequirementColumn(): string 
+    {
+        return 'requirement_id'; // Valor por defecto
+    }
+
+    
 }

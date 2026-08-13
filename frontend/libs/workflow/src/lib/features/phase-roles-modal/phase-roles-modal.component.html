@@ -1,4 +1,4 @@
-@if (!selectedRoleForRegisters()) {
+@if (!selectedItemForRegisters()) {
   <div class="modal-overlay">
     <div class="modal-dialog-custom">
       <!-- CABECERA -->
@@ -6,7 +6,7 @@
         class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center"
       >
         <h5 class="m-0 fw-bold">
-          <i class="fa-solid fa-users-gear me-2"></i> {{ modalTitle() }}
+          <i class="fa-solid fa-layer-group me-2"></i> {{ modalTitle() }}
         </h5>
 
         <!-- Botón de cierre conectado al output -->
@@ -19,7 +19,7 @@
         </button>
       </div>
 
-      <div class=".modal-body-scroll p-4">
+      <div class="modal-body-scroll p-4">
         <div class="row mb-4">
           <!-- Buscador Reactivo -->
           <div class="row mb-4">
@@ -38,7 +38,7 @@
                 <input
                   type="text"
                   class="form-control border-start-0 ps-0 shadow-none"
-                  placeholder="Buscar rol técnico por nombre..."
+                  placeholder="Buscar {{ itemName() | lowercase }} por nombre..."
                   (input)="updateSearch($event)"
                 />
               </div>
@@ -51,32 +51,35 @@
             <i class="fa-solid fa-lock fs-2 me-3"></i>
             <div>
               <h6 class="fw-bold mb-1">Fase de {{ config().phaseName }} Cerrada</h6>
-              <p class="mb-0 small">Esta fase ha concluido. Todos los roles y sus bitácoras se encuentran en estado inmutable.</p>
+              <p class="mb-0 small">Esta fase ha concluido. Todos los elementos y sus bitácoras se encuentran en estado inmutable.</p>
             </div>
           </div>
           }
 
-          <!-- ROLES EN PROCESO -->
+          <!-- ELEMENTOS EN PROCESO -->
           <h6 class="text-brand fw-bold mb-3 border-bottom pb-2">
-            <i class="fa-solid fa-spinner fa-spin-pulse me-2"></i> Roles en Proceso
+            <!-- 🟢 Uso de itemNamePlural() -->
+            <i class="fa-solid fa-spinner fa-spin-pulse me-2"></i> {{ itemNamePlural() }} en Proceso
           </h6>
 
-          <!-- Tabla de roles en proceso -->
+          <!-- Tabla en proceso -->
           <div class="table-responsive mb-4">
             <table class="table table-hover align-middle border">
               <thead class="table-light text-muted small">
                 <tr>
-                  <th>ROL TÉCNICO</th>
+                  <!-- 🟢 Uso de itemName() -->
+                  <th class="text-uppercase">{{ itemName() }}</th>
                   <th class="text-center">ESTADO</th>
                   <th class="text-end">ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
-                @for (role of activeRoles(); track role.id) {
+                @for (item of activeItems(); track item.id) {
                   <tr>
                     <td class="fw-medium">
-                      <i class="fa-solid fa-user-tie text-muted me-2"></i>
-                      {{ role.name }}
+                      <!-- 🟢 Icono dinámico basado en isCoePhase() -->
+                      <i class="fa-solid text-muted me-2" [ngClass]="isCoePhase() ? 'fa-box-open' : 'fa-user-tie'"></i>
+                      {{ item.name || item.master_deliverable?.name }}
                     </td>
                     <td class="text-center">
                       <span class="badge badge-in-progress rounded-pill px-3 py-2">EN PROCESO</span>
@@ -84,7 +87,7 @@
                     <td class="text-end">
                       <button
                         class="btn btn-sm btn-outline-brand me-2 rounded-pill px-3"
-                        (click)="openRegisters(role)"
+                        (click)="openRegisters(item)"
                       >
                         <i class="fa-solid fa-book-journal-whills me-1"></i>
                         Bitácora
@@ -92,8 +95,8 @@
 
                       <button
                         class="btn btn-sm btn-outline-brand rounded-pill px-3 shadow-sm"
-                        [disabled]="(role.registers_count || 0) === 0"
-                        (click)="closeRole(role)"
+                        [disabled]="(item.registers_count || 0) === 0"
+                        (click)="closeItem(item)"
                       >
                         <i class="fa-solid fa-lock me-1"></i> Cerrar
                       </button>
@@ -103,7 +106,8 @@
                   <tr>
                     <td colspan="3" class="text-center text-muted py-4">
                       <i class="fa-regular fa-folder-open fs-2 mb-2 opacity-50 d-block"></i>
-                      No se encontraron roles en proceso.
+                      <!-- 🟢 Uso de itemNamePlural() en lowercase -->
+                      No se encontraron {{ itemNamePlural() | lowercase }} en proceso.
                     </td>
                   </tr>
                 }
@@ -111,27 +115,30 @@
             </table>
           </div>
 
-          <!-- ROLES CERRADOS -->
+          <!-- ELEMENTOS CERRADOS -->
           <h6 class="text-success fw-bold mb-3 border-bottom pb-2 mt-4">
-            <i class="fa-solid fa-check-double me-2"></i> Roles Cerrados
+            <!-- 🟢 Uso de itemNamePlural() -->
+            <i class="fa-solid fa-check-double me-2"></i> {{ itemNamePlural() }} Cerrados
           </h6>
 
-          <!-- Tabla de roles cerrados -->
+          <!-- Tabla cerrados -->
           <div class="table-responsive mb-4">
             <table class="table table-hover align-middle border">
               <thead class="table-light text-muted small">
                 <tr>
-                  <th>ROL TÉCNICO</th>
+                  <!-- 🟢 Uso de itemName() -->
+                  <th class="text-uppercase">{{ itemName() }}</th>
                   <th class="text-center">ESTADO</th>
                   <th class="text-end">ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
-                @for (role of closedRoles(); track role.id) {
+                @for (item of closedItems(); track item.id) {
                   <tr>
                     <td class="fw-medium text-muted">
-                      <i class="fa-solid fa-user-lock text-muted me-2"></i>
-                      {{ role.name }}
+                      <!-- 🟢 Icono dinámico basado en isCoePhase() -->
+                      <i class="fa-solid text-muted me-2" [ngClass]="isCoePhase() ? 'fa-box-archive' : 'fa-user-lock'"></i>
+                      {{ item.name || item.master_deliverable?.name }}
                     </td>
                     <td class="text-center">
                       <span class="badge badge-closed rounded-pill px-3 py-2">CERRADO</span>
@@ -139,14 +146,14 @@
                     <td class="text-end">
                       <button
                         class="btn btn-sm btn-outline-brand me-2 rounded-pill px-3"
-                        (click)="openRegisters(role)"
+                        (click)="openRegisters(item)"
                       >
                         <i class="fa-solid fa-eye me-1"></i> Ver Bitácora
                       </button>
                       @if (isPhaseActive()) {
                         <button
                           class="btn btn-sm btn-outline-warning text-dark"
-                          (click)="reopenRole(role)"
+                          (click)="reopenItem(item)"
                         >
                           <i class="fa-solid fa-lock-open me-1"></i> Reabrir
                         </button>
@@ -157,7 +164,8 @@
                   <tr>
                     <td colspan="3" class="text-center text-muted py-4">
                       <i class="fa-regular fa-folder-closed fs-2 mb-2 opacity-50 d-block"></i>
-                      No hay roles técnicos cerrados.
+                      <!-- 🟢 Uso de itemNamePlural() en lowercase -->
+                      No hay {{ itemNamePlural() | lowercase }} cerrados.
                     </td>
                   </tr>
                 }
@@ -170,7 +178,7 @@
         @if (isPhaseActive()) {
           <div class="modal-footer bg-light d-flex justify-content-between align-items-center w-100">
             <span class="small text-muted">
-              <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase, todos los roles deben estar cerrados.
+              <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase, todos los elementos deben estar cerrados.
             </span>
             
             <button class="btn btn-brand px-4" (click)="closeGlobalPhase()" [disabled]="isLoading() || !isPhaseCloseEnabled()">
@@ -188,17 +196,15 @@
 }
 
 <!-- RENDERIZADO CONDICIONAL DEL MODAL SUPERPUESTO (CAPA 3: BITÁCORA) -->
-    @if (selectedRoleForRegisters()) {
-      <lib-phase-registers-modal
-        [requirementId]="requirementId()"
-        [rrti]="rrti()"
-        [roleId]="selectedRoleForRegisters()!.id"
-        [roleName]="selectedRoleForRegisters()!.name"
-        [roleStatus]="selectedRoleForRegisters()!.status"
-        [config]="config()"
-        (closeModal)="selectedRoleForRegisters.set(null)"
-      >
-      </lib-phase-registers-modal>
-    }
-
-    
+@if (selectedItemForRegisters()) {
+  <lib-phase-registers-modal
+    [requirementId]="requirementId()"
+    [rrti]="rrti()"
+    [parentId]="selectedItemForRegisters()!.id"
+    [parentName]="selectedItemForRegisters()!.name || selectedItemForRegisters()!.master_deliverable?.name!"
+    [parentStatus]="selectedItemForRegisters()!.status"
+    [config]="config()"
+    (closeModal)="closeRegistersAndRefresh()"
+  >
+  </lib-phase-registers-modal>
+}

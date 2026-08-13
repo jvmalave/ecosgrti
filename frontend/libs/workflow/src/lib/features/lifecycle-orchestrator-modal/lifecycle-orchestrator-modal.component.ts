@@ -11,6 +11,7 @@ export interface DashboardRequirement {
   roles_count: number;
   has_roles: boolean | number | string;
   dt_closed_roles_count?: number;
+  deliverables_count?: number;
 }
 
 export type PhaseAction = 'DT' | 'COR' | 'COE' | 'CER' | 'CEE' | 'PI' | 'PAP' | 'AU';
@@ -69,7 +70,19 @@ export class LifecycleOrchestratorModalComponent {
     return Number(closedDtRoles) > 0;
   });
 
-  isCoEEnabled = computed(() => false);
+  isCoEEnabled = computed(() => {
+    const req = this.req();
+    if (!req) return false;
+
+    // 🟢 Lógica de Lista Negra: NO se habilita en fases prematuras
+    const invalidStatuses = ['RC', 'EST', 'ATF-I'];
+    const isValidStatus = !invalidStatuses.includes(req.status);
+    
+    const deliverablesCount = req.deliverables_count || 0; 
+    
+    return isValidStatus && (deliverablesCount > 0);
+  });
+  
   isCeREnabled = computed(() => false);
   isCeEEnabled = computed(() => false);
   isPiEnabled = computed(() => false);

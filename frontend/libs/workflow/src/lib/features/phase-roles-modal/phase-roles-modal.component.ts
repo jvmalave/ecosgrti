@@ -2,9 +2,9 @@ import { Component, OnInit, inject, input, output, signal, computed } from '@ang
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { WorkflowPhaseService } from '../../data-access/services/workflow-phase.service';
-import { NotificationService } from '../../data-access/services/notification.services'; // Añadido
+import { NotificationService } from '../../data-access/services/notification.services';
 import { PhaseConfig } from '../../data-access/models/phase-config.interface';
-import { WorkflowRole } from '../../data-access/models/workflow-phase.models';
+import { WorkflowPhaseItem } from '../../data-access/models/workflow-phase.models'; 
 import { PhaseRegistersModalComponent } from '../phase-registers-modal/phase-registers-modal.component';
 
 @Component({
@@ -16,7 +16,7 @@ import { PhaseRegistersModalComponent } from '../phase-registers-modal/phase-reg
 })
 export class PhaseRolesModalComponent implements OnInit {
   private readonly phaseService = inject(WorkflowPhaseService);
-  private readonly notificationService = inject(NotificationService); // Añadido
+  private readonly notificationService = inject(NotificationService);
 
   // =========================================================================
   // INPUTS & OUTPUTS
@@ -31,50 +31,49 @@ export class PhaseRolesModalComponent implements OnInit {
   // =========================================================================
   // ESTADO REACTIVO (Signals)
   // =========================================================================
-  roles = signal<WorkflowRole[]>([]);
+  // Renombramos a variables genéricas para soportar ambas fases
+  phaseItems = signal<WorkflowPhaseItem[]>([]);
   isLoading = signal<boolean>(true);
   errorMessage = signal<string | null>(null);
   
   searchQuery = signal<string>('');
-  selectedRoleForRegisters = signal<WorkflowRole | null>(null);
+  selectedItemForRegisters = signal<WorkflowPhaseItem | null>(null);
 
   // =========================================================================
-  // COMPUTADOS (La magia de la UI)
+  // COMPUTADOS (Computed)
   // =========================================================================
   modalTitle = computed(() => this.config().modalTitle);
-  apiEndpoint = computed(() => this.config().apiEndpoint);
+  isCoePhase = computed(() => this.config().phaseCode === 'COE');
+  itemName = computed(() => this.isCoePhase() ? 'Entregable' : 'Rol');
+  itemNamePlural = computed(() => this.isCoePhase() ? 'Entregables' : 'Roles');
 
-  // Lógica polimórfica para saber si la fase está abierta y permite edición
-  isPhaseActive = computed(() => {
-    const status = this.reqStatus();
-    const code = this.config().phaseCode;
+  
+  isPhaseClosed = computed(() => {
+    const currentStatus = this.reqStatus();
+    const closeCode = `${this.config().phaseCode}-C`; 
     
-    // Hard-Gates según la fase actual
-    if (code === 'DT') return ['ATF-C', 'DT-I'].includes(status);
-    if (code === 'COR') return ['DT-C', 'COR-I'].includes(status);
-    if (code === 'COE') return ['COR-C', 'COE-I'].includes(status);
-    
-    return false;
+    return currentStatus === closeCode;
   });
 
-  // Filtro de búsqueda
-  filteredRoles = computed(() => {
+  isPhaseActive = computed(() => {
+    return !this.isPhaseClosed();
+  });
+
+  // Búsqueda polimórfica 
+  filteredItems = computed(() => {
     const query = (this.searchQuery() || '').toLowerCase();
-    return this.roles().filter(role => {
-      const roleName = role.name || '';
-      return roleName.toLowerCase().includes(query);
+    return this.phaseItems().filter(item => {
+      const name = item.name || item.master_deliverable?.name || '';
+      return name.toLowerCase().includes(query);
     });
   });
 
-  // Separación por estados
-  activeRoles = computed(() => this.filteredRoles().filter(r => r.status === 'IN_PROGRESS'));
-  closedRoles = computed(() => this.filteredRoles().filter(r => r.status === 'CLOSED'));
+  activeItems = computed(() => this.filteredItems().filter(item => item.status === 'IN_PROGRESS'));
+  closedItems = computed(() => this.filteredItems().filter(item => item.status === 'CLOSED'));
 
-  // Validación para el botón final de "Cerrar Fase"
   isPhaseCloseEnabled = computed(() => {
-    const total = this.roles().length;
-    const closed = this.closedRoles().length;
-    // Habilitado solo si hay roles y TODOS están cerrados
+    const total = this.phaseItems().length;
+    const closed = this.closedItems().length;
     return total > 0 && total === closed;
   });
 
@@ -83,19 +82,20 @@ export class PhaseRolesModalComponent implements OnInit {
   // =========================================================================
   
   ngOnInit(): void {
-    this.loadRoles();
+    this.loadItems();
   }
 
-  loadRoles(): void {
+  loadItems(): void {
     this.isLoading.set(true);
-    this.phaseService.initializeRoles(this.requirementId(), this.apiEndpoint())
+    // 🟢 Inyectamos el config completo y usamos el nuevo nombre del método
+    this.phaseService.initializePhaseComponents(this.requirementId(), this.config())
       .subscribe({
         next: (response) => {
-          this.roles.set(response.roles_list);
+          this.phaseItems.set(response.roles_list);
           this.isLoading.set(false);
         },
         error: (err: HttpErrorResponse) => {
-          this.notificationService.showError('Error', 'No se pudieron cargar los roles.'); // Ajustado
+          this.notificationService.showError('Error', `No se pudieron cargar los datos de la fase.`);
           this.isLoading.set(false);
           console.error('Detalle del error HTTP:', err.message, err.error);
         }
@@ -107,95 +107,122 @@ export class PhaseRolesModalComponent implements OnInit {
     this.searchQuery.set(inputElement.value);
   }
 
-  openRegisters(role: WorkflowRole): void {
-    this.selectedRoleForRegisters.set(role);
+  openRegisters(item: WorkflowPhaseItem): void {
+    this.selectedItemForRegisters.set(item);
   }
 
-  /**
-   * Cierra un rol técnico individual previa confirmación
-   */
-  async closeRole(role: WorkflowRole): Promise<void> {
+  async closeItem(item: WorkflowPhaseItem): Promise<void> {
+    const displayName = item.name || item.master_deliverable?.name || 'Seleccionado';
+    const noun = this.itemName();
+
     const isConfirmed = await this.notificationService.confirm(
-      'Cerrar Rol Técnico',
-      `¿Estás seguro que deseas cerrar el rol "${role.name}"? Esta acción bloqueará la adición de nuevas bitácoras.`
+      `Cerrar ${noun}`,
+      `¿Estás seguro que deseas cerrar el ${noun} "${displayName}"? Esta acción bloqueará la adición de nuevas bitácoras.`
     );
 
     if (isConfirmed) {
-      this.phaseService.changeRoleStatus(role.id, this.apiEndpoint(), 'CLOSED')
+      // Inyectamos config
+      this.phaseService.changeComponentStatus(item.id, this.config(), 'CLOSED')
         .subscribe({
           next: () => {
-            this.roles.update(roles => roles.map(r => r.id === role.id ? { ...r, status: 'CLOSED' } : r));
-            this.notificationService.toastSuccess('Rol técnico cerrado exitosamente.');
+            this.phaseItems.update(items => items.map(i => i.id === item.id ? { ...i, status: 'CLOSED' } : i));
+            this.notificationService.toastSuccess(`${noun.charAt(0).toUpperCase() + noun.slice(1)} cerrado exitosamente.`);
+            this.phaseService.refreshDashboard$.next();
           },
           error: (err: HttpErrorResponse) => {
-             // Manejo de reglas de negocio bloqueadas por Backend (pest)
+            console.error('Detalle del error HTTP:', err.message, err.error);
             if (err.status === 422) {
                 this.notificationService.showWarning(
                   'Acción Denegada', 
-                  'No se puede cerrar el rol porque requiere al menos un registro técnico en la bitácora.'
+                  `No se puede cerrar el ${noun} porque requiere al menos un registro en su bitácora.`
                 );
             } else {
-                 this.notificationService.showError('Error Transaccional', 'No se pudo procesar el cierre del rol.');
+                this.notificationService.showError('Error Transaccional', `No se pudo procesar el cierre del ${noun}.`);
             }
-            console.error('Fallo en closeRole:', err.message);
           }
         });
     }
   }
 
-  /**
-   * Reabre un rol técnico cerrado previa confirmación
-   */
-  async reopenRole(role: WorkflowRole): Promise<void> {
+  async reopenItem(item: WorkflowPhaseItem): Promise<void> {
+    const displayName = item.name || item.master_deliverable?.name || 'Seleccionado';
+    const noun = this.itemName();
+
     const isConfirmed = await this.notificationService.confirm(
-      'Reabrir Rol Técnico',
-      `¿Estás seguro que deseas reabrir el rol "${role.name}"? Esto permitirá agregar nuevos registros en la bitácora a este rol.`
+      `Reabrir ${noun}`,
+      `¿Estás seguro que deseas reabrir el ${noun} "${displayName}"? Esto permitirá agregar nuevos registros.`
     );
 
     if (isConfirmed) {
-      this.phaseService.changeRoleStatus(role.id, this.apiEndpoint(), 'IN_PROGRESS')
+      // Inyectamos config
+      this.phaseService.changeComponentStatus(item.id, this.config(), 'IN_PROGRESS')
         .subscribe({
           next: () => {
-            this.roles.update(roles => roles.map(r => r.id === role.id ? { ...r, status: 'IN_PROGRESS' } : r));
-            this.notificationService.toastSuccess('Rol técnico reabierto exitosamente.');
+            this.phaseItems.update(items => items.map(i => i.id === item.id ? { ...i, status: 'IN_PROGRESS' } : i));
+            this.notificationService.toastSuccess(`${noun.charAt(0).toUpperCase() + noun.slice(1)} reabierto exitosamente.`);
+            this.phaseService.refreshDashboard$.next();
           },
           error: (err: HttpErrorResponse) => {
             this.notificationService.showError(
                 'Reapertura Denegada', 
-                err.error?.message || 'No se pudo reabrir el rol. Verifica que la fase global siga activa.'
+                err.error?.message || `No se pudo reabrir el ${noun}. Verifica que la fase global siga activa.`
             );
-            console.error('Fallo en reopenRole:', err.message);
           }
         });
     }
   }
 
-  /**
-   * Cierra la fase completa
-   */
+  // async closeGlobalPhase(): Promise<void> {
+  //     const isConfirmed = await this.notificationService.confirm(
+  //         `Cerrar Fase de ${this.config().phaseName}`,
+  //         `Todos los elementos han sido cerrados. ¿Deseas dar por finalizada la fase de ${this.config().phaseName}?`
+  //     );
+
+  //     if(isConfirmed) {
+  //         this.isLoading.set(true);
+  //         // 🟢 Inyectamos config
+  //         this.phaseService.closePhase(this.requirementId(), this.config())
+  //           .subscribe({
+  //             next: () => {
+  //               this.isLoading.set(false);
+  //               this.notificationService.toastSuccess(`Fase de ${this.config().phaseName} finalizada.`);
+  //               this.closeModal.emit();
+  //               this.phaseService.refreshDashboard$.next();
+  //             },
+  //             error: (err: HttpErrorResponse) => {
+  //               console.error('Fallo en closeGlobalPhase:', err.message);
+  //               this.notificationService.showError('Error de Sistema', 'Hubo un problema al intentar cerrar la fase global.');
+  //               this.isLoading.set(false);
+  //             }
+  //           });
+  //     }
+  // }
+
   async closeGlobalPhase(): Promise<void> {
       const isConfirmed = await this.notificationService.confirm(
           `Cerrar Fase de ${this.config().phaseName}`,
-          `Todos los roles han sido cerrados. ¿Deseas dar por finalizada la fase de ${this.config().phaseName} para este requerimiento?`
+          `Todos los elementos han sido cerrados. ¿Deseas dar por finalizada la fase de ${this.config().phaseName}?`
       );
 
       if(isConfirmed) {
           this.isLoading.set(true);
-          this.phaseService.closePhase(this.requirementId(), this.apiEndpoint())
+          this.phaseService.closePhase(this.requirementId(), this.config())
             .subscribe({
               next: () => {
                 this.isLoading.set(false);
                 this.notificationService.toastSuccess(`Fase de ${this.config().phaseName} finalizada.`);
-                this.closeModal.emit();
-                // Avisar al dashboard que debe refrescar los indicadores
                 this.phaseService.refreshDashboard$.next();
               },
               error: (err: HttpErrorResponse) => {
+                console.error('Fallo en closeGlobalPhase:', err.message);
                 this.notificationService.showError('Error de Sistema', 'Hubo un problema al intentar cerrar la fase global.');
-                console.error('Error al cerrar la fase', err);
                 this.isLoading.set(false);
               }
             });
       }
+  }
+  closeRegistersAndRefresh(): void {
+    this.selectedItemForRegisters.set(null); // Cierra el modal de la bitácora
+    this.loadItems(); // Recarga los roles/entregables para actualizar el registers_count
   }
 }
