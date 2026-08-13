@@ -13,14 +13,20 @@ class AuditLog extends Model
     // Indicamos explícitamente el esquema y la tabla
     protected $table = 'audit.audit_logs';
 
+    public $incrementing = false;
+    protected $keyType = 'string';
+
     protected $fillable = [
         'user_id',
         'action',
         'description',
         'ip_address',
         'user_agent',
-        'payload' // Para guardar datos extra en JSON si es necesario
+        'payload',
+        'target_id'
     ];
+
+    
 
     // Desactivamos timestamps si prefieres manejar solo 'created_at' 
     // o déjalos si la migración los tiene.

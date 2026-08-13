@@ -1,0 +1,236 @@
+<div class="modal-overlay">
+  <div class="modal-dialog-custom">
+
+    <!-- CABECERA CORPORATIVA -->
+    <div
+      class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center"
+    >
+      <h5 class="m-0 fw-bold">
+        <i class="fa-solid fa-book-journal-whills me-2"></i> Bitácora de Diseño
+        Técnico
+      </h5>
+      <button
+        type="button"
+        class="btn text-white fs-5 p-0 border-0 shadow-none"
+        (click)="closeModal.emit()"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- CUERPO CON SCROLL -->
+    <div class="modal-body-scroll p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <span
+          class="badge bg-light text-brand ms-3 border border-light rounded-pill fs-6 shadow-sm"
+        >
+          Requerimiento: {{ rrti() }}
+        </span>
+        <span
+          class="badge bg-light text-brand ms-3 border border-light rounded-pill fs-6 shadow-sm"
+        >
+          Rol: {{ role().name }}
+        </span>
+      </div>
+
+        <!-- BANNER DE ROL CERRADO (Solo visible si el rol está CLOSED) -->
+      @if (role().status === 'CLOSED') {
+        <div class="alert alert-success d-flex align-items-center mt-3 shadow-sm" role="alert">
+          <i class="fa-solid fa-lock fs-2 me-3"></i>
+          <div>
+            <h6 class="fw-bold mb-1">Rol Técnico {{ role().name }} es Inmutable</h6>
+            <p class="mb-0 small">El ciclo de vida de este rol ha concluido. Por integridad de los datos, no es posible agregar, editar o eliminar registros de su bitácora técnica.</p>
+          </div>
+        </div>
+      }
+
+      <!-- Contenedor del Formulario de Registro (Solo se renderiza si NO está cerrado) -->
+      @if (role().status !== 'CLOSED') {
+          <div class="card border border-light shadow-sm mb-4">
+            <div class="card-body bg-white rounded p-4">
+              <h6 class="text-brand fw-bold mb-3 border-bottom pb-2">
+                @if (editingRegisterId()) {
+                  <i class="fa-solid fa-pen text-warning me-2"></i> Editando
+                  Registro
+                } @else {
+                  <i class="fa-solid fa-pen-to-square me-2"></i> Agregar Nuevo
+                  Registro
+                }
+              </h6>
+    
+              <form
+                [formGroup]="registerForm"
+                (ngSubmit)="saveRegister()"
+                class="row g-3"
+              >
+                <div class="col-md-8">
+                  <label for="reg-tit" class="form-label text-muted small fw-bold"
+                    >Título del Registro</label
+                  >
+                  <input
+                    id="reg-tit"
+                    type="text"
+                    formControlName="title"
+                    class="form-control"
+                    [class.is-invalid]="
+                      registerForm.get('title')?.invalid &&
+                      registerForm.get('title')?.touched
+                    "
+                    placeholder="Ej. Diseño de Arquitectura Cloud"
+                  />
+                </div>
+    
+                <div class="col-md-4">
+                  <label for="reg-date" class="form-label text-muted small fw-bold"
+                    >Fecha de Creación</label
+                  >
+                  <input
+                    id="reg-date"
+                    type="date"
+                    formControlName="date"
+                    class="form-control"
+                    [class.is-invalid]="
+                      registerForm.get('date')?.invalid &&
+                      registerForm.get('date')?.touched
+                    "
+                  />
+                </div>
+    
+                <div class="col-12">
+                  <label for="reg-desc" class="form-label text-muted small fw-bold"
+                    >Descripción Detallada</label
+                  >
+                  <textarea
+                    id="reg-desc"
+                    formControlName="description"
+                    class="form-control"
+                    rows="3"
+                    [class.is-invalid]="
+                      registerForm.get('description')?.invalid &&
+                      registerForm.get('description')?.touched
+                    "
+                    placeholder="Redacte los detalles técnicos, decisiones tomadas, o enlaces a repositorios..."
+                  ></textarea>
+                </div>
+    
+                <div class="col-12 text-end mt-3">
+                  @if (editingRegisterId()) {
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-secondary px-4 rounded-pill me-2"
+                      (click)="cancelEdit()"
+                    >
+                      <i class="fa-solid fa-xmark-circle me-1"></i> Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      class="btn btn-sm btn-outline-brand me-2 rounded-pill shadow-sm px-3"
+                      [disabled]="registerForm.invalid || isSaving()"
+                    >
+                      @if (isSaving()) {
+                        <i class="fa-solid fa-circle-notch fa-spin me-2"></i>
+                        Actualizando...
+                      } @else {
+                        <i class="fa-solid fa-cloud-arrow-up me-2"></i> Actualizar
+                        Registro
+                      }
+                    </button>
+                  } @else {
+                    <button
+                      type="submit"
+                      class="btn btn-sm btn-outline-brand me-2 rounded-pill shadow-sm px-3"
+                      [disabled]="registerForm.invalid || isSaving()"
+                    >
+                      @if (isSaving()) {
+                        <i class="fa-solid fa-circle-notch fa-spin me-2"></i>
+                        Guardando...
+                      } @else {
+                        <i class="fa-solid fa-save me-2"></i> Guardar en Bitácora
+                      }
+                    </button>
+                  }
+                </div>
+              </form>
+            </div>
+          </div>
+          <!-- ... (Aquí mantienes intacto todo el div.card-body con tu formGroup) ... -->
+      }
+      <!-- Contenedor del Historial de Registros -->
+      <div class="mt-4">
+        <h6 class="text-secondary fw-bold border-bottom pb-2 mb-3">
+          <i class="fa-solid fa-clock-rotate-left me-2"></i> Historial de
+          Registros
+        </h6>
+
+        @if (isLoading()) {
+          <div class="text-center py-4 text-muted">
+            <i class="fa-solid fa-spinner fa-spin fs-3"></i>
+            <p class="small mt-2">Cargando historial...</p>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle border">
+              <thead class="table-light text-muted small">
+                <tr>
+                  <th>FECHA</th>
+                  <th>TÍTULO</th>
+                  <th>DESCRIPCIÓN</th>
+                  <th class="text-end">ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (reg of registers(); track reg.id) {
+                  <tr>
+                    <td class="text-nowrap fw-medium text-secondary">
+                      <!-- Asumiendo que execution_date llega como string YYYY-MM-DD -->
+                      <i class="fa-regular fa-calendar me-1"></i>
+                      {{ reg.date | date: 'dd/MM/yyyy' }}
+                    </td>
+                    <td class="fw-bold text-dark">{{ reg.title }}</td>
+                    <td class="small text-muted" title="{{ reg.description }}">
+                      <span class="text-truncate-custom">{{
+                        reg.description
+                      }}</span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                      @if (role().status === 'CLOSED') {
+                        <!-- Botón Solo Lectura -->
+                        <button class="btn btn-sm btn-light border text-brand me-1" title="Ver Detalles del Registro"
+                                (click)="viewRegister(reg)">
+                          <i class="fa-solid fa-eye"></i> Ver
+                        </button>
+                      } @else {
+                        <!-- Botones de Edición y Borrado Activos -->
+                        <button class="btn btn-sm btn-light border text-brand me-1" title="Editar"
+                                (click)="editRegister(reg)">
+                          <i class="fa-solid fa-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-light border text-danger" title="Eliminar"
+                                (click)="deleteRegister(reg)">
+                          <i class="fa-solid fa-trash-can "></i>
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td
+                      colspan="4"
+                      class="text-center text-muted py-5 bg-light border-dashed"
+                    >
+                      <i
+                        class="fa-regular fa-folder-open fs-2 mb-2 opacity-50 d-block"
+                      ></i>
+                      Aún no existen registros documentados en la bitácora de
+                      este rol.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

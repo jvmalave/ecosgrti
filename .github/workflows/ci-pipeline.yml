@@ -2,7 +2,7 @@ name: Pipeline de Integracion Continua (SGRTI)
 
 on:
   push:
-    branches: [ develop, main, feature/sprint2-US03_US04_US05 ]
+    branches: [ develop, main, feature/sprint5-us38_us39_us40_us41 ]
   pull_request:
     branches: [ develop, main ]
 

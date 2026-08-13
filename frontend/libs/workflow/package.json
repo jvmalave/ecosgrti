@@ -1,0 +1,11 @@
+{
+  "name": "@ecosgrti/workflow",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@angular/common": "~21.2.0",
+    "@angular/core": "~21.2.0"
+  },
+  "dependencies": {
+    "sweetalert2": "^11.26.24"
+  }
+}

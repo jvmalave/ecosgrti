@@ -1,1 +1,5 @@
-@import "bootstrap/scss/bootstrap";
+@use "bootstrap/scss/bootstrap";
+
+.swal2-container {
+  z-index: 9999 !important;
+}

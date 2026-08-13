@@ -8,12 +8,17 @@ use App\Domains\Security\Models\FunctionalConsultant;
 use App\Domains\Security\Models\CspeConsultant;
 use App\Domains\Core\Models\RequirementCspePivot;
 use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Domains\Core\Models\ScheduleEstimation;
+use App\Domains\Workflow\Models\RequirementPhaseHistory;
+use App\Domains\Catalogs\Models\ProgressMatrix;
 
 class Requirement extends Model
 {
     
     use HasUuid;
     use HasFactory;
+    use SoftDeletes;
 
     protected $table = 'core.requirements';
 
@@ -23,20 +28,33 @@ class Requirement extends Model
     // 2. Le decimos que el ID es un texto (UUID)
     protected $keyType = 'string';
 
+    protected $with = ['progressMatrix'];
+
 
     protected $fillable = [
-        'id',
-        'rrti', 
-        'requirement_type',
-        'creation_date',
-        'description', 
-        'management_type', 
-        'needs_spreadsheet_path',
-        'it_request_doc_path',
-        'functional_consultant_id',
-        'status', 
-        'is_locked'
+      'id',
+      'rrti', 
+      'requirement_type',
+      'creation_date',
+      'description', 
+      'management_type',
+      'progress_matrix_id',  
+      'needs_spreadsheet_path',
+      'it_request_doc_path',
+      'functional_consultant_id',
+      'status', 
+      'is_locked',
+      'snapshot_society_name',
+      'snapshot_system_name',
+      'snapshot_unit_name',
+      'progress_percentage'
     ];
+
+
+    protected static function newFactory()
+    {
+        return \Database\Factories\Core\RequirementFactory::new(); 
+    }
 
     /**
      * Relación: Un requerimiento pertenece a un Consultor Funcional
@@ -57,5 +75,25 @@ class Requirement extends Model
         )
         ->using(RequirementCspePivot::class) 
         ->withTimestamps(); 
+    }
+
+    /**
+     * Relación 1 a 1: Un Requerimiento tiene una (y solo una) Estimación de Cronograma (Camino de Hierro).
+     * * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function scheduleEstimation()
+    {
+        return $this->hasOne(ScheduleEstimation::class, 'requirement_id');
+    }
+
+    public function phaseHistories()
+    {
+        return $this->hasMany(RequirementPhaseHistory::class, 'requirement_id');
+    }
+
+    
+    public function progressMatrix()
+    {
+        return $this->belongsTo(ProgressMatrix::class, 'progress_matrix_id');
     }
 }

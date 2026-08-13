@@ -21,9 +21,10 @@ it('Escenario: Acceso denegado a rutas restringidas por nivel de jerarquía', fu
     });
 
     // 2. Creación y asignación explícita del usuario
+    
     $consultor = User::factory()->create([
-        'roles' => json_encode(['Consultant']),
-    ]);
+    'roles' => ['Consultant'], // Cambiado de json_encode a Array nativo
+]);
     assert($consultor instanceof Authenticatable);
 
     // 3. Petición HTTP
@@ -45,11 +46,11 @@ it('Escenario: Registro inmutable de auditoría al modificar privilegios', funct
 
     // 2. Creación del usuario a modificar
     $usuario = User::factory()->create([
-        'roles' => json_encode(['Consultant']),
-    ]);
+    'roles' => ['Consultant'], // 💡 Cambiado de json_encode a Array nativo
+]);
 
     // 3. ACCIÓN: Modificación de roles
-    $usuario->roles = json_encode(['Coord']);
+    $usuario->roles = ['Coord'];
     $usuario->save(); 
 
     // 4. VERIFICACIÓN: Comprobación en base de datos

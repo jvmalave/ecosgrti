@@ -9,26 +9,33 @@ class RequirementDashboardService
 {
     /**
      * Obtiene la lista de requerimientos usando Carga Híbrida (Redis + PostgreSQL)
-     * Ahora con soporte para Búsqueda Reactiva.
+     * Ahora con soporte para Búsqueda Reactiva y Hard-Gates (COR Enabled).
      */
     public function getRequirements(string $status, int $limit, int $offset, ?string $searchTerm = null): array
     {
-        // 1. Modificar la llave de caché para que sea única por cada búsqueda
-        // Usamos md5 para generar un sufijo corto y seguro, o 'all' si no hay búsqueda.
         $searchHash = $searchTerm ? md5(strtolower($searchTerm)) : 'all';
-        $cacheKey = "req_{$status}_{$offset}_{$searchHash}";
+        
+        // Captura de Parámetros con Valores por Defecto Redis
+        $version = Redis::get('dashboard_version') ?: 3; 
+        
+        // Nombrar la llave incluyendo la versión (ej. req_v3_active_0_all)
+        $cacheKey = "req_v{$version}_{$status}_{$offset}_{$searchHash}";
 
-        // 2. Intento de Carga desde Redis (Cache Hit)
+        // Intento de Carga desde Redis
         $cachedData = Redis::get($cacheKey);
         if ($cachedData) {
-            return json_decode($cachedData, true); // Respuesta en milisegundos
+            return json_decode($cachedData, true); 
         }
 
-        // 3. Fallback a Base de Datos (Cache Miss)
+        // Fallback a Base de Datos (Cache Miss)
         $query = DB::table('core.requirements as r')
             ->join('security.functional_consultants as fc', 'r.functional_consultant_id', '=', 'fc.id')
             ->join('security.persons as p', 'fc.person_id', '=', 'p.id')
-            ->select(
+            ->leftJoin('workflow.atf_agreements as aa', 'r.id', '=', 'aa.requirement_id')
+            ->whereNull('r.deleted_at')
+            
+            // Seleccionar solo las columnas nativas como un arreglo estricto
+            ->select([
                 'r.id', 
                 'r.rrti', 
                 'r.requirement_type', 
@@ -36,24 +43,38 @@ class RequirementDashboardService
                 'r.creation_date', 
                 'p.first_name', 
                 'p.last_name',
-                'r.snapshot_unit_name'
-            );
+                'r.snapshot_unit_name',
+                'r.management_type'
+            ])
+            
+            // Inyectar los cálculos booleanos y subconsultas usando selectRaw de forma aislada
+            ->selectRaw('COUNT(aa.id) > 0 as has_atf_agreements')
+            // Subconsulta para contar los roles de la fase ATF
+            ->selectRaw('(SELECT COUNT(*) FROM workflow.requirements_roles WHERE requirements_roles.requirement_id = r.id) as roles_count')
+            // Subconsulta para contar si la fase ATF tiene roles
+            ->selectRaw('(SELECT COUNT(*) FROM workflow.requirements_roles WHERE requirements_roles.requirement_id = r.id) > 0 as has_roles')
+            // Subconsulta para contar los entregables maestros de la fase ATF
+            ->selectRaw('(SELECT COUNT(*) FROM workflow.deliverables WHERE workflow.deliverables.requirement_id = r.id) as deliverables_count')
+            // Subconsulta para contar exclusivamente los roles en estado 'CLOSED' de la fase de Diseño Técnico (DT)
+            ->selectRaw("(
+                SELECT COUNT(dr.id) 
+                FROM workflow.dt_roles dr 
+                INNER JOIN workflow.requirements_roles rr ON dr.requirement_role_id = rr.id 
+                WHERE rr.requirement_id = r.id AND dr.status = 'CLOSED'
+            ) as dt_closed_roles_count")
+            
+            ->groupBy('r.id', 'fc.id', 'p.id');
 
-        // Lógica de separación de contextos (Proceso vs Histórico)
         if ($status === 'active') {
-            $query->where('r.status', '!=', 'FC'); // Lo que NO esté Finalizado/Cerrado
+            $query->where('r.status', '!=', 'FC'); 
         } else {
-            $query->where('r.status', '=', 'FC'); // Solo histórico
+            $query->where('r.status', '=', 'FC'); 
         }
 
-        // -------------------------------------------------------------
-        // Lógica del Buscador Reactivo
-        // -------------------------------------------------------------
         if (!empty($searchTerm)) {
             $query->where('r.rrti', 'ILIKE', '%' . $searchTerm . '%');
         }
 
-        // Ejecución con el truco "limit + 1" para calcular el "has_more" eficientemente
         $results = $query->orderBy('r.created_at', 'desc')
             ->offset($offset)
             ->limit($limit + 1)
@@ -61,23 +82,22 @@ class RequirementDashboardService
 
         $hasMore = $results->count() > $limit;
         
-        // Si trajimos el extra, lo sacamos de la lista final para enviar solo el límite solicitado
         if ($hasMore) {
             $results->pop(); 
         }
 
-        // 4. Estructurar la respuesta
+        // Estructurar la respuesta
         $response = [
-            'data' => $results,
+            'data' => $results->values()->toArray(), // Protegemos el Array para Angular
             'meta' => [
                 'has_more' => $hasMore,
-                'total_returned' => $results->count(),
+                'total_returned' => count($results),
                 'offset' => $offset,
                 'limit' => $limit
             ]
         ];
 
-        // 5. Blindar Redis: Guardar el dataset con un TTL de 300 segundos
+        // Guardar en Redis
         Redis::setex($cacheKey, 300, json_encode($response));
 
         return $response;

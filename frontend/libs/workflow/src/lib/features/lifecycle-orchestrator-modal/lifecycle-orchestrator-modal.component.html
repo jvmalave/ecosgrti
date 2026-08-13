@@ -1,0 +1,173 @@
+@if (!activePhaseConfig()) {
+  <div class="modal-overlay">
+    <div class="modal-dialog-custom">
+      <!-- CABECERA CORPORATIVA -->
+      <div
+        class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center"
+      >
+        <h5 class="m-0 fw-bold">
+          <i class="fa-solid fa-gears me-2"></i> Orquestador de Ciclo de Vida
+        </h5>
+        <button
+          type="button"
+          class="btn text-white fs-5 p-0 border-0 shadow-none"
+          (click)="triggerClose()"
+          aria-label="Close"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- CUERPO DEL MODAL (Se oculta si hay una fase abierta) -->
+      @if (!activePhaseConfig()) {
+        <div class="modal-body p-4 p-md-5 text-center">
+          <h4 class="mb-4 text-dark">
+            Requerimiento
+            <span
+              class="badge border rounded-pill ms-2 fs-5 fw-bold px-3 py-2"
+              style="
+                background-color: #f3e8f5;
+                color: #8e1482;
+                border: 1px solid #8e1482;
+              "
+            >
+              {{ req().rrti }}
+            </span>
+          </h4>
+          <span class="text-muted fw-bold me-2 small">Tipo de Gestión:</span>
+          <span
+            class="badge border rounded-pill text-secondary bg-light px-3 py-2 me-2"
+          >
+            {{ req().management_type | titlecase }}
+          </span>
+          <hr />
+          <p class="text-muted mb-4 small">
+            Seleccione la fase técnica a la que desea acceder
+          </p>
+
+          <!-- Matriz dinámica de Fases -->
+          <div class="phase-grid">
+            <!-- DISEÑO TÉCNICO -->
+            @if (showDt()) {
+              <button
+                class="phase-btn"
+                [disabled]="!isDtEnabled()"
+                (click)="navigateTo(PHASES.DT)"
+              >
+                <div class="icon-wrapper">
+                  <i class="fa-solid fa-laptop-code"></i>
+                </div>
+                <span class="btn-label">Diseño<br />Técnico</span>
+              </button>
+            }
+
+            <!-- CONSTRUCCIÓN (ROLES) -->
+            @if (showCoR()) {
+              <button
+                class="phase-btn"
+                [disabled]="!isCoREnabled()"
+                (click)="navigateTo(PHASES.COR)"
+              >
+                <div class="icon-wrapper">
+                  <i class="fa-solid fa-users-gear"></i>
+                </div>
+                <span class="btn-label">Construcción<br />(Roles)</span>
+              </button>
+            }
+
+            <!-- CONSTRUCCIÓN (ENTREGABLES) -->
+            @if (showCoE()) {
+              <button
+                class="phase-btn"
+                [disabled]="!isCoEEnabled()"
+                (click)="navigateTo(PHASES.COE)"
+              >
+                <div class="icon-wrapper">
+                  <i class="fa-solid fa-cubes"></i>
+                </div>
+                <span class="btn-label">Construcción<br />(Entregables)</span>
+              </button>
+            }
+
+            <!-- CERTIFICACIÓN (ROLES) -->
+            @if (showCeR()) {
+              <button
+                class="phase-btn"
+                [disabled]="!isCeREnabled()"
+              >
+                <div class="icon-wrapper">
+                  <i class="fa-solid fa-user-check"></i>
+                </div>
+                <span class="btn-label">Certificación<br />(Roles)</span>
+              </button>
+            }
+
+            <!-- PRUEBAS INTEGRALES  -->
+            @if (ShowPi()) {
+              <button
+                class="phase-btn"
+                [disabled]="!isPiEnabled()"
+              >
+                <div class="icon-wrapper">
+                  <i class="fa-solid fa-gauge-high"></i>
+                </div>
+                <span class="btn-label">Pruebas<br />Integrales</span>
+              </button>
+            }
+
+            <!-- CERTIFICACIÓN (ENTREGABLES) -->
+            @if (showCeE()) {
+              <button
+                class="phase-btn"
+                [disabled]="!isCeEEnabled()"
+              >
+                <div class="icon-wrapper">
+                  <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <span class="btn-label">Certificación<br />(Entregables)</span>
+              </button>
+            }
+
+            <!-- PASE A PRODUCCIÓN -->
+            @if (showPap()) {
+              <button
+                class="phase-btn"
+                [disabled]="!isPapEnabled()"
+              >
+                <div class="icon-wrapper">
+                  <i class="fa-solid fa-server"></i>
+                </div>
+                <span class="btn-label">Pase a<br />Producción</span>
+              </button>
+            }
+
+            <!-- ASIGNACIÓN DE USUARIOS -->
+            @if (showAu()) {
+              <button
+                class="phase-btn"
+                [disabled]="!isAuEnabled()"
+              >
+                <div class="icon-wrapper">
+                  <i class="fa-solid fa-user-plus"></i>
+                </div>
+                <span class="btn-label">Asignación<br />de Usuarios</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- RENDERIZADO CONDICIONAL DEL MODAL POLIMÓRFICO (CAPA 2) -->
+    @if (activePhaseConfig()) {
+      <lib-phase-roles-modal
+        [requirementId]="req().id"
+        [config]="activePhaseConfig()!"
+        [rrti]="req().rrti"
+        [reqStatus]="req().status"
+        (closeModal)="closeActivePhase()"
+      >
+      </lib-phase-roles-modal>
+    }

@@ -1,0 +1,119 @@
+<div class="modal-backdrop fade show" style="z-index: 1060 !important;"></div>
+
+<div class="modal fade show d-block" tabindex="-1" style="z-index: 1065 !important;">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+      
+      <div class="modal-header brand-gradient text-white pt-3 pb-3 px-4 d-flex justify-content-between align-items-center border-0">
+        <h5 class="modal-title fw-bold mb-0">
+          <i class="bi bi-person-badge me-2 fs-5"></i> 
+          Gestión de Roles
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeList.emit()" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body p-4 bg-light">
+
+        <div class="d-flex align-items-center mb-4">
+          <span class="text-muted fw-bold me-2 small">Requerimiento:</span>
+          <span
+            class="badge rounded-pill px-3 py-2 me-2"
+            style="background-color: #f3e8f5; color: #8e1482; border: 1px solid #8e1482;"
+          >
+            {{ requirementName() }}
+          </span>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+          <div class="input-group shadow-sm" style="max-width: 350px; border-radius: 50rem;">
+            <span class="input-group-text bg-white border-end-0 rounded-start-pill text-muted" style="border-color: #e1bee7;">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" class="form-control bg-white border-start-0 rounded-end-pill shadow-none" 
+                  style="border-color: #e1bee7;"
+                  placeholder="Buscar rol por nombre..." [value]="searchTerm()" (input)="updateSearch($event)">
+          </div>
+
+          @if (!isPhaseClosed()) {
+            <button class="btn btn-sm btn-brand rounded-pill px-4 shadow-sm text-nowrap d-flex align-items-center"
+                    (click)="openCreateModal()">
+              <i class="bi bi-plus-circle me-2"></i> Agregar Rol
+            </button>
+          }
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="px-4 py-3 text-muted fw-bold small text-uppercase">Nombre del Rol</th>
+                    <th class="px-4 py-3 text-muted fw-bold small text-uppercase">Tipo de Asignación</th>
+                    <th class="px-4 py-3 text-muted fw-bold small text-uppercase">Descripción</th>
+                    <th class="px-4 py-3 text-end text-muted fw-bold small text-uppercase">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @if (isLoading()) {
+                    <tr>
+                      <td colspan="4" class="text-center py-5 text-muted">
+                        <div class="spinner-border spinner-border-sm text-brand me-2" style="color: #d500f9;" role="status"></div> Cargando roles técnicos...
+                      </td>
+                    </tr>
+                  } @else {
+                    @for (role of filteredRoles(); track role.id) {
+                      <tr>
+                        <td class="px-4 py-3 fw-medium text-dark">{{ role.role_name }}</td>
+                        <td class="px-4 py-3">
+                          <span class="badge rounded-pill fw-normal" 
+                                [ngClass]="role.assignment_type === 'Interno' ? 'bg-primary bg-opacity-10 text-primary border border-primary-subtle' : 'bg-warning bg-opacity-10 text-warning border border-warning-subtle'">
+                            {{ role.assignment_type }}
+                          </span>
+                        </td>
+                        <td class="px-4 py-3 text-secondary small" [title]="role.description">
+                          {{ role.description.length > 40 ? (role.description | slice:0:40) + '...' : role.description }}
+                        </td>
+                        <td class="px-4 py-3 text-end text-nowrap">
+                          <button class="btn btn-sm btn-outline-brand rounded-circle me-2 d-inline-flex justify-content-center align-items-center" 
+                                  style="width: 32px; height: 32px;" title="Mostrar Detalle" (click)="openViewModal(role)">
+                            <i class="bi bi-eye"></i>
+                          </button>
+                          
+                          @if (!isPhaseClosed()) {
+                            <button class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex justify-content-center align-items-center" 
+                                    style="width: 32px; height: 32px;" title="Eliminar Rol" (click)="deleteRole(role.id)">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          }
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="4" class="text-center py-5 text-muted bg-light rounded-bottom-3">
+                          <i class="bi bi-search fs-2 d-block mb-3 text-secondary opacity-25"></i>
+                          <span class="fw-medium">{{ searchTerm() ? 'No hay resultados para "' + searchTerm() + '"' : 'No hay roles técnicos registrados.' }}</span>
+                        </td>
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (isFormModalOpen()) {
+  <lib-atf-roles-form-modal
+    [requirementId]="requirementId()"
+    [roleToEdit]="selectedRole()"
+    [isPhaseClosed]="isPhaseClosed()"
+    (closeModal)="onModalClose()"
+    (roleSaved)="onRoleSaved()">
+  </lib-atf-roles-form-modal>
+}

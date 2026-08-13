@@ -25,10 +25,79 @@
               <i class="fas fa-chart-pie"></i> Reportes
             </a>
           </li>
+
+          <!-- OPCIÓN CONFIGURACIÓN CON SUBMENÚ DESPLEGABLE -->
           <li class="nav-item">
-            <a href="#" class="nav-link rounded-3 px-3 py-2">
-              <i class="fas fa-cog"></i> Configuración
+            <a
+              class="nav-link rounded-3 px-3 py-2 text-white"
+              (click)="toggleConfigMenu()"
+              (keydown.enter)="toggleConfigMenu()"
+              tabindex="0"
+              style="cursor: pointer"
+            >
+              <div
+                class="d-flex w-100 justify-content-between align-items-center"
+              >
+                <span><i class="fas fa-cog me-2"></i> Configuración</span>
+                <i
+                  class="fas fa-chevron-down transition-transform"
+                  [class.rotate-180]="isConfigMenuOpen()"
+                ></i>
+              </div>
             </a>
+
+            <!-- Submenú MDM (Se renderiza si isConfigMenuOpen es true) -->
+            @if (isConfigMenuOpen()) {
+              <ul
+                class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition"
+              >
+                <li class="nav-item">
+                  <a
+                    class="nav-link rounded-3 px-3 py-2 small text-white"
+                    (click)="openUnifiedPersonListModal()"
+                    (keydown.enter)="openUnifiedPersonListModal()"
+                    tabindex="0"
+                    style="cursor: pointer"
+                  >
+                    <i class="fas fa-id-card me-2"></i> Directorio de Fichas
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a
+                    class="nav-link rounded-3 px-3 py-2 small text-white"
+                    (click)="openOrgStructureModal()"
+                    (keydown.enter)="openOrgStructureModal()"
+                    tabindex="0"
+                    style="cursor: pointer"
+                  >
+                    <i class="fas fa-sitemap me-2"></i> Estructura
+                    Organizacional
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a
+                    class="nav-link rounded-3 px-3 py-2 small text-white"
+                    (click)="openProgressMatrixModal()"
+                    (keydown.enter)="openProgressMatrixModal()"
+                    tabindex="0"
+                    style="cursor: pointer"
+                  >
+                    <i class="fas fa-sliders-h me-2"></i> Matrices de Progreso
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a
+                    class="nav-link rounded-3 px-3 py-2 small text-white"
+                    (click)="openMilestoneConfigModal()"
+                    (keydown.enter)="openMilestoneConfigModal()"
+                    tabindex="0"
+                    style="cursor: pointer"
+                  >
+                    <i class="fas fa-list-check me-2"></i> Hitos Técnicos (MDM)
+                  </a>
+                </li>
+              </ul>
+            }
           </li>
         </ul>
       </nav>
@@ -81,9 +150,9 @@
             </div>
           </div>
 
-          <hr class="my-4 text-muted" />
+          <hr class="my-3 text-muted" />
 
-          <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
             <ul class="nav nav-pills gap-2">
               <li class="nav-item">
                 <button
@@ -137,6 +206,15 @@
             </div>
           </div>
 
+          <!-- Botón para crear nuevo requerimiento -->
+          <button
+            type="button"
+            class="btn btn-outline-brand rounded-pill px-4 shadow-sm"
+            (click)="openCreateModal()"
+          >
+            <i class="bi bi-plus-circle me-2"></i>Nuevo Requerimiento
+          </button>
+
           <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0">
@@ -148,7 +226,7 @@
                     <th>Unidad</th>
                     <th>Fecha Creación</th>
                     <th>Estatus</th>
-                    <th class="text-end pe-4">Acciones</th>
+                    <th class="text-center pe-4">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -187,30 +265,83 @@
                         <td>{{ req.creation_date | date: 'dd/MM/yyyy' }}</td>
                         <td>
                           <span
-                            class="badge rounded-pill"
-                            [ngClass]="{
-                              'bg-warning text-dark': req.status === 'PL',
-                              'bg-info': req.status === 'EV',
-                              'bg-success': req.status === 'FC',
-                            }"
+                            class="badge border px-3 py-1 {{
+                              req.status | reqStatus: 'class'
+                            }}"
                           >
-                            {{
-                              req.status === 'PL'
-                                ? 'Planificación'
-                                : req.status === 'EV'
-                                  ? 'Evaluación'
-                                  : req.status === 'FC'
-                                    ? 'Cerrado'
-                                    : req.status
-                            }}
+                            {{ req.status | reqStatus: 'label' }}
                           </span>
                         </td>
-                        <td class="text-end pe-4">
-                          <button
-                            class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                        <td class="align-middle text-center">
+                          <div
+                            class="d-flex align-items-center justify-content-center gap-2"
                           >
-                            <i class="bi bi-eye me-1"></i>Ver
-                          </button>
+                            <button
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                              (click)="openDetailModal(req.id)"
+                              title="Ver Detalle"
+                            >
+                            <i class="fa-solid fa-eye"></i>
+                              <!-- <img
+                                src="assets/icons/show-details.png"
+                                alt="Ver Detalles"
+                                class="custom-icon"
+                              /> -->
+                            </button>
+
+                            <button
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                              (click)="openEstimationModal(req)"
+                              title="Gestionar Estimación"
+                            >
+                            <i class="bi bi-calendar3"></i>
+                              <!-- <img
+                                src="assets/icons/estimation.png"
+                                alt="Estimación"
+                                class="custom-icon"
+                              /> -->
+                            </button>
+
+                            <button
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                              (click)="gestionarAcuerdos(req)"
+                              [class.opacity-50]="!isAtfEnabled(req.status)"
+                              [disabled]="!isAtfEnabled(req.status)"
+                              title="Gestionar Acuerdos"
+                            >
+                            <i class="fa-solid fa-handshake"></i>
+                              <!-- <img
+                                src="assets/icons/acuerdo.png"
+                                alt="ATF"
+                                class="custom-icon"
+                                [class.opacity-50]="req.is_locked"
+                              /> -->
+                            </button>
+
+                            <button
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                              title="Gestionar Requerimiento"
+                              (click)="openLifecycleOrchestrator(req)"
+                              [class.opacity-50]="!isGrEnabled(req.status)"
+                              [disabled]="!isGrEnabled(req.status)"
+                            >
+                            <i class="fa-solid fa-gear"></i>
+                              <!-- <img
+                                src="assets/icons/manage-req.png"
+                                alt="Gestionar Requerimiento"
+                                class="custom-icon"
+                              /> -->
+                            </button>
+                            <button
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                              title="Cerrar Requerimiento"
+                              [class.opacity-50]="!isGrEnabled(req.status)"
+                              [disabled]="!isGrEnabled(req.status)"
+                            >
+                            <i class="fa-solid fa-lock"></i>
+                              
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     }
@@ -218,8 +349,137 @@
                 </tbody>
               </table>
             </div>
+            <div class="d-flex justify-content-evenly align-items-center my-3">
+              <button
+                class="btn btn-outline-secondary"
+                (click)="previousPage()"
+                [disabled]="currentOffset() === 0"
+              >
+                <i class="bi bi-chevron-left"></i> Anterior
+              </button>
+
+              <span class="text-muted small">
+                Mostrando desde el registro {{ currentOffset() + 1 }} al
+                {{ currentOffset() + requirements().length }}
+              </span>
+
+              <button
+                class="btn btn-outline-primary"
+                (click)="nextPage()"
+                [disabled]="!hasMore()"
+              >
+                Siguiente <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
           </div>
         </div>
+        @if (isDetailModalOpen()) {
+          <div
+            class="modal-backdrop fade show"
+            style="z-index: 1050 !important"
+          ></div>
+
+          <div
+            class="modal fade show"
+            tabindex="-1"
+            style="display: block; z-index: 1060 !important"
+          >
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+              <div class="modal-content border-0 shadow-lg">
+                <lib-requirement-modal
+                  [requirementId]="selectedRequirementId()"
+                  (modalClosed)="closeDetailModal(true)"
+                >
+                </lib-requirement-modal>
+              </div>
+            </div>
+          </div>
+        }
+        @if (isAtfListModalOpen()) {
+          <lib-atf-agreements-list-modal
+            [requirementId]="selectedReqForAtf()!"
+            [requirementCode]="selectedReqCodeForAtf()"
+            [isAtfOpen]="isSelectedReqAtfOpen()"
+            [currentManagementType]="selectedReqManagementType()"
+            (closeModal)="closeAtfListModal()"
+            (openCreateModal)="openAgreementCreate()"
+            (viewAgreementDetail)="openAgreementView($event)"
+            (typeUpdated)="onRequirementMutated($event)"
+          >
+          </lib-atf-agreements-list-modal>
+        }
+
+        @if (isAtfModalOpen()) {
+          <lib-atf-agreements-modal
+            [requirementId]="selectedReqForAtf()!"
+            [initialMode]="atfModalMode()"
+            [agreementData]="selectedAgreementData()"
+            [isAtfOpen]="isSelectedReqAtfOpen()"
+            (closeModal)="closeAtfModal()"
+            (agreementSaved)="onAgreementSaved()"
+            [requirementCreationDate]="selectedReqCreationDate()"
+          >
+          </lib-atf-agreements-modal>
+        }
+        <!-- Modal de Estimación -->
+        @if (isEstimationModalOpen()) {
+          <lib-estimation-form
+            [requirementId]="selectedReqForAtf()!"
+            [requirementCode]="selectedReqCodeForAtf()"
+            [requirementCreationDate]="selectedReqCreationDate()"
+            [isPlanningClosed]="isSelectedReqPlanningClosed()"
+            (closeModal)="closeEstimationModal()"
+            (estimationSaved)="loadRequirements()"
+          >
+          </lib-estimation-form>
+        }
+
+        <!-- Modal de Creación de Requerimiento -->
+        @if (isCreateModalOpen()) {
+          <lib-requirement-create-modal
+            (closeModal)="closeCreateModal()"
+            (requirementCreated)="loadRequirements()"
+          >
+          </lib-requirement-create-modal>
+        }
+
+        <!-- ======================================================= -->
+        <!-- MODALES DEL MÓDULO DE CONFIGURACIÓN (MDM)               -->
+        <!-- ======================================================= -->
+
+        @if (activeConfigModal() === 'UNIFIED_PERSON') {
+          <lib-unified-person-modal (modalClosed)="closeConfigModal()">
+          </lib-unified-person-modal>
+        }
+
+        @if (showUnifiedPersonListModal()) {
+          <lib-unified-person-list-modal
+            (modalClosed)="closeUnifiedPersonListModal()"
+          >
+          </lib-unified-person-list-modal>
+        }
+
+        @if (showOrgStructureModal()) {
+          <lib-org-structure (modalClosed)="closeOrgStructureModal()">
+          </lib-org-structure>
+        }
+        @if (showProgressMatrixModal()) {
+          <lib-progress-matrix-config (closeModal)="closeProgressMatrixModal()">
+          </lib-progress-matrix-config>
+        }
+
+        @if (showMilestoneConfigModal()) {
+          <lib-milestone-config (closeModal)="closeMilestoneConfigModal()">
+          </lib-milestone-config>
+        }
+
+        @if (selectedReqForOrchestrator()) {
+          <lib-lifecycle-orchestrator-modal
+            [req]="selectedReqForOrchestrator()!"
+            (closeModal)="closeLifecycleOrchestrator()"
+          >
+          </lib-lifecycle-orchestrator-modal>
+        }
       </section>
     </main>
   </div>

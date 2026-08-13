@@ -19,6 +19,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Registrar rutas de migraciones DDD
+        $this->loadMigrationsFrom([
+            database_path('migrations/security'),
+            database_path('migrations/catalogs'),
+            database_path('migrations/core'),
+            database_path('migrations/audit'),
+            database_path('migrations/workflow'),
+        ]);
     }
 }
