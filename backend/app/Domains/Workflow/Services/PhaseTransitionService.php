@@ -21,7 +21,7 @@ class PhaseTransitionService
         'phase_status_code' => $statusCode,
         'transitioned_at' => now(),
         'executed_by_user_id' => $userId,
-        'remarks' => $remarks // Asegúrate de que este campo exista en tu migración
+        'remarks' => $remarks ?? '',
     ]);
 }
 }

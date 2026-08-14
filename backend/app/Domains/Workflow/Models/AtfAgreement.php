@@ -19,6 +19,7 @@ class AtfAgreement extends Model
     // Especificamos la tabla con su esquema
     protected $table = 'workflow.atf_agreements';
 
+    // 1. Le decimos que el ID no es autoincremental
     public $incrementing = false;
 
     // 2. Le decimos que el ID es un texto (UUID)

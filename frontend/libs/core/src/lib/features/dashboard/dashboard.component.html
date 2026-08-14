@@ -226,7 +226,7 @@
                     <th>Unidad</th>
                     <th>Fecha Creación</th>
                     <th>Estatus</th>
-                    <th class="ps-4">Acciones</th>
+                    <th class="text-center pe-4">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -265,32 +265,11 @@
                         <td>{{ req.creation_date | date: 'dd/MM/yyyy' }}</td>
                         <td>
                           <span
-                            class="badge rounded-pill"
-                            [ngClass]="{
-                              'bg-danger text-light': req.status === 'RC',
-
-                              'bg-warning text-dark': req.status === 'ATF-C',
-                              'bg-info': req.status === 'ATF-I',
-                              'bg-success': req.status === 'FC',
-                              'bg-secondary': req.status === 'ES-R',
-                              'bg-primary': req.status === 'REQ_CLOSED',
-                            }"
+                            class="badge border px-3 py-1 {{
+                              req.status | reqStatus: 'class'
+                            }}"
                           >
-                            {{
-                              req.status === 'RC'
-                                ? 'Req. Creado'
-                                : req.status === 'ATF-C'
-                                  ? 'ATF Cerrado'
-                                  : req.status === 'FC'
-                                    ? 'Cerrado'
-                                    : req.status === 'ATF-I'
-                                      ? 'ATF Iniciado'
-                                      : req.status === 'ES-R'
-                                        ? 'Estimacion Creada'
-                                        : req.status === 'REQ_CLOSED'
-                                          ? 'Req. Cerrado'
-                                          : req.status
-                            }}
+                            {{ req.status | reqStatus: 'label' }}
                           </span>
                         </td>
                         <td class="align-middle text-center">
@@ -302,11 +281,12 @@
                               (click)="openDetailModal(req.id)"
                               title="Ver Detalle"
                             >
-                              <img
+                            <i class="fa-solid fa-eye"></i>
+                              <!-- <img
                                 src="assets/icons/show-details.png"
                                 alt="Ver Detalles"
                                 class="custom-icon"
-                              />
+                              /> -->
                             </button>
 
                             <button
@@ -314,11 +294,12 @@
                               (click)="openEstimationModal(req)"
                               title="Gestionar Estimación"
                             >
-                              <img
+                            <i class="bi bi-calendar3"></i>
+                              <!-- <img
                                 src="assets/icons/estimation.png"
                                 alt="Estimación"
                                 class="custom-icon"
-                              />
+                              /> -->
                             </button>
 
                             <button
@@ -328,25 +309,37 @@
                               [disabled]="!isAtfEnabled(req.status)"
                               title="Gestionar Acuerdos"
                             >
-                              <img
+                            <i class="fa-solid fa-handshake"></i>
+                              <!-- <img
                                 src="assets/icons/acuerdo.png"
                                 alt="ATF"
                                 class="custom-icon"
                                 [class.opacity-50]="req.is_locked"
-                              />
+                              /> -->
                             </button>
 
                             <button
                               class="btn btn-sm btn-outline-brand rounded-pill px-3"
                               title="Gestionar Requerimiento"
+                              (click)="openLifecycleOrchestrator(req)"
                               [class.opacity-50]="!isGrEnabled(req.status)"
                               [disabled]="!isGrEnabled(req.status)"
                             >
-                              <img
+                            <i class="fa-solid fa-gear"></i>
+                              <!-- <img
                                 src="assets/icons/manage-req.png"
                                 alt="Gestionar Requerimiento"
                                 class="custom-icon"
-                              />
+                              /> -->
+                            </button>
+                            <button
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                              title="Cerrar Requerimiento"
+                              [class.opacity-50]="!isGrEnabled(req.status)"
+                              [disabled]="!isGrEnabled(req.status)"
+                            >
+                            <i class="fa-solid fa-lock"></i>
+                              
                             </button>
                           </div>
                         </td>
@@ -455,9 +448,7 @@
         <!-- ======================================================= -->
 
         @if (activeConfigModal() === 'UNIFIED_PERSON') {
-          <lib-unified-person-modal 
-            (modalClosed)="closeConfigModal()"
-          >
+          <lib-unified-person-modal (modalClosed)="closeConfigModal()">
           </lib-unified-person-modal>
         }
 
@@ -469,20 +460,25 @@
         }
 
         @if (showOrgStructureModal()) {
-          <lib-org-structure 
-            (modalClosed)="closeOrgStructureModal()">
+          <lib-org-structure (modalClosed)="closeOrgStructureModal()">
           </lib-org-structure>
         }
         @if (showProgressMatrixModal()) {
-          <lib-progress-matrix-config
-            (closeModal)="closeProgressMatrixModal()">
+          <lib-progress-matrix-config (closeModal)="closeProgressMatrixModal()">
           </lib-progress-matrix-config>
         }
 
         @if (showMilestoneConfigModal()) {
-          <lib-milestone-config 
-            (closeModal)="closeMilestoneConfigModal()">
+          <lib-milestone-config (closeModal)="closeMilestoneConfigModal()">
           </lib-milestone-config>
+        }
+
+        @if (selectedReqForOrchestrator()) {
+          <lib-lifecycle-orchestrator-modal
+            [req]="selectedReqForOrchestrator()!"
+            (closeModal)="closeLifecycleOrchestrator()"
+          >
+          </lib-lifecycle-orchestrator-modal>
         }
       </section>
     </main>

@@ -21,9 +21,7 @@ use Illuminate\Support\Facades\Storage;
 
 class RequirementService
 {
-    /**
-     * Inyectamos el servicio de Auditoría Forense
-     */
+    
     public function __construct(
         private readonly AuditService $auditService,
         private readonly PhaseTransitionService $phaseTransitionService,

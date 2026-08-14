@@ -4,7 +4,6 @@
 
 use App\Domains\Security\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\postJson;
@@ -21,10 +20,6 @@ uses(RefreshDatabase::class);
 // Criterio T04.2: Validación Organizacional con Carga Híbrida (Redis)
 // ========================================================================
 it('Escenario: Consulta optimizada de la estructura organizacional del consultor (Redis)', function () {
-    
-    $user = User::factory()->create();
-    assert($user instanceof User);
-    actingAs($user);
 
     $societyId = (string) Str::uuid();
     DB::table('catalogs.societies')->insert(['id' => $societyId, 'name' => 'Soc_' . Str::random(4), 'created_at' => now(), 'updated_at' => now()]);
@@ -35,8 +30,26 @@ it('Escenario: Consulta optimizada de la estructura organizacional del consultor
     $unitId = (string) Str::uuid();
     DB::table('catalogs.requesting_units')->insert(['id' => $unitId, 'name' => 'Unit_' . Str::random(4), 'system_id' => $systemId, 'created_at' => now(), 'updated_at' => now()]);
 
+    // 1. Crear Persona PRIMERO
     $personId = (string) Str::uuid();
-    DB::table('security.persons')->insert(['id' => $personId, 'first_name' => 'A', 'last_name' => 'B', 'email' => 'test_' . Str::random(5) . '@cantv.com.ve', 'created_at' => now(), 'updated_at' => now()]);
+    DB::table('security.persons')->insert([
+        'id'         => $personId, 
+        'first_name' => 'A', 
+        'last_name'  => 'B', 
+        'email'      => 'test_' . Str::random(5) . '@cantv.com.ve', 
+        'created_at' => now(), 
+        'updated_at' => now()
+    ]);
+
+    // 2. Crear Usuario asociando person_id
+    
+    $user = User::factory()->create(
+        [
+          'roles'=> ['Admin'],
+        ]
+    );
+    assert($user instanceof User); 
+    actingAs($user, 'api');
 
     $consultorId = (string) Str::uuid();
     DB::table('security.functional_consultants')->insert(['id' => $consultorId, 'person_id' => $personId, 'requesting_unit_id' => $unitId, 'created_at' => now(), 'updated_at' => now()]);
@@ -61,10 +74,6 @@ it('Escenario: Consulta optimizada de la estructura organizacional del consultor
 // Criterio T04.1 y T04.3: Persistencia, UUID v4 y Unit Snapshot
 // ========================================================================
 it('Escenario: Creación exitosa del requerimiento con captura de Snapshot', function () {
-    
-    $user = User::factory()->create();
-    assert($user instanceof User);
-    actingAs($user);
 
     Storage::fake('local'); 
 
@@ -105,6 +114,7 @@ it('Escenario: Creación exitosa del requerimiento con captura de Snapshot', fun
         'updated_at'   => now(),
     ]);
 
+    // 3. Crear Persona del Consultor PRIMERO
     $personId = (string) Str::uuid();
     DB::table('security.persons')->insert([
         'id'         => $personId,
@@ -114,6 +124,15 @@ it('Escenario: Creación exitosa del requerimiento con captura de Snapshot', fun
         'created_at' => now(),
         'updated_at' => now(),
     ]);
+
+    // 4. Crear Usuario autenticado enlazado a la persona mediante person_id
+    $user = User::factory()->create(
+        [
+          'roles'=> ['Admin'],
+        ]
+    );
+    assert($user instanceof User); 
+    actingAs($user, 'api');
 
     $consultorId = (string) Str::uuid();
     DB::table('security.functional_consultants')->insert([
@@ -142,7 +161,7 @@ it('Escenario: Creación exitosa del requerimiento con captura de Snapshot', fun
         'updated_at' => now(),
     ]);
 
-    // 3. Payload
+    // 5. Payload
     $rrtiCode = 'RRTI-' . date('Y') . '-' . rand(100, 999);
     $payload = [
         'rrti'                     => $rrtiCode,
@@ -156,7 +175,7 @@ it('Escenario: Creación exitosa del requerimiento con captura de Snapshot', fun
         'needs_spreadsheet'        => UploadedFile::fake()->create('necesidades.xlsx', 1024, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
     ];
 
-    // 4. Petición POST
+    // 6. Petición POST
     $response = postJson('/api/core/requirements', $payload);
 
     if ($response->status() !== 201) {

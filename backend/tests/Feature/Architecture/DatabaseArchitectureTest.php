@@ -29,8 +29,12 @@ test('Escenario 01: Verificación de estructura multiesquema', function () {
 
 test('Escenario 02: Uso de UUID como identificador primario', function () {
     // 1. Verificamos la generación automática de UUID v4
-    $usuario = User::factory()->create();
+    $usuario = User::factory()->create([
+    'email' => 'unique_' . Str::random(8) . '@example.org',
+]);
     $idGenerado = $usuario->id;
+
+    
     
     expect(Str::isUuid($idGenerado))->toBeTrue();
 

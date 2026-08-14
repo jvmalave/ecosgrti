@@ -1,0 +1,111 @@
+/* ========================================================
+  IDENTIDAD VISUAL CANTV - Capa 3: Bitácora de Diseño
+   ======================================================== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(5px);
+  z-index: 1060; /* Capa 3: Estrictamente superior a 1055 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-dialog-custom {
+  width: 100%;
+  max-width: 1100px;
+  max-height: 100vh;
+  background: #ffffff;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+.text-truncate-custom {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.brand-gradient {
+  background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%);
+  border-bottom: 3px solid #ea80fc;
+}
+
+.modal-body-scroll {
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: #fcfcfc;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #e0e0e0;
+    border-radius: 3px;
+  }
+}
+
+.text-brand {
+  color: #d500f9 !important;
+}
+
+.btn-brand {
+  background: linear-gradient(90deg, #aa00ff 0%, #d500f9 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: linear-gradient(90deg, #7b1fa2 0%, #aa00ff 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4);
+    transform: translateY(-1px);
+  }
+  
+  &:disabled {
+    background: #e1bee7;
+    color: #9e9e9e;
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+// Botón Outline Corporativo
+  .btn-outline-brand { 
+    border-color: #d500f9; 
+    color: #d500f9; 
+    font-weight: 500;
+    transition: all 0.3s ease; 
+    background: transparent;
+
+    &:hover { 
+      background: #d500f9; 
+      color: white; 
+      box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4); 
+      transform: translateY(-1px);
+    }
+    
+    &:disabled {
+      background: #e1bee7;
+      color: #9e9e9e;
+      box-shadow: none;
+      transform: none;
+    }
+  }
+
+  .alert{
+      border-left: 4px solid rgba(3, 21, 1, 0.4) !important; 
+    }

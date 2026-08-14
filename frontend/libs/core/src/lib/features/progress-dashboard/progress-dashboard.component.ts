@@ -24,9 +24,24 @@ export class ProgressDashboardComponent {
   public readonly statusDictionary: Record<string, string> = {
     'RC': 'Requerimiento Creado',
     'ES-R': 'Estimación Creada',
-    'ATF-I': 'ATF Iniciado',
-    'ATF-C': 'ATF Cerrado',
-    'REQ_CLOSED': 'Requerimiento Cerrado',
+    'ATF-I': 'Acuerdos en Proceso',
+    'ATF-C': 'Acuerdos Cerrados',
+    'DT-I':  'Diseño Técnico en Proceso',
+    'DT-C':  'Diseño Técnico Cerrado',
+    'COR-I': 'Construcción (Roles) en Proceso',
+    'COR-C': 'Construcción (Roles) Cerrado',
+    'COE-I': 'Construcción (Entregables) en Proceso',
+    'COE-C': 'Construcción (Entregables) Cerrado',
+    'CEE-I': 'Certificación (Entregables) en Proceso',
+    'CEE-C': 'Certificación (Entregables) Cerrado',
+    'CER-I': 'Certificación (Roles) en Proceso',
+    'CER-C': 'Certificación (Roles) Cerrado',
+    'PI-I':  'Pruebas Integrales en Proceso',
+    'PI-C':  'Pruebas Integrales Cerradas',
+    'PAP-I': 'Pase a Producción en Proceso',
+    'PAP-C': 'Pase a Producción Cerrado',
+    'AU': 'Asignado a Usuario Cerrado',
+    'RF': 'Requerimiento Cerrado',
     // Aquí puedes ir agregando futuros estados del ciclo de vida
   };
 
