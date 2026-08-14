@@ -17,7 +17,11 @@ use function Pest\Laravel\withoutMiddleware;
 beforeEach(function () {
     /** @var \Tests\TestCase|mixed $this */
     
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create([
+    'email' => 'user_' . Str::random(8) . '@cantv.com.ve',
+    'roles' => ['Admin'],
+]);
+    
 
     // 1. Construcción del Grafo Jerárquico Base
     $societyId = Str::uuid()->toString();
