@@ -37,12 +37,8 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
     // Eliminar Acuerdo ATF
     Route::delete('/requirements/{requirementId}/atf-agreements/{agreementId}', [ATFAgreementController::class, 'destroy']);
 
-    /*
-    |--------------------------------------------------------------------------
-    | GESTION DE COMPONENTE ROLES
-    |--------------------------------------------------------------------------
-    */
-    
+
+    //===== US26: Gestión de Componente Roles) ======
     // Registrar Rol 
     Route::post('/requirements/{requirementId}/roles', [RequirementRoleController::class, 'store']);
     // Listar Roles de un Requerimiento
