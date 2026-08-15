@@ -1,7 +1,7 @@
 /**
  * Define los códigos de las fases soportadas por el motor polimórfico.
  */
-export type PhaseCode = 'DT' | 'COR' | 'COE';
+export type PhaseCode = 'DT' | 'COR' | 'COE' | 'PI' | 'CER' | 'CEE';
 
 /**
  * Contrato que dicta el comportamiento, textos dinámicos y rutas API de la fase.
@@ -51,5 +51,35 @@ export const PHASE_CONFIGURATIONS: Record<PhaseCode, PhaseConfig> = {
     initEndpoint: 'deliverables-init',
     parentEntityPath: 'deliverables',
     childEntityPath: 'activities'
+  },
+  PI: {
+    phaseCode: 'PI',
+    phaseName: 'Pruebas Integrales',
+    apiEndpoint: 'pi',
+    modalTitle: 'Roles en Pruebas Integrales',
+    emptyStateText: 'No hay hallazgos registrados en la bitácora de pruebas.',
+    initEndpoint: 'roles-init',
+    parentEntityPath: 'roles',
+    childEntityPath: 'registers'
+  },
+  CER: {
+    phaseCode: 'CER',
+    phaseName: 'Certificación de Roles',
+    apiEndpoint: 'cer',
+    modalTitle: 'Certificación Técnica (CSAL)',
+    emptyStateText: 'No hay observaciones de certificación.',
+    initEndpoint: 'roles-init',
+    parentEntityPath: 'roles',
+    childEntityPath: 'results' // Adaptación conceptual, dependerá de tus endpoints
+  },
+  CEE: {
+    phaseCode: 'CEE',
+    phaseName: 'Certificación de Entregables',
+    apiEndpoint: 'cee',
+    modalTitle: 'Certificación Documental',
+    emptyStateText: 'No hay observaciones de certificación documental.',
+    initEndpoint: 'deliverables-init',
+    parentEntityPath: 'deliverables',
+    childEntityPath: 'results' 
   }
 };

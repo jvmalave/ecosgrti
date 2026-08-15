@@ -10,6 +10,7 @@ use App\Domains\Workflow\Models\CorRole;
 use App\Domains\Workflow\Models\CorRegister;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use App\Domains\Core\Dictionaries\CacheKeyDictionary; // 
 
 class CorRoleService extends AbstractPhaseComponentService
 {
@@ -19,7 +20,7 @@ class CorRoleService extends AbstractPhaseComponentService
     // IMPLEMENTACIÓN DEL CONTRATO DEL SERVICIO BASE
     // =========================================================================
     protected function getComponentModel(): string { return CorRole::class; }
-    protected function getCacheKeyPrefix(): string { return 'cor_roles'; }
+    protected function getCacheKeyPrefix(): string { return 'cor'; } // Simplificado para el diccionario
     protected function getPhaseCode(): string { return 'COR-C'; }
     protected function getPhaseInitCode(): string { return 'COR-I'; }
 
@@ -43,62 +44,12 @@ class CorRoleService extends AbstractPhaseComponentService
     // MÉTODOS ESPECÍFICOS DE LA FASE COR (US30)
     // =========================================================================
     
-    /**
-     * CU-034: Inicializar y sincronizar roles cerrados desde DT hacia COR
-     */
-    // public function initializeRoles(string $requirementId): array
-    // {
-    //     // 1. Verificación (Hard Gate): Deben existir roles cerrados en DT
-    //     $dtClosedRoles = DB::table('workflow.dt_roles')
-    //         ->where('requirement_id', $requirementId)
-    //         ->where('status', 'CLOSED')
-    //         ->whereNull('deleted_at')
-    //         ->count();
-
-    //     if ($dtClosedRoles === 0) {
-    //         abort(403, 'Acceso denegado: El requerimiento no posee roles cerrados en Diseño Técnico.');
-    //     }
-
-    //     // 2. Transición Masiva e Idempotente (con inyección de autoría)
-    //     $userId = auth()->id();
-        
-    //     DB::statement("
-    //         INSERT INTO workflow.cor_roles (
-    //             id, requirement_role_id, requirement_id, name, status, 
-    //             created_by, updated_by, created_at, updated_at
-    //         ) 
-    //         SELECT 
-    //             gen_random_uuid(), requirement_role_id, requirement_id, name, 'IN_PROGRESS', 
-    //             ?, ?, NOW(), NOW() 
-    //         FROM workflow.dt_roles 
-    //         WHERE requirement_id = ? AND status = 'CLOSED' AND deleted_at IS NULL
-    //         ON CONFLICT (requirement_role_id) DO NOTHING
-    //     ", [$userId, $userId, $requirementId]);
-
-    //     // 3. Recuperar datos con ordenamiento nativo
-    //     $cacheKey = "req_{$requirementId}_cor_roles_meta";
-        
-    //     $rolesList = Cache::remember($cacheKey, 600, function () use ($requirementId) {
-    //         return CorRole::where('requirement_id', $requirementId)
-    //                     ->withCount('registers') // Esto asume que el método registers() en el modelo no cuenta los borrados
-    //                     ->orderBy('name', 'asc')
-    //                     ->get()
-    //                     ->toArray();
-    //     });
-
-    //     return [
-    //         'requirement_id' => $requirementId,
-    //         'roles_list' => $rolesList
-    //     ];
-    // }
-
     public function initializeRoles(string $requirementId): array
     {
         // 1. Verificación (Hard Gate): Deben existir roles cerrados en DT
         $dtClosedRoles = DB::table('workflow.dt_roles')
             ->where('requirement_id', $requirementId)
             ->where('status', 'CLOSED')
-            // Eliminamos la validación deleted_at porque dt_roles no posee esa columna
             ->count();
 
         if ($dtClosedRoles === 0) {
@@ -119,10 +70,10 @@ class CorRoleService extends AbstractPhaseComponentService
             FROM workflow.dt_roles 
             WHERE requirement_id = ? AND status = 'CLOSED' 
             ON CONFLICT (requirement_role_id) DO NOTHING
-        ", [$userId, $userId, $requirementId]); // Eliminamos "AND deleted_at IS NULL" de la consulta SQL
+        ", [$userId, $userId, $requirementId]);
 
-        // 3. Recuperar datos con ordenamiento nativo
-        $cacheKey = "req_{$requirementId}_cor_roles_meta";
+        // 3. Recuperar datos con ordenamiento nativo utilizando el DICCIONARIO
+        $cacheKey = CacheKeyDictionary::phaseComponentsList($requirementId, 'COR');
         
         $rolesList = Cache::remember($cacheKey, 600, function () use ($requirementId) {
             return CorRole::where('requirement_id', $requirementId)
@@ -154,5 +105,10 @@ class CorRoleService extends AbstractPhaseComponentService
                 abort(422, 'Validación fallida: No se puede cerrar un rol sin actividades en su bitácora técnica.');
             }
         }
+    }
+
+    protected function getRequirementColumn(): string 
+    {
+        return 'requirement_id'; // Adaptación para COR
     }
 }

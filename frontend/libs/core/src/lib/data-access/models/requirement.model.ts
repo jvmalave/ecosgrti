@@ -47,6 +47,8 @@ export interface RequirementDetail {
   functional_consultant?: {
     person_id: string;
   };
+
+  frozen_phases: string[];
 }
 
 export interface OrganizationalGraph {

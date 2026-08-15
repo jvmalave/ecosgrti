@@ -15,14 +15,16 @@ export interface WorkflowRecord {
  * Representa un elemento padre (Rol o Entregable) devuelto por la inicialización.
  * Combina los atributos posibles de COR y COE usando propiedades opcionales.
  */
+
 export interface WorkflowPhaseItem {
   id: string;
-  status: string;
-  // Propiedades exclusivas de COR
+  status: string; // Puede ser 'IN_PROGRESS', 'CLOSED', 'PENDING_CERTIFICATION', 'CERTIFIED'
+  // Propiedades exclusivas de COR / PI / CER
   name?: string;
   requirement_id?: string;
   requirement_role_id?: string;
-  // Propiedades exclusivas de COE
+  is_approved?: boolean; //  US32: Bandera para la Aprobación Funcional en PI
+  // Propiedades exclusivas de COE / CEE
   req_id?: string;
   deliverable_id?: string;
   master_deliverable?: {
@@ -31,6 +33,8 @@ export interface WorkflowPhaseItem {
   };
   // Propiedad inyectada por withCount() en Laravel
   registers_count?: number; 
+  // Propiedad inyectada para CEE/CER relacionada a los tickets
+  ticket_id?: string; 
 }
 
 /**
@@ -38,7 +42,7 @@ export interface WorkflowPhaseItem {
  */
 export interface RolesInitResponse {
   requirement_id: string;
-  roles_list: WorkflowPhaseItem[]; // 🟢 Adiós al any[]
+  roles_list: WorkflowPhaseItem[]; 
 }
 
 /**

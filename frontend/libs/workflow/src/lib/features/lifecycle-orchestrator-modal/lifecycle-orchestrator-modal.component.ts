@@ -12,6 +12,7 @@ export interface DashboardRequirement {
   has_roles: boolean | number | string;
   dt_closed_roles_count?: number;
   deliverables_count?: number;
+  frozen_phases: string[];
 }
 
 export type PhaseAction = 'DT' | 'COR' | 'COE' | 'CER' | 'CEE' | 'PI' | 'PAP' | 'AU';

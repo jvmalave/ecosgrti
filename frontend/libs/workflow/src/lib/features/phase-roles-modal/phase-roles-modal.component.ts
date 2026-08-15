@@ -24,14 +24,15 @@ export class PhaseRolesModalComponent implements OnInit {
   requirementId = input.required<string>();
   config = input.required<PhaseConfig>();
   rrti = input.required<string>();
-  reqStatus = input.required<string>();
+  
+  // 🟢 AHORA: Recibimos el arreglo de fases congeladas emitido por el backend
+  frozenPhases = input.required<string[]>();
 
   closeModal = output<void>();
 
   // =========================================================================
   // ESTADO REACTIVO (Signals)
   // =========================================================================
-  // Renombramos a variables genéricas para soportar ambas fases
   phaseItems = signal<WorkflowPhaseItem[]>([]);
   isLoading = signal<boolean>(true);
   errorMessage = signal<string | null>(null);
@@ -43,16 +44,16 @@ export class PhaseRolesModalComponent implements OnInit {
   // COMPUTADOS (Computed)
   // =========================================================================
   modalTitle = computed(() => this.config().modalTitle);
-  isCoePhase = computed(() => this.config().phaseCode === 'COE');
-  itemName = computed(() => this.isCoePhase() ? 'Entregable' : 'Rol');
-  itemNamePlural = computed(() => this.isCoePhase() ? 'Entregables' : 'Roles');
+  // 🟢 Evaluación polimórfica para nomenclaturas (aplica para COE y CEE)
+  isDeliverablesPhase = computed(() => ['COE', 'CEE'].includes(this.config().phaseCode));
+  itemName = computed(() => this.isDeliverablesPhase() ? 'Entregable' : 'Rol');
+  itemNamePlural = computed(() => this.isDeliverablesPhase() ? 'Entregables' : 'Roles');
 
-  
+  // 🟢 INMUTABILIDAD ARQUITECTÓNICA: Evaluamos la jerarquía del backend
   isPhaseClosed = computed(() => {
-    const currentStatus = this.reqStatus();
-    const closeCode = `${this.config().phaseCode}-C`; 
-    
-    return currentStatus === closeCode;
+    const frozen = this.frozenPhases() || [];
+    // Si la fase actual ('DT', 'COR', 'PI') existe en el arreglo de congeladas, está cerrada.
+    return frozen.includes(this.config().phaseCode);
   });
 
   isPhaseActive = computed(() => {
@@ -87,7 +88,7 @@ export class PhaseRolesModalComponent implements OnInit {
 
   loadItems(): void {
     this.isLoading.set(true);
-    // 🟢 Inyectamos el config completo y usamos el nuevo nombre del método
+    
     this.phaseService.initializePhaseComponents(this.requirementId(), this.config())
       .subscribe({
         next: (response) => {
@@ -121,7 +122,6 @@ export class PhaseRolesModalComponent implements OnInit {
     );
 
     if (isConfirmed) {
-      // Inyectamos config
       this.phaseService.changeComponentStatus(item.id, this.config(), 'CLOSED')
         .subscribe({
           next: () => {
@@ -154,7 +154,6 @@ export class PhaseRolesModalComponent implements OnInit {
     );
 
     if (isConfirmed) {
-      // Inyectamos config
       this.phaseService.changeComponentStatus(item.id, this.config(), 'IN_PROGRESS')
         .subscribe({
           next: () => {
@@ -171,32 +170,6 @@ export class PhaseRolesModalComponent implements OnInit {
         });
     }
   }
-
-  // async closeGlobalPhase(): Promise<void> {
-  //     const isConfirmed = await this.notificationService.confirm(
-  //         `Cerrar Fase de ${this.config().phaseName}`,
-  //         `Todos los elementos han sido cerrados. ¿Deseas dar por finalizada la fase de ${this.config().phaseName}?`
-  //     );
-
-  //     if(isConfirmed) {
-  //         this.isLoading.set(true);
-  //         // 🟢 Inyectamos config
-  //         this.phaseService.closePhase(this.requirementId(), this.config())
-  //           .subscribe({
-  //             next: () => {
-  //               this.isLoading.set(false);
-  //               this.notificationService.toastSuccess(`Fase de ${this.config().phaseName} finalizada.`);
-  //               this.closeModal.emit();
-  //               this.phaseService.refreshDashboard$.next();
-  //             },
-  //             error: (err: HttpErrorResponse) => {
-  //               console.error('Fallo en closeGlobalPhase:', err.message);
-  //               this.notificationService.showError('Error de Sistema', 'Hubo un problema al intentar cerrar la fase global.');
-  //               this.isLoading.set(false);
-  //             }
-  //           });
-  //     }
-  // }
 
   async closeGlobalPhase(): Promise<void> {
       const isConfirmed = await this.notificationService.confirm(
@@ -221,8 +194,9 @@ export class PhaseRolesModalComponent implements OnInit {
             });
       }
   }
+
   closeRegistersAndRefresh(): void {
-    this.selectedItemForRegisters.set(null); // Cierra el modal de la bitácora
-    this.loadItems(); // Recarga los roles/entregables para actualizar el registers_count
+    this.selectedItemForRegisters.set(null); 
+    this.loadItems(); 
   }
 }

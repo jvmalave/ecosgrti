@@ -7,7 +7,8 @@ namespace App\Domains\Workflow\Traits;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
-use App\Domains\Core\Models\Requirement; // Ajusta según tu namespace de modelos Core
+use App\Domains\Core\Models\Requirement;
+use App\Domains\Core\Dictionaries\CacheKeyDictionary;
 
 trait ManagesPhaseRegisters
 {
@@ -16,7 +17,9 @@ trait ManagesPhaseRegisters
      */
     abstract protected function getRegisterModel(): string;
     abstract protected function getParentForeignKey(): string;
-    
+    abstract protected function getRequirementColumn(): string; 
+    abstract protected function getCacheKeyPrefix(): string;
+    abstract protected function getComponentModel(): string;
     
     /**
      * CREAR REGISTRO O ACTIVIDAD (E INICIAR FASE GLOBAL)
@@ -66,17 +69,21 @@ trait ManagesPhaseRegisters
                         'Apertura automática de la subfase al crear el primer registro técnico.'
                     );
                     
-                    Cache::put("req_{$requirementId}_progress", $calculatedProgress, now()->addDays(1));
+                    // USO DEL DICCIONARIO: Progreso del requerimiento
+                    Cache::put(
+                        CacheKeyDictionary::requirementProgress($requirementId), 
+                        $calculatedProgress, 
+                        now()->addDays(1)
+                    );
                     
-                    // 🟢 REACTIVIDAD DASHBOARD: Avisamos que el status y progreso cambiaron
-                    \Illuminate\Support\Facades\Redis::incr('dashboard_version');
+                    // USO DEL DICCIONARIO: Reactividad global del Dashboard
+                    \Illuminate\Support\Facades\Redis::incr(CacheKeyDictionary::globalDashboardVersion());
                 }
             }
 
-            // Invalida Cachés (Bitácora y Botón Cerrar)
-            Cache::forget($this->getCacheKeyPrefix() . "_registers_{$parentId}");
-            // Invalida caché de componentes padres para que active el botón de Cerrar
-            Cache::forget("req_{$requirementId}_" . $this->getCacheKeyPrefix() . "_roles_meta");
+            // USO DEL DICCIONARIO: Purgas de caché estandarizadas
+            Cache::forget(CacheKeyDictionary::componentRegisters($parentId, $this->getCacheKeyPrefix()));
+            Cache::forget(CacheKeyDictionary::phaseComponentsList($requirementId, $this->getCacheKeyPrefix()));
 
             return $register;
         });
@@ -105,7 +112,8 @@ trait ManagesPhaseRegisters
                 auth()->id()
             );
 
-            Cache::forget($this->getCacheKeyPrefix() . "_registers_{$parentId}");
+            // USO DEL DICCIONARIO: Purga estandarizada
+            Cache::forget(CacheKeyDictionary::componentRegisters($parentId, $this->getCacheKeyPrefix()));
 
             return $register;
         });
@@ -117,7 +125,6 @@ trait ManagesPhaseRegisters
     public function deleteRegister(string $registerId, string $parentId): void
     {
         $registerModel = $this->getRegisterModel();
-        // Necesitamos el modelo padre para extraer el requirement_id en la limpieza de caché
         $parentModel = $this->getComponentModel(); 
 
         DB::transaction(function () use ($registerModel, $parentModel, $registerId, $parentId) {
@@ -125,12 +132,15 @@ trait ManagesPhaseRegisters
 
             $register = $registerModel::findOrFail($registerId);
             $parent = $parentModel::findOrFail($parentId);
-            $requirementId = $parent->requirement_id;
+            
 
-            //
+            $reqColumn = $this->getRequirementColumn();
+            $requirementId = (string) $parent->{$reqColumn};
+
+            // Ejecución del Soft Delete
             $register->deleted_by = auth()->id();
             $register->save(); 
-            $register->delete(); // Ahora el trait de SoftDeletes se ejecutará limpiamente
+            $register->delete(); 
 
             $this->auditService->logModelChange(
                 'DELETE_PHASE_REGISTER',
@@ -139,9 +149,9 @@ trait ManagesPhaseRegisters
                 auth()->id()
             );
 
-            // Limpia ambas cachés
-            Cache::forget($this->getCacheKeyPrefix() . "_registers_{$parentId}");
-            Cache::forget("req_{$requirementId}_" . $this->getCacheKeyPrefix() . "_roles_meta");
+            // USO DEL DICCIONARIO: Purgas estandarizadas
+            Cache::forget(CacheKeyDictionary::componentRegisters($parentId, $this->getCacheKeyPrefix()));
+            Cache::forget(CacheKeyDictionary::phaseComponentsList($requirementId, $this->getCacheKeyPrefix()));
         });
     }
 
@@ -159,4 +169,5 @@ trait ManagesPhaseRegisters
     }
 
     abstract protected function countRegistersInRequirement(string $requirementId): int;
+    abstract protected function getPhaseInitCode(): string;
 }
