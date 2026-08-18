@@ -21,6 +21,9 @@ export interface RequirementDashboard {
   tipo_gestion?: string;
   roles_count: number, 
   has_roles: boolean,
+  frozen_phases: string[];
+  consultor_funcional: string; 
+  unidad_solicitante: string;
 }
 
 export interface RequirementDetail {
@@ -49,6 +52,7 @@ export interface RequirementDetail {
   };
 
   frozen_phases: string[];
+  open_phases: string[];
 }
 
 export interface OrganizationalGraph {

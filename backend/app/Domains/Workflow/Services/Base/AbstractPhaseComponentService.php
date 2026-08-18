@@ -7,10 +7,12 @@ namespace App\Domains\Workflow\Services\Base;
 use App\Domains\Audit\Services\AuditService;
 use App\Domains\Workflow\Services\PhaseTransitionService;
 use App\Domains\Workflow\Services\ProgressCalculationService;
+use App\Domains\Core\Models\Requirement;
+use App\Domains\Core\Dictionaries\CacheKeyDictionary; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis; 
 use Illuminate\Database\Eloquent\Model;
-use App\Domains\Core\Models\Requirement;
 
 abstract class AbstractPhaseComponentService
 {
@@ -20,18 +22,13 @@ abstract class AbstractPhaseComponentService
         protected readonly ProgressCalculationService $progressService
     ) {}
 
-    /**
-     * Métodos abstractos que las clases hijas DEBEN implementar.
-     * Esto define el "Contrato" de la fase.
-     */
-    abstract protected function getComponentModel(): string; // Ej: CorRole::class
-    abstract protected function getCacheKeyPrefix(): string; // Ej: 'cor_roles_cache'
-    abstract protected function getPhaseCode(): string;      // Ej: 'COR-C'
-    abstract protected function getPhaseInitCode(): string;  // Ej: 'COR-I'
+    abstract protected function getComponentModel(): string; 
+    abstract protected function getCacheKeyPrefix(): string; 
+    abstract protected function getPhaseCode(): string;      
+    abstract protected function getPhaseInitCode(): string;  
 
     /**
      * GESTIONAR CICLO DE VIDA DEL COMPONENTE (CERRAR/REABRIR)
-     * Abstrae la lógica de cambio de estado de un Rol o Entregable.
      */
     public function changeComponentStatus(string $componentId, string $newStatus): Model
     {
@@ -41,7 +38,6 @@ abstract class AbstractPhaseComponentService
         return DB::transaction(function () use ($component, $newStatus) {
             $previousStatus = $component->status;
             
-            // Validación genérica: No reabrir si la fase global ya avanzó
             if ($newStatus === 'IN_PROGRESS') {
                 $reqPhase = DB::table('core.requirements')->where('id', $component->req_id ?? $component->requirement_id)->value('status');
                 if ($reqPhase === $this->getPhaseCode()) {
@@ -53,7 +49,6 @@ abstract class AbstractPhaseComponentService
 
             $component->update(['status' => $newStatus]);
             
-            // Auditoría genérica inyectando el modelo dinámico
             $this->auditService->logModelChange(
                 'CHANGE_COMPONENT_STATUS',
                 "Cambio de estado en componente de la fase " . $this->getPhaseInitCode(),
@@ -65,24 +60,62 @@ abstract class AbstractPhaseComponentService
                 auth()->id()
             );
             
-            // Invalida la caché utilizando el prefijo dinámico
             $reqId = $component->req_id ?? $component->requirement_id;
-            Cache::forget("req_{$reqId}_{$this->getCacheKeyPrefix()}_meta");
+
+            // =====================================================================
+            // 🟢 DOBLE INVALIDACIÓN Y REACTIVIDAD DEL FRONTEND
+            // =====================================================================
+            
+            $listKey = CacheKeyDictionary::phaseComponentsList($reqId, $this->getPhaseInitCode());
+            Cache::forget($listKey);
+            Redis::del($listKey);
+
+            $fallbackKey = "req_{$reqId}_{$this->getCacheKeyPrefix()}_meta";
+            Cache::forget($fallbackKey);
+            Redis::del($fallbackKey);
+
+            // 🟢 CRÍTICO: Disparar la reactividad en Angular para mover el rol de tabla
+            Redis::incr(CacheKeyDictionary::globalDashboardVersion());
 
             return $component;
         });
     }
 
+   protected function getRequiredPredecessorPhases(): array 
+    {
+        return []; 
+    }
+
     /**
      * CIERRE GLOBAL DE LA FASE (HARD GATE)
-     * Abstrae la validación de quórum, actualización de progreso y sellado.
      */
     public function closeGlobalPhase(string $requirementId): array
     {
         $modelClass = $this->getComponentModel();
 
         return DB::transaction(function () use ($requirementId, $modelClass) {
-            // HARD GATE: Verificar que NO existan componentes en proceso
+            
+            // =====================================================================
+            //  VALIDACION DE FASE PREVIAS CERRADAS 
+            // =====================================================================
+            $predecessors = $this->getRequiredPredecessorPhases();
+            
+            if (!empty($predecessors)) {
+                $closedPhases = DB::table('workflow.requirement_phase_history')
+                    ->where('requirement_id', $requirementId)
+                    ->whereIn('phase_status_code', $predecessors)
+                    ->pluck('phase_status_code')
+                    ->toArray();
+
+                $missing = array_diff($predecessors, $closedPhases);
+                
+                if (!empty($missing)) {
+                    abort(422, 'Validación fallida: No se puede cerrar esta fase porque tienes fases previas aún están abiertas: ' . implode(', ', $missing));
+                }
+            }
+            // =====================================================================
+            // VALIDACIÓN DE COMPONENTES INTERNOS DE LA FASE ACTUAL
+            // =====================================================================
             $reqColumn = $this->getRequirementColumn();
             
             $openComponents = $modelClass::where($reqColumn, $requirementId)
@@ -95,17 +128,6 @@ abstract class AbstractPhaseComponentService
 
             $requirement = Requirement::findOrFail($requirementId);
             
-            // Recálculo del Avance Global (Motor Polimórfico)
-            $calculatedProgress = $this->progressService->calculateGlobalProgress($requirement);
-
-            // Transición de Estado Maestro
-            $requirement->update([
-                'status' => $this->getPhaseCode(),
-                'progress_percentage' => $calculatedProgress,
-                'updated_at' => now()
-            ]);
-
-            // 🟢 Registro Histórico Transaccional
             $this->phaseTransitionService->recordTransition(
                 $requirementId,
                 $this->getPhaseCode(),
@@ -113,9 +135,64 @@ abstract class AbstractPhaseComponentService
                 'Cierre global exitoso de la subfase'
             );
 
-            // 🟢 Limpieza de Caché y Sellado
-            Cache::forget("req_{$requirementId}_{$this->getCacheKeyPrefix()}_meta");
-            Cache::put("req_{$requirementId}_" . strtolower($this->getPhaseInitCode()) . "_congelado", true, now()->addDays(1));
+            $calculatedProgress = $this->progressService->calculateGlobalProgress($requirement);
+
+            $isVanguard = $this->phaseTransitionService->isVanguardStatus($this->getPhaseCode(), $requirement->status);
+
+            $updateData = [
+                'progress_percentage' => $calculatedProgress,
+                'updated_at' => now()
+            ];
+
+            if ($isVanguard) {
+                $updateData['status'] = $this->getPhaseCode();
+                $requirement->status = $this->getPhaseCode(); 
+            }
+
+            $requirement->update($updateData);
+
+            $this->auditService->logModelChange(
+                'CLOSE_GLOBAL_PHASE',
+                "Cierre global exitoso de la fase " . $this->getPhaseInitCode() . ($isVanguard ? " (Nueva Vanguardia)" : " (Proceso Paralelo)"),
+                [
+                    'requirement_id' => $requirementId,
+                    'new_status' => $requirement->status, 
+                    'progress_reached' => $calculatedProgress,
+                    'is_vanguard_update' => $isVanguard
+                ],
+                (string) auth()->id(),
+                $requirementId
+            );
+            // =========================================================================
+            // DESTRUCCIÓN DEL CACHÉ (DOBLE INVALIDACIÓN)
+            // =========================================================================
+            $phasePrefix = $this->getPhaseInitCode(); 
+
+            $keysToPurge = [
+                CacheKeyDictionary::requirementProgress($requirementId),
+                CacheKeyDictionary::phaseComponentsList($requirementId, $phasePrefix),
+                "req_{$requirementId}_{$this->getCacheKeyPrefix()}_meta",
+                CacheKeyDictionary::requirementDetail($requirementId),
+                CacheKeyDictionary::requirementDashboardSummary($requirementId),
+                CacheKeyDictionary::progressDashboardData($requirementId)
+            ];
+
+            // Purga en ambos drivers por seguridad
+            foreach ($keysToPurge as $key) {
+                Cache::forget($key);
+                Redis::del($key);
+            }
+            
+            Cache::put(
+                CacheKeyDictionary::phaseFrozenFlag($requirementId, $phasePrefix), 
+                true, 
+                now()->addDays(1)
+            );
+
+            if (config('cache.default') === 'redis') {
+                Cache::tags([CacheKeyDictionary::dashboardTag()])->flush();
+            }
+            Redis::incr(CacheKeyDictionary::globalDashboardVersion());
 
             return [
                 'success' => true,
@@ -125,22 +202,10 @@ abstract class AbstractPhaseComponentService
         });
     }
 
-    /**
-     * Hook polimórfico para validaciones específicas antes del cambio de estado.
-     * Las clases hijas (como CorRoleService) pueden sobrescribirlo.
-     */
-    protected function validateStatusTransition(Model $component, string $newStatus): void
-    {
-        // Por defecto no hace nada.
-    }
+    protected function validateStatusTransition(Model $component, string $newStatus): void {}
 
-    /**
-     * Define la columna que vincula el componente con el requerimiento padre.
-     */
     protected function getRequirementColumn(): string 
     {
-        return 'requirement_id'; // Valor por defecto
+        return 'requirement_id'; 
     }
-
-    
 }

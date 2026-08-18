@@ -19,10 +19,27 @@ class CorRoleService extends AbstractPhaseComponentService
     // =========================================================================
     // IMPLEMENTACIÓN DEL CONTRATO DEL SERVICIO BASE
     // =========================================================================
+    // protected function getComponentModel(): string { return CorRole::class; }
+    // protected function getCacheKeyPrefix(): string { return 'cor'; } // Simplificado para el diccionario
+    // protected function getPhaseCode(): string { return 'COR-C'; }
+    // protected function getPhaseInitCode(): string { return 'COR-I'; }
+
+
+
+    // =========================================================================
+    // IMPLEMENTACIÓN DEL CONTRATO DEL SERVICIO BASE
+    // =========================================================================
     protected function getComponentModel(): string { return CorRole::class; }
-    protected function getCacheKeyPrefix(): string { return 'cor'; } // Simplificado para el diccionario
+
+    protected function getCacheKeyPrefix(): string { return 'cor_roles'; } 
+    
     protected function getPhaseCode(): string { return 'COR-C'; }
+
     protected function getPhaseInitCode(): string { return 'COR-I'; }
+
+    protected function getRequiredPredecessorPhases(): array {
+        return ['ATF-C', 'DT-C']; 
+    }
 
     // =========================================================================
     // IMPLEMENTACIÓN DEL CONTRATO DEL TRAIT DE BITÁCORAS
@@ -73,7 +90,7 @@ class CorRoleService extends AbstractPhaseComponentService
         ", [$userId, $userId, $requirementId]);
 
         // 3. Recuperar datos con ordenamiento nativo utilizando el DICCIONARIO
-        $cacheKey = CacheKeyDictionary::phaseComponentsList($requirementId, 'COR');
+        $cacheKey = CacheKeyDictionary::phaseComponentsList($requirementId, $this->getPhaseInitCode());
         
         $rolesList = Cache::remember($cacheKey, 600, function () use ($requirementId) {
             return CorRole::where('requirement_id', $requirementId)

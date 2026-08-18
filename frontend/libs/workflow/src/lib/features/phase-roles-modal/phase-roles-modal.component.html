@@ -1,4 +1,11 @@
-@if (!selectedItemForRegisters()) {
+<!-- ========================================================================= -->
+<!-- CAPA 1: MODAL PRINCIPAL (Se oculta si se abre un sub-modal de Capa 3)  -->
+<!-- ========================================================================= -->
+@if (
+  !selectedItemForRegisters() &&
+  !selectedItemForTestUsers() &&
+  !selectedItemForApproval()
+) {
   <div class="modal-overlay">
     <div class="modal-dialog-custom">
       <!-- CABECERA -->
@@ -21,7 +28,7 @@
 
       <div class="modal-body-scroll p-4">
         <div class="row mb-4">
-          <!-- Buscador Reactivo -->
+          <!-- BUSCADOR REACTIVO -->
           <div class="row mb-4">
             <div class="col-md-6">
               <span
@@ -38,7 +45,9 @@
                 <input
                   type="text"
                   class="form-control border-start-0 ps-0 shadow-none"
-                  placeholder="Buscar {{ itemName() | lowercase }} por nombre..."
+                  placeholder="Buscar {{
+                    itemName() | lowercase
+                  }} por nombre..."
                   (input)="updateSearch($event)"
                 />
               </div>
@@ -47,27 +56,35 @@
 
           <!-- BANNER DE FASE CERRADA -->
           @if (!isPhaseActive()) {
-          <div class="alert alert-success d-flex align-items-center mt-3 shadow-sm" role="alert">
-            <i class="fa-solid fa-lock fs-2 me-3"></i>
-            <div>
-              <h6 class="fw-bold mb-1">Fase de {{ config().phaseName }} Cerrada</h6>
-              <p class="mb-0 small">Esta fase ha concluido. Todos los elementos y sus bitácoras se encuentran en estado inmutable.</p>
+            <div
+              class="alert alert-success d-flex align-items-center mt-3 shadow-sm"
+              role="alert"
+            >
+              <i class="fa-solid fa-lock fs-2 me-3"></i>
+              <div>
+                <h6 class="fw-bold mb-1">
+                  Fase de {{ config().phaseName }} Cerrada
+                </h6>
+                <p class="mb-0 small">
+                  Esta fase ha concluido. Todos los elementos y sus bitácoras se
+                  encuentran en estado inmutable.
+                </p>
+              </div>
             </div>
-          </div>
           }
 
+          <!-- ================================================================= -->
           <!-- ELEMENTOS EN PROCESO -->
+          <!-- ================================================================= -->
           <h6 class="text-brand fw-bold mb-3 border-bottom pb-2">
-            <!-- 🟢 Uso de itemNamePlural() -->
-            <i class="fa-solid fa-spinner fa-spin-pulse me-2"></i> {{ itemNamePlural() }} en Proceso
+            <i class="fa-solid fa-spinner fa-spin-pulse me-2"></i>
+            {{ itemNamePlural() }} en Proceso
           </h6>
 
-          <!-- Tabla en proceso -->
           <div class="table-responsive mb-4">
             <table class="table table-hover align-middle border">
               <thead class="table-light text-muted small">
                 <tr>
-                  <!-- 🟢 Uso de itemName() -->
                   <th class="text-uppercase">{{ itemName() }}</th>
                   <th class="text-center">ESTADO</th>
                   <th class="text-end">ACCIONES</th>
@@ -77,37 +94,117 @@
                 @for (item of activeItems(); track item.id) {
                   <tr>
                     <td class="fw-medium">
-                      <!-- 🟢 Icono dinámico basado en isCoePhase() -->
-                      <i class="fa-solid text-muted me-2" [ngClass]="isDeliverablesPhase() ? 'fa-box-open' : 'fa-user-tie'"></i>
+                      <i
+                        class="fa-solid text-muted me-2"
+                        [ngClass]="
+                          isDeliverablesPhase() ? 'fa-box-open' : 'fa-user-tie'
+                        "
+                      ></i>
                       {{ item.name || item.master_deliverable?.name }}
                     </td>
                     <td class="text-center">
-                      <span class="badge badge-in-progress rounded-pill px-3 py-2">EN PROCESO</span>
+                      <span
+                        class="badge badge-in-progress rounded-pill px-3 py-2"
+                        >EN PROCESO</span
+                      >
                     </td>
                     <td class="text-end">
-                      <button
-                        class="btn btn-sm btn-outline-brand me-2 rounded-pill px-3"
-                        (click)="openRegisters(item)"
-                      >
-                        <i class="fa-solid fa-book-journal-whills me-1"></i>
-                        Bitácora
-                      </button>
+                      <!--  BIFURCACIÓN DE BOTONES SEGÚN LA FASE -->
+                      @if (config().phaseCode === 'PI') {
+                        <!-- BOTONERA EXCLUSIVA PARA PRUEBAS INTEGRALES (PI) -->
+                        <button
+                          class="btn btn-sm btn-outline-brand me-2 rounded-pill px-3"
+                          (click)="openRegisters(item)"
+                          title="Gestionar Bitácora"
+                        >
+                          <i class="fa-solid fa-book-journal-whills me-1"></i>
+                          Bitácora
+                          <!-- Opcional: Mostrar un badge con la cantidad de registros -->
+                          <!-- @if ((item.registers_count ?? 0) > 0) {
+                            <span
+                              class="badge bg-info text-white ms-1 rounded-pill"
+                              >{{ (item.registers_count ?? 0) }}</span
+                            >
+                          } -->
+                        </button>
 
-                      <button
-                        class="btn btn-sm btn-outline-brand rounded-pill px-3 shadow-sm"
-                        [disabled]="(item.registers_count || 0) === 0"
-                        (click)="closeItem(item)"
-                      >
-                        <i class="fa-solid fa-lock me-1"></i> Cerrar
-                      </button>
+                        <!-- Botón Usuarios (Bloqueado si no hay bitácora) -->
+                        <button
+                          class="btn btn-sm btn-outline-info me-2 rounded-pill px-3"
+                          [disabled]="(item.registers_count ?? 0) === 0"
+                          (click)="openTestUsers(item)"
+                          [title]="
+                            (item.registers_count ?? 0) === 0
+                              ? 'Debe registrar primero un avance en la bitácora'
+                              : 'Asignar Usuarios'
+                          "
+                        >
+                          <i class="fa-solid fa-users me-1"></i> Usuario
+                        </button>
+
+                        <!-- Botón Aprobación | Ver Acta (Bloqueado si no hay bitácora o si ya está aprobado) -->
+                        @if (!item.is_approved) {
+                          <!-- Botón original: Registrar Aprobación (Bloqueado si no hay bitácora) -->
+                          <button
+                            class="btn btn-sm btn-outline-success me-2 rounded-pill px-3"
+                            [disabled]="(item.registers_count ?? 0) === 0"
+                            (click)="openFunctionalApproval(item)"
+                            [title]="
+                              (item.registers_count ?? 0) === 0
+                                ? 'Debe registrar primero un avance en la bitácora'
+                                : 'Registrar Aprobación'
+                            "
+                          >
+                            <i class="fa-solid fa-file-signature me-1"></i>
+                            Aprobación
+                          </button>
+                        } @else {
+                          <!-- Botón nuevo: Ver Acta (Solo lectura, siempre disponible cuando está aprobado) -->
+                          <button
+                            class="btn btn-sm btn-success me-2 rounded-pill px-4"
+                            (click)="viewApprovalDocument(item)"
+                            title="Ver Acta de Aprobación"
+                          >
+                            <i class="fa-solid fa-file-pdf me-1"></i> Ver Acta
+                          </button>
+                        }
+
+                        <button
+                          class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm"
+                          [disabled]="!canClosePiRole(item)"
+                          [title]="getClosePiRoleTooltip(item)"
+                          (click)="closeItem(item)"
+                        >
+                          <i class="fa-solid fa-lock me-1"></i> Cerrar
+                        </button>
+                      } @else {
+                        <!-- BOTONERA ESTÁNDAR (DT, COR, COE) -->
+                        <button
+                          class="btn btn-sm btn-outline-brand me-2 rounded-pill px-3"
+                          (click)="openRegisters(item)"
+                        >
+                          <i class="fa-solid fa-book-journal-whills me-1"></i>
+                          Bitácora
+                        </button>
+
+                        <button
+                          class="btn btn-sm btn-outline-brand rounded-pill px-3 shadow-sm"
+                          [disabled]="(item.registers_count || 0) === 0"
+                          (click)="closeItem(item)"
+                        >
+                          <i class="fa-solid fa-lock me-1"></i> Cerrar
+                        </button>
+                      }
                     </td>
                   </tr>
                 } @empty {
                   <tr>
                     <td colspan="3" class="text-center text-muted py-4">
-                      <i class="fa-regular fa-folder-open fs-2 mb-2 opacity-50 d-block"></i>
-                      <!-- 🟢 Uso de itemNamePlural() en lowercase -->
-                      No se encontraron {{ itemNamePlural() | lowercase }} en proceso.
+                      <i
+                        class="fa-regular fa-folder-open fs-2 mb-2 opacity-50 d-block"
+                      ></i>
+                      No se encontraron {{ itemNamePlural() | lowercase }} en
+                      proceso.
                     </td>
                   </tr>
                 }
@@ -115,18 +212,18 @@
             </table>
           </div>
 
+          <!-- ================================================================= -->
           <!-- ELEMENTOS CERRADOS -->
+          <!-- ================================================================= -->
           <h6 class="text-success fw-bold mb-3 border-bottom pb-2 mt-4">
-            <!-- 🟢 Uso de itemNamePlural() -->
-            <i class="fa-solid fa-check-double me-2"></i> {{ itemNamePlural() }} Cerrados
+            <i class="fa-solid fa-check-double me-2"></i>
+            {{ itemNamePlural() }} Cerrados
           </h6>
 
-          <!-- Tabla cerrados -->
           <div class="table-responsive mb-4">
             <table class="table table-hover align-middle border">
               <thead class="table-light text-muted small">
                 <tr>
-                  <!-- 🟢 Uso de itemName() -->
                   <th class="text-uppercase">{{ itemName() }}</th>
                   <th class="text-center">ESTADO</th>
                   <th class="text-end">ACCIONES</th>
@@ -136,12 +233,20 @@
                 @for (item of closedItems(); track item.id) {
                   <tr>
                     <td class="fw-medium text-muted">
-                      <!-- 🟢 Icono dinámico basado en isCoePhase() -->
-                      <i class="fa-solid text-muted me-2" [ngClass]="isDeliverablesPhase() ? 'fa-box-archive' : 'fa-user-lock'"></i>
+                      <i
+                        class="fa-solid text-muted me-2"
+                        [ngClass]="
+                          isDeliverablesPhase()
+                            ? 'fa-box-archive'
+                            : 'fa-user-lock'
+                        "
+                      ></i>
                       {{ item.name || item.master_deliverable?.name }}
                     </td>
                     <td class="text-center">
-                      <span class="badge badge-closed rounded-pill px-3 py-2">CERRADO</span>
+                      <span class="badge badge-closed rounded-pill px-3 py-2"
+                        >CERRADO</span
+                      >
                     </td>
                     <td class="text-end">
                       <button
@@ -150,6 +255,7 @@
                       >
                         <i class="fa-solid fa-eye me-1"></i> Ver Bitácora
                       </button>
+
                       @if (isPhaseActive()) {
                         <button
                           class="btn btn-sm btn-outline-warning text-dark"
@@ -163,8 +269,9 @@
                 } @empty {
                   <tr>
                     <td colspan="3" class="text-center text-muted py-4">
-                      <i class="fa-regular fa-folder-closed fs-2 mb-2 opacity-50 d-block"></i>
-                      <!-- 🟢 Uso de itemNamePlural() en lowercase -->
+                      <i
+                        class="fa-regular fa-folder-closed fs-2 mb-2 opacity-50 d-block"
+                      ></i>
                       No hay {{ itemNamePlural() | lowercase }} cerrados.
                     </td>
                   </tr>
@@ -174,18 +281,29 @@
           </div>
         </div>
 
+        <!-- ================================================================= -->
         <!-- FOOTER DEL MODAL PRINCIPAL -->
+        <!-- ================================================================= -->
         @if (isPhaseActive()) {
-          <div class="modal-footer bg-light d-flex justify-content-between align-items-center w-100">
+          <div
+            class="modal-footer bg-light d-flex justify-content-between align-items-center w-100"
+          >
             <span class="small text-muted">
-              <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase, todos los elementos deben estar cerrados.
+              <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase,
+              todos los elementos deben estar cerrados.
             </span>
-            
-            <button class="btn btn-brand px-4" (click)="closeGlobalPhase()" [disabled]="isLoading() || !isPhaseCloseEnabled()">
+
+            <button
+              class="btn btn-brand px-4"
+              (click)="closeGlobalPhase()"
+              [disabled]="isLoading() || !isPhaseCloseEnabled()"
+            >
               @if (isLoading()) {
-                <i class="fa-solid fa-circle-notch fa-spin me-2"></i> Cerrando...
+                <i class="fa-solid fa-circle-notch fa-spin me-2"></i>
+                Cerrando...
               } @else {
-                <i class="fa-solid fa-flag-checkered me-2"></i> Cerrar Fase {{ config().phaseName }}
+                <i class="fa-solid fa-flag-checkered me-2"></i> Cerrar Fase
+                {{ config().phaseName }}
               }
             </button>
           </div>
@@ -195,16 +313,55 @@
   </div>
 }
 
-<!-- RENDERIZADO CONDICIONAL DEL MODAL SUPERPUESTO (CAPA 3: BITÁCORA) -->
+<!-- ========================================================================= -->
+<!-- CAPA 3: MODALES SUPERPUESTOS (Renderizado Condicional)                 -->
+<!-- ========================================================================= -->
+
+<!-- MODAL 1: BITÁCORA (Todas las fases) -->
 @if (selectedItemForRegisters()) {
   <lib-phase-registers-modal
     [requirementId]="requirementId()"
     [rrti]="rrti()"
     [parentId]="selectedItemForRegisters()!.id"
-    [parentName]="selectedItemForRegisters()!.name || selectedItemForRegisters()!.master_deliverable?.name!"
+    [parentName]="
+      selectedItemForRegisters()!.name ||
+      selectedItemForRegisters()!.master_deliverable?.name!
+    "
     [parentStatus]="selectedItemForRegisters()!.status"
     [config]="config()"
     (closeModal)="closeRegistersAndRefresh()"
   >
   </lib-phase-registers-modal>
+}
+
+<!-- MODAL 2: USUARIOS DE PRUEBA (Solo fase PI) -->
+@if (selectedItemForTestUsers()) {
+  <lib-pi-test-users-modal
+    [requirementId]="requirementId()"
+    [roleId]="selectedItemForTestUsers()!.id"
+    [roleName]="
+      selectedItemForTestUsers()!.name ||
+      selectedItemForTestUsers()!.master_deliverable?.name!
+    "
+    [rrti]="rrti()"
+    (closeModal)="closeTestUsersModal()"
+  >
+  </lib-pi-test-users-modal>
+}
+
+<!-- MODAL 3: APROBACIÓN FUNCIONAL (Solo fase PI) -->
+@if (selectedItemForApproval()) {
+  <lib-pi-approval-modal
+    [requirementId]="requirementId()"
+    [roleId]="selectedItemForApproval()!.id"
+    [roleName]="
+      selectedItemForApproval()!.name ||
+      selectedItemForApproval()!.master_deliverable?.name!
+    "
+    [rrti]="rrti()"
+    [consultantName]="consultantName()"
+    [functionalUnit]="functionalUnit()"
+    (closeModal)="closeFunctionalApprovalModal()"
+  >
+  </lib-pi-approval-modal>
 }

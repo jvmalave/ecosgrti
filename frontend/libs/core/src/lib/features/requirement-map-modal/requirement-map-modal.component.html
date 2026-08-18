@@ -54,6 +54,7 @@
               <div
                 class="stepper-item"
                 [class.completed]="node.state === 'COMPLETED'"
+                [class.in-progress]="node.state === 'ACTIVE'"
               >
                 <div class="step-icon-wrapper">
                   <i [class]="node.icon"></i>
@@ -87,6 +88,7 @@
               <div
                 class="stepper-item"
                 [class.completed]="node.state === 'COMPLETED'"
+                [class.in-progress]="node.state === 'ACTIVE'"
               >
                 <div class="step-icon-wrapper">
                   <i [class]="node.icon"></i>

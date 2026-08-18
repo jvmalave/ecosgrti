@@ -4,27 +4,91 @@ declare(strict_types=1);
 
 namespace App\Domains\Workflow\Services;
 
+use App\Domains\Audit\Services\AuditService;
+use App\Domains\Core\Dictionaries\CacheKeyDictionary;
 use App\Domains\Workflow\Models\DtRegister;
 use App\Domains\Workflow\Models\DtRole;
-use App\Domains\Workflow\Models\RequirementPhaseHistory;
-use App\Domains\Core\Models\Requirement;
-use App\Domains\Audit\Services\AuditService;
-use Illuminate\Support\Facades\DB;
+use App\Domains\Workflow\Services\PhaseTransitionService;
+use App\Domains\Workflow\Services\ProgressCalculationService;
+use App\Domains\Workflow\Traits\ManagesPhaseRegisters; 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
-class DtRegisterService
+
+class DtRegisterService 
 {
+    
+    use ManagesPhaseRegisters;
+
     public function __construct(
-        private readonly AuditService $auditService,
-        private readonly ProgressCalculationService $progressService
-    ) {}
+        protected readonly AuditService $auditService,
+        protected readonly PhaseTransitionService $phaseTransitionService,
+        protected readonly ProgressCalculationService $progressService
+    ) {
+      
+    }
+
+    // =====================================================================
+    // 1. CONTRATO CON EL TRAIT MANAGESPHASEREGISTERS
+    // =====================================================================
+
+    protected function getRegisterModel(): string 
+    {
+        return DtRegister::class;
+    }
+
+    protected function getParentForeignKey(): string 
+    {
+        return 'role_id'; 
+    }
+
+    protected function getPhaseInitCode(): string 
+    {
+        return 'DT-I';
+    }
+
+    protected function getCacheKeyPrefix(): string 
+    {
+        return 'dt_roles';
+    }
+
+    /**
+     * Devuelve la clase del modelo Padre (El componente al que pertenece la bitácora)
+     */
+    protected function getComponentModel(): string 
+    {
+        return DtRole::class; 
+    }
+
+    /**
+     * Devuelve el nombre de la columna en el modelo Padre que lo enlaza con el Requerimiento
+     */
+    protected function getRequirementColumn(): string 
+    {
+        return 'requirement_id'; // En workflow.dt_roles, la columna es requirement_id
+    }
+
+    /**
+     * Cuenta cuántos registros de bitácora DT existen en total para un requerimiento.
+     */
+    protected function countRegistersInRequirement(string $requirementId): int 
+    {
+        return DB::table('workflow.dt_registers')
+            ->join('workflow.dt_roles', 'workflow.dt_registers.role_id', '=', 'workflow.dt_roles.id')
+            ->where('workflow.dt_roles.requirement_id', $requirementId)
+            ->count();
+    }
+
+    // =====================================================================
+    // 2. MÉTODOS ESPECÍFICOS DE LA BITÁCORA DE DT
+    // =====================================================================
 
     /**
      * CONSULTA DE REGISTROS DE BITÁCORA DE DISEÑO TÉCNICO POR ROL (CACHÉ REDIS)
      */
-    public function getRegistersByRole(string $roleId)
+    public function getRegistersByRole(string $roleId): array
     {
-        $cacheKey = "dt_registers_cache_{$roleId}";
+        $cacheKey = CacheKeyDictionary::componentRegisters($roleId, 'dt');
         
         return Cache::remember($cacheKey, 600, function () use ($roleId) {
             return DtRegister::where('role_id', $roleId)
@@ -33,70 +97,6 @@ class DtRegisterService
                 ->toArray();
         });
     }
-    /**
-     * AGREGAR REGISTRO DE DISEÑO TÉCNICO Y EVALUAR IMPACTO GLOBAL
-     */
-    public function storeRegister(DtRole $role, array $data): DtRegister
-    {
-        return DB::transaction(function () use ($role, $data) {
-            $register = $role->registers()->create([
-                'title' => $data['title'],
-                'date' => $data['date'],
-                'description' => $data['description'],
-            ]);
-
-            $this->auditService->logModelChange(
-                'CREATE_DT_REGISTER',
-                'Creación del registro DT:  ' . $data['title'] . ' del rol: ' . $role->name,
-                ['record_id' => $register->id, 'title' => $data['title']],
-                auth()->id()
-            );
-
-            // DISPARADOR DE ESTADO INICIAL
-            $totalRegisters = DB::table('workflow.dt_registers')
-                ->join('workflow.dt_roles', 'dt_registers.role_id', '=', 'dt_roles.id')
-                ->where('dt_roles.requirement_id', $role->requirement_id)
-                ->count();
-
-            if ($totalRegisters === 1) {
-                $requirement = Requirement::findOrFail($role->requirement_id);
-                
-                $requirement->update(['status' => 'DT-I']);
-                
-                RequirementPhaseHistory::create([
-                    'requirement_id' => $requirement->id,
-                    'phase_status_code' => 'DT-I',
-                    'executed_by_user_id' => auth()->id(),
-                    'transitioned_at' => now(),
-                    'created_at' => now()
-                ]);
-                
-                $calculatedProgress = $this->progressService->calculateGlobalProgress($requirement);
-                
-                $requirement->update([
-                    'progress_percentage' => $calculatedProgress
-                ]);
-
-                Cache::put("req_{$requirement->id}_progress", $calculatedProgress);
-                
-                $this->auditService->logModelChange(
-                    'UPDATE_GLOBAL_PROGRESS',
-                    'Avance global automatizado por inicio de fase DT',
-                    ['record_id' => $requirement->id, 'new_progress' => $calculatedProgress],
-                    auth()->id()
-                );
-            }
-
-            // 🟢 INVALIDACIÓN DE CACHÉS
-            // 1. Limpia la caché de la bitácora específica del rol
-            Cache::forget("dt_registers_cache_{$role->id}");
-            // 2. Limpia la caché global de la lista de roles para que el frontend reciba el nuevo registers_count
-            Cache::forget("req_{$role->requirement_id}_dt_roles_meta");
-
-            return $register;
-        });
-    }
-
 
     /**
      * ACTUALIZAR REGISTRO DE DISEÑO TÉCNICO
@@ -117,38 +117,36 @@ class DtRegisterService
                 auth()->id()
             );
             
-            Cache::forget("dt_registers_cache_{$register->role_id}");
+            // Purgas estandarizadas mediante el Diccionario
+            Cache::forget(CacheKeyDictionary::componentRegisters($register->role_id, 'dt'));
 
             return $register;
         });
     }
 
     /**
-     * ELIMINAR REGISTRO DE DISEÑO TÉCNICO (Limpieza física controlada) Y ACTUALIZA CACHE DE ROLES.
+     * ELIMINAR REGISTRO DE DISEÑO TÉCNICO
      */
     public function deleteRegister(DtRegister $register): void
     {
         DB::transaction(function () use ($register) {
             $roleId = $register->role_id;
             $registerId = $register->id;
-            
-            // Extraemos el ID del requerimiento antes de destruir el registro
             $requirementId = $register->role->requirement_id;
             
-            $register->delete(); // Dispara ON DELETE CASCADE en PostgreSQL
+            $register->delete(); 
             
             $this->auditService->logModelChange(
                 'DELETE_PHYSICAL_DT_REG',
                 'Eliminación física de registro DT ' . $register->title . ' del rol: ' . $register->role->name,
                 ['record_id' => $registerId],
-                auth()->id()
+                auth()->id(),
+                $requirementId
             );
             
-            // INVALIDACIÓN DE CACHÉS
-            // 1. Limpia la caché de la bitácora
-            Cache::forget("dt_registers_cache_{$roleId}");
-            // 2. Limpia la caché global de la lista de roles para que el candado se vuelva a cerrar si el count llega a 0
-            Cache::forget("req_{$requirementId}_dt_roles_meta");
+            // Evicción de Caché usando el Diccionario Centralizado
+            Cache::forget(CacheKeyDictionary::componentRegisters($roleId, 'dt'));
+            Cache::forget(CacheKeyDictionary::phaseComponentsList($requirementId, 'dt'));
         });
     }
 }

@@ -13,6 +13,10 @@ export interface DashboardRequirement {
   dt_closed_roles_count?: number;
   deliverables_count?: number;
   frozen_phases: string[];
+  consultor_funcional: string;
+  unidad_solicitante: string;
+  cor_closed_roles_count?: number;
+
 }
 
 export type PhaseAction = 'DT' | 'COR' | 'COE' | 'CER' | 'CEE' | 'PI' | 'PAP' | 'AU';
@@ -65,7 +69,7 @@ export class LifecycleOrchestratorModalComponent {
     // Extraemos el valor, asegurando que sea un número (fallback a 0)
     const closedDtRoles = this.req().dt_closed_roles_count || 0;
     
-    console.log('Auditoría Hard-Gate COR -> Roles cerrados en DT:', closedDtRoles);
+    console.log('Auditoría Hard-Gate DT -> Roles cerrados en ATF:', closedDtRoles);
     
     // El botón solo se habilita si hay al menos 1 rol en estado CLOSED en DT
     return Number(closedDtRoles) > 0;
@@ -80,13 +84,39 @@ export class LifecycleOrchestratorModalComponent {
     const isValidStatus = !invalidStatuses.includes(req.status);
     
     const deliverablesCount = req.deliverables_count || 0; 
+
+    console.log('Auditoría Hard-Gate COE -> Entregables cerrados en ATF:', deliverablesCount);
     
     return isValidStatus && (deliverablesCount > 0);
   });
+
+  // isPiEnabled = computed(() => {
+  //   const PiReq = this.req();
+  //   if (!PiReq) return false;
+  //   const invalidStatuses = ['RC', 'EST', 'ATF-I', 'DT-I', 'COE-I'];
+  //   const isValidStatus = !invalidStatuses.includes(PiReq.status);
+  //   return isValidStatus;
+  // });
+
+  isPiEnabled = computed(() => {
+    const PiReq = this.req();
+    if (!PiReq) return false;
+
+    const invalidStatuses = ['RC', 'EST', 'ATF-I', 'DT-I', 'COE-I'];
+    const isValidStatus = !invalidStatuses.includes(PiReq.status);
+
+    const hasClosedCorRoles = (PiReq.cor_closed_roles_count ?? 0) > 0;
+    const hasClosedCorCount = (PiReq.dt_closed_roles_count ?? 0);
+
+    console.log('Auditoría Hard-Gate Pi -> Roles cerrados en COR:', hasClosedCorCount);
+
+    return isValidStatus && hasClosedCorRoles;
+  });
+
   
   isCeREnabled = computed(() => false);
   isCeEEnabled = computed(() => false);
-  isPiEnabled = computed(() => false);
+  
   isPapEnabled = computed(() => false);
   isAuEnabled = computed(() => false);
 

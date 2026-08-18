@@ -1,12 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Domains\Workflow\Http\Controllers\ATFAgreementController;
+
 use App\Domains\Workflow\Http\Controllers\ProgressDashboardController;
 use App\Domains\Workflow\Http\Controllers\RequirementRoleController;
 use App\Domains\Workflow\Http\Controllers\DeliverableController;
 use App\Domains\Workflow\Http\Controllers\ATFClosureController;
+
+// Controladores ATF
+use App\Domains\Workflow\Http\Controllers\ATFAgreementController;
 use App\Domains\Workflow\Http\Controllers\UpdateManagementTypeController;
+
+// Controladores Construcción Operativa (COE)
 use App\Domains\Workflow\Http\Controllers\CoeDeliverableController;
 use App\Domains\Workflow\Http\Controllers\CoeActivityController;
 
@@ -17,6 +22,17 @@ use App\Domains\Workflow\Http\Controllers\DtRegisterController;
 // Controladores Construcción-Roles (COR)
 use App\Domains\Workflow\Http\Controllers\CorRoleController;
 use App\Domains\Workflow\Http\Controllers\CorRegisterController;
+
+// Controladores Pruebas Integrales (PI)
+use App\Domains\Workflow\Http\Controllers\PiRegisterController;
+use App\Domains\Workflow\Http\Controllers\PiTestUserController;
+use App\Domains\Workflow\Http\Controllers\PiApprovalController;
+use App\Domains\Workflow\Http\Controllers\PiRoleController;
+
+
+
+
+
 
 // Middleware a todo el grupo de workflow para centralizar la seguridad
 Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
@@ -177,6 +193,41 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
     });
 
   });
+  /*
+  |--------------------------------------------------------------------------
+  | GESTIÓN FASE PRUEBAS INTEGRALES (PI))
+  |--------------------------------------------------------------------------
+  */
+
+  // CU-040: Inicialización y Promoción a Pruebas Integrales (PI)
+    Route::get('/requirements/{id}/pi/roles-init', [PiRoleController::class, 'index']);
+  
+  
+    // CU-041: Acceder a Gestión de Pruebas Integrales
+    Route::get('/pi/roles/{role_id}/test-users', [PiTestUserController::class, 'index']);
+    // Crear Usuario de pruebas 
+    Route::post('/pi/roles/{role_id}/test-users', [PiTestUserController::class, 'store']);
+    // Borrar Usiario de pruebas
+    Route::delete('/pi/test-users/{user_id}', [PiTestUserController::class, 'destroy']);
+
+    // Listar registros en la botacora de Pruebas Integrales
+    Route::get('/pi/roles/{role_id}/registers', [PiRegisterController::class, 'index']);
+    // Crear una nueva registro en la bitácora
+    Route::post('/requirements/{req_id}/pi/roles/{role_id}/registers', [PiRegisterController::class, 'store']);
+    // Actualizar registro en la bitacora
+    Route::put('/pi/registers/{reg_id}/roles/{role_id}', [PiRegisterController::class, 'update']);
+    // Borrar registro de la bitacora
+    Route::delete('/pi/registers/{reg_id}/roles/{role_id}', [PiRegisterController::class, 'destroy']);
+
+    // Agregar Aprobación
+    Route::post('/requirements/{req_id}/pi/roles/{role_id}/approvals', [PiApprovalController::class, 'store']);
+    // Descargar Aprobación
+    Route::get('/requirements/{req_id}/pi/roles/{role_id}/approvals/download', [PiApprovalController::class, 'download']); 
+    // Cierre individual de Rol PI
+    Route::patch('/pi/roles/{role_id}/status', [PiRoleController::class, 'changeStatus']);
+    // Cierre Global de la Fase PI
+    Route::patch('/requirements/{req_id}/pi/close', [PiRoleController::class, 'closePhase']);
+  
 
   /*
   |--------------------------------------------------------------------------

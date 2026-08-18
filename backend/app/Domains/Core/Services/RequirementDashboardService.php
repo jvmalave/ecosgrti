@@ -30,28 +30,52 @@ class RequirementDashboardService
             ->whereNull('r.deleted_at')
             ->select([
                 'r.id', 'r.rrti', 'r.requirement_type', 'r.status',
-                'r.creation_date', 'p.first_name', 'p.last_name',
-                'r.snapshot_unit_name', 'r.management_type'
+                'r.creation_date', 'r.management_type',
+                'r.snapshot_unit_name as unidad_solicitante' // Alias exacto para Angular
             ])
+            // Consultor Funcional
+            ->selectRaw("CONCAT(p.first_name, ' ', p.last_name) as consultor_funcional")
+            // Conteo de ATF Agreements
             ->selectRaw('COUNT(aa.id) > 0 as has_atf_agreements')
+            // Conteo de Roles
             ->selectRaw('(SELECT COUNT(*) FROM workflow.requirements_roles WHERE requirements_roles.requirement_id = r.id) as roles_count')
+            // Conteo de Roles
             ->selectRaw('(SELECT COUNT(*) FROM workflow.requirements_roles WHERE requirements_roles.requirement_id = r.id) > 0 as has_roles')
+            // Conteo de Entregables
             ->selectRaw('(SELECT COUNT(*) FROM workflow.deliverables WHERE workflow.deliverables.requirement_id = r.id) as deliverables_count')
+            // Conteo de Roles de Diseño Técnico Cerrados
             ->selectRaw("(
                 SELECT COUNT(dr.id) 
                 FROM workflow.dt_roles dr 
                 INNER JOIN workflow.requirements_roles rr ON dr.requirement_role_id = rr.id 
                 WHERE rr.requirement_id = r.id AND dr.status = 'CLOSED'
             ) as dt_closed_roles_count")
-            
-            
+             // Conteo de Roles de Construcción Cerrados
+            ->selectRaw("(
+                SELECT COUNT(cr.id)
+                FROM workflow.cor_roles cr
+                INNER JOIN workflow.requirements_roles rr ON cr.requirement_role_id = rr.id
+                WHERE rr.requirement_id = r.id AND cr.status = 'CLOSED'
+            ) as cor_closed_roles_count")
+            //Conteo de Entregables Operativos (COE) Cerrados
+            ->selectRaw("(
+                SELECT COUNT(cd.id)
+                FROM workflow.coe_deliverables cd
+                WHERE cd.req_id = r.id AND cd.status = 'CLOSED'
+            ) as coe_closed_deliverables_count")
+             // historical_frozen_string
             ->selectRaw("(
                 SELECT string_agg(SPLIT_PART(ph.phase_status_code, '-', 1), ',') 
                 FROM workflow.requirement_phase_history ph 
                 WHERE ph.requirement_id = r.id AND ph.phase_status_code LIKE '%-C'
             ) as historical_frozen_string")
-            
-            ->groupBy('r.id', 'fc.id', 'p.id');
+            ->groupBy('r.id', 'fc.id', 'p.id')
+            // historical_active_string
+            ->selectRaw("(
+                SELECT string_agg(SPLIT_PART(ph.phase_status_code, '-', 1), ',') 
+                FROM workflow.requirement_phase_history ph 
+                WHERE ph.requirement_id = r.id AND ph.phase_status_code LIKE '%-I'
+            ) as historical_active_string");
 
         if ($status === 'active') {
             $query->where('r.status', '!=', 'FC'); 
@@ -74,17 +98,24 @@ class RequirementDashboardService
         // TRANSFORMACIÓN
         $results->transform(function ($item) {
             $item->frozen_phases = [];
+            $item->open_phases = []; 
             
             if ($item->status === 'RC') {
                 $item->frozen_phases = ['ATF', 'DT', 'COR', 'COE', 'PI', 'CER', 'CEE', 'PAP', 'AU'];
-            } elseif (!empty($item->historical_frozen_string)) {
-                $item->frozen_phases = array_values(array_unique(explode(',', $item->historical_frozen_string)));
+            } else {
+                $frozen = !empty($item->historical_frozen_string) ? array_unique(explode(',', $item->historical_frozen_string)) : [];
+                $active = !empty($item->historical_active_string) ? array_unique(explode(',', $item->historical_active_string)) : [];
+                
+                $item->frozen_phases = array_values($frozen);
+                
+                // Una fase está "abierta" si fue inicializada pero NO está en las congeladas
+                $item->open_phases = array_values(array_diff($active, $frozen));
             }
 
             unset($item->historical_frozen_string);
+            unset($item->historical_active_string);
             return $item;
         });
-
         $response = [
             'data' => $results->values()->toArray(),
             'meta' => [

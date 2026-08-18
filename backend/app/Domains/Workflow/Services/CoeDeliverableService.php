@@ -20,9 +20,16 @@ class CoeDeliverableService extends AbstractPhaseComponentService
     // IMPLEMENTACIÓN DEL CONTRATO DEL SERVICIO BASE
     // =========================================================================
     protected function getComponentModel(): string { return CoeDeliverable::class; }
-    protected function getCacheKeyPrefix(): string { return 'coe'; } // Simplificado para el diccionario
+    
+    protected function getCacheKeyPrefix(): string { return 'coe_deliverables'; } 
+    
     protected function getPhaseCode(): string { return 'COE-C'; }
     protected function getPhaseInitCode(): string { return 'COE-I'; }
+
+    protected function getRequiredPredecessorPhases(): array {
+        return ['ATF-C']; // COE corre paralelo a DT y COR, solo depende de ATF
+    }
+
 
     // =========================================================================
     // IMPLEMENTACIÓN DEL CONTRATO DEL TRAIT DE BITÁCORAS
@@ -77,23 +84,23 @@ class CoeDeliverableService extends AbstractPhaseComponentService
         ", [$userId, $userId, $requirementId]);
 
         // 3. Recuperar datos con ordenamiento nativo utilizando el DICCIONARIO (RN-COE-10)
-        $cacheKey = CacheKeyDictionary::phaseComponentsList($requirementId, 'COE');
+        $cacheKey = CacheKeyDictionary::phaseComponentsList($requirementId, $this->getPhaseInitCode());
         
         $deliverablesList = Cache::remember($cacheKey, 600, function () use ($requirementId) {
-            return CoeDeliverable::with('masterDeliverable:id,name') // Carga eager del nombre original
+            return CoeDeliverable::with('masterDeliverable:id,name') 
                         ->where('req_id', $requirementId)
-                        ->withCount('registers') // Cuenta las actividades asociadas
+                        ->withCount('registers') 
                         ->get()
                         ->sortBy(function($deliverable) {
                             return $deliverable->masterDeliverable->name ?? '';
                         })
-                        ->values() // Re-indexar tras el sortBy collection
+                        ->values() 
                         ->toArray();
         });
 
         return [
             'requirement_id' => $requirementId,
-            'roles_list' => $deliverablesList // Mantenemos la llave 'roles_list' para no romper el front-end polimórfico
+            'roles_list' => $deliverablesList 
         ];
     }
 

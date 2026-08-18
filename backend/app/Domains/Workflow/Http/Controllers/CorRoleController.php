@@ -12,6 +12,8 @@ class CorRoleController extends AbstractPhaseController
 {
     public function __construct(CorRoleService $phaseService)
     {
+      // Vincula el motor específico de Construcción-Roles 
+        // a la propiedad protegida de la clase abstracta padre.
         $this->phaseService = $phaseService;
     }
 

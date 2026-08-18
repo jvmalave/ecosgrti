@@ -23,18 +23,20 @@ export class RequirementMapModalComponent {
   requirement = input.required<RequirementDetail>(); 
   closeModal = output<void>();
 
-  // Definición dura de las rutas
+  // Rutas actualizadas incluyendo Planificación (PL)
   private readonly ROLES_ROUTE = [
+    { code: 'PL', name: 'Planificación' },
     { code: 'ATF', name: 'Análisis Técnico Funcional' },
     { code: 'DT', name: 'Diseño Técnico' },
     { code: 'COR', name: 'Construcción de Roles' },
     { code: 'PI', name: 'Pruebas Integrales' },
     { code: 'CER', name: 'Certificación de Roles' },
-    { code: 'PAP', name: 'Pase a Producción.' },
-    { code: 'AU', name: 'Asignacion de Usuario' }
+    { code: 'PAP', name: 'Pase a Producción' },
+    { code: 'AU', name: 'Asignación de Usuario' }
   ];
 
   private readonly DELIVERABLES_ROUTE = [
+    { code: 'PL', name: 'Planificación' },
     { code: 'ATF', name: 'Análisis Técnico Funcional' },
     { code: 'COE', name: 'Construcción de Entregables' },
     { code: 'CEE', name: 'Certificación de Entregables' }
@@ -47,38 +49,49 @@ export class RequirementMapModalComponent {
   rolesPath = computed<MapNode[]>(() => {
     const req = this.requirement();
     if (req.management_type === 'Entregables') return []; // No aplica
-    return this.calculateNodeStates(this.ROLES_ROUTE, req.frozen_phases || []);
+    return this.calculateNodeStates(this.ROLES_ROUTE, req);
   });
 
   deliverablesPath = computed<MapNode[]>(() => {
     const req = this.requirement();
     if (req.management_type === 'Roles') return []; // No aplica
-    return this.calculateNodeStates(this.DELIVERABLES_ROUTE, req.frozen_phases || []);
+    return this.calculateNodeStates(this.DELIVERABLES_ROUTE, req);
   });
 
   isMixed = computed(() => this.requirement().management_type === 'Mixto');
 
   // =========================================================================
-  // LÓGICA DE ESTADOS
+  // LÓGICA DE ESTADOS (SOPORTE PARA PARALELISMO)
   // =========================================================================
 
-  private calculateNodeStates(route: {code: string, name: string}[], frozenPhases: string[]): MapNode[] {
-    let foundActive = false;
+  private calculateNodeStates(route: {code: string, name: string}[], req: RequirementDetail): MapNode[] {
+    const frozenPhases = req.frozen_phases || [];
+    const openPhases = req.open_phases || []; 
 
     return route.map(phase => {
-      // 1. Si está en el arreglo de congeladas, está COMPLETA (Verde)
+      // CASO ESPECIAL: Planificación (PL
+      if (phase.code === 'PL') {
+        const isCompleted = req.status !== 'RC' || frozenPhases.length > 0;
+        const isActive = req.status === 'RC';
+
+        if (isCompleted) {
+          return { ...phase, state: 'COMPLETED', icon: 'fa-solid fa-circle-check text-success' };
+        }
+        if (isActive) {
+          return { ...phase, state: 'ACTIVE', icon: 'fa-solid fa-circle-dot text-primary fa-fade' };
+        }
+        return { ...phase, state: 'PENDING', icon: 'fa-regular fa-circle text-muted' };
+      }
+      // 🟢 CASO GENERAL: Fases de Vanguardia Paralela
+      // Si está en el arreglo de congeladas, está COMPLETA (Verde)
       if (frozenPhases.includes(phase.code)) {
         return { ...phase, state: 'COMPLETED', icon: 'fa-solid fa-circle-check text-success' };
       }
-
-      // 2. Si no está congelada y no hemos encontrado la activa, esta es la ACTIVA (Azul)
-      // (La primera fase de la ruta que NO está congelada es el "Borde de Ataque")
-      if (!foundActive) {
-        foundActive = true;
-        return { ...phase, state: 'ACTIVE', icon: 'fa-solid fa-circle-dot text-primary fa-fade' }; // fa-fade le da el efecto de pulso
+      // Si está en el arreglo de abiertas, está ACTIVA (Azul/Pulse). 
+      if (openPhases.includes(phase.code)) {
+        return { ...phase, state: 'ACTIVE', icon: 'fa-solid fa-circle-dot text-primary fa-fade' }; 
       }
-
-      // 3. Todo lo que esté después de la activa es FUTURO (Gris)
+      // Lo que no cumpla lo anterior es FUTURO (Gris)
       return { ...phase, state: 'PENDING', icon: 'fa-regular fa-circle text-muted' };
     });
   }
