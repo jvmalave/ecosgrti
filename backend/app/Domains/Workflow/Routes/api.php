@@ -29,6 +29,15 @@ use App\Domains\Workflow\Http\Controllers\PiTestUserController;
 use App\Domains\Workflow\Http\Controllers\PiApprovalController;
 use App\Domains\Workflow\Http\Controllers\PiRoleController;
 
+// Controladores Certificación (CER)
+
+use App\Domains\Workflow\Http\Controllers\CerRoleController;
+
+// Controladores Certificación (CEE)
+use App\Domains\Workflow\Http\Controllers\CeeDeliverableController;
+
+// 
+
 
 
 
@@ -228,6 +237,40 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
     // Cierre Global de la Fase PI
     Route::patch('/requirements/{req_id}/pi/close', [PiRoleController::class, 'closePhase']);
   
+
+    // ==========================================
+    // FASE CER (Certificación de Roles) - US33
+    // ==========================================
+
+    Route::prefix('cer')->group(function () {
+        Route::get('/requirements/{requirementId}/roles-init', [CerRoleController::class, 'index']);
+        Route::patch('/requirements/{requirementId}/close', [CerRoleController::class, 'closePhase']);
+        
+        Route::post('/requirements/{requirementId}/tickets', [CerRoleController::class, 'storeTicket']);
+        // Usamos POST (simulando PUT desde Angular) para soportar envío de archivos PDF (Multipart)
+        Route::post('/tickets/{ticketId}', [CerRoleController::class, 'updateTicket']); 
+        
+        Route::post('/tickets/{ticketId}/results', [CerRoleController::class, 'registerResult']);
+        Route::post('/tickets/{ticketId}/results-update', [CerRoleController::class, 'updateResult']);
+    });
+
+    // ==========================================
+    // FASE CEE (Certificación de Entregables) - US34
+    // ==========================================
+      
+      Route::prefix('cee')->group(function () {
+        Route::get('/requirements/{requirementId}/deliverables-init', [CeeDeliverableController::class, 'index']);
+        Route::patch('/requirements/{requirementId}/close', [CeeDeliverableController::class, 'closePhase']);
+        
+        Route::post('/requirements/{requirementId}/tickets', [CeeDeliverableController::class, 'storeTicket']);
+        Route::post('/tickets/{ticketId}', [CeeDeliverableController::class, 'updateTicket']); 
+        
+        Route::post('/tickets/{ticketId}/results', [CeeDeliverableController::class, 'registerResult']);
+        Route::post('/tickets/{ticketId}/results-update', [CeeDeliverableController::class, 'updateResult']);
+      });
+
+
+
 
   /*
   |--------------------------------------------------------------------------

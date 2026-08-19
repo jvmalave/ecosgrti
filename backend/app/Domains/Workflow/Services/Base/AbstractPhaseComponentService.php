@@ -81,9 +81,18 @@ abstract class AbstractPhaseComponentService
         });
     }
 
-   protected function getRequiredPredecessorPhases(): array 
+    protected function getRequiredPredecessorPhases(): array 
     {
         return []; 
+    }
+
+    /**
+     * Por defecto retorna 'CLOSED' (compatible con ATF, DT, COR, PI).
+     * Las fases de Certificación sobrescribirán este método para retornar 'CERTIFIED'.
+     */
+    protected function getCompletedStatusCode(): string
+    {
+        return 'CLOSED';
     }
 
     /**
@@ -114,16 +123,17 @@ abstract class AbstractPhaseComponentService
                 }
             }
             // =====================================================================
-            // VALIDACIÓN DE COMPONENTES INTERNOS DE LA FASE ACTUAL
+            // VALIDACIÓN DINÁMICA DE COMPONENTES INTERNOS DE LA FASE ACTUAL
             // =====================================================================
             $reqColumn = $this->getRequirementColumn();
+            $completedStatus = $this->getCompletedStatusCode(); 
             
             $openComponents = $modelClass::where($reqColumn, $requirementId)
-                  ->where('status', '!=', 'CLOSED')
+                  ->where('status', '!=', $completedStatus)
                   ->count();
 
             if ($openComponents > 0) {
-                abort(422, 'Validación fallida: Todos los componentes deben estar en estado CERRADO para avanzar.');
+                abort(422, "Validación fallida: Todos los componentes deben estar en estado {$completedStatus} para avanzar.");
             }
 
             $requirement = Requirement::findOrFail($requirementId);
