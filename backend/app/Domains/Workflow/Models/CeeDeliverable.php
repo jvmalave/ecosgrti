@@ -19,9 +19,14 @@ class CeeDeliverable extends Model
         'deliverable_id', 
         'ticket_id', 
         'status', 
-        'rejection_reason', 
+        'rejection_reason',
+        'rejection_history', 
         'created_by', 
         'updated_by'
+    ];
+
+    protected $casts = [
+        'rejection_history' => 'array', 
     ];
 
     public function requirement()

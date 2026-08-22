@@ -11,6 +11,7 @@ use App\Domains\Workflow\Http\Requests\StoreCerTicketRequest;
 use App\Domains\Workflow\Http\Requests\UpdateCerTicketRequest;
 use App\Domains\Workflow\Http\Requests\CerResultRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class CerRoleController extends Controller
 {
@@ -19,14 +20,13 @@ class CerRoleController extends Controller
     public function index(string $requirementId): JsonResponse
     {
         $this->cerRoleService->initializeRoles($requirementId);
-
-        $roles = CerRole::with('requirementRole')
+        
+        $roles = CerRole::with(['requirementRole', 'ticket'])
             ->where('requirement_id', $requirementId)
             ->get()->sortBy('requirementRole.role_name')->values();
 
         return response()->json(['requirement_id' => $requirementId, 'roles' => $roles]);
     }
-
     public function storeTicket(StoreCerTicketRequest $request, string $requirementId): JsonResponse
     {
         $ticket = $this->cerRoleService->storeTicket(
@@ -63,6 +63,19 @@ class CerRoleController extends Controller
             $ticketId, $request->validated(), $request->file('file'), $evaluations, $request->validated('special_auth_token')
         );
         return response()->json(['message' => 'Dictamen alterado exitosamente.', 'ticket' => $ticket]);
+    }
+
+    public function downloadFile(string $ticketId)
+    {
+        // Delegamos la búsqueda y respuesta al servicio
+        return $this->cerRoleService->getTicketFile($ticketId);
+    }
+
+    public function downloadRequestFile(string $ticketId)
+    {
+        $filePath = $this->cerRoleService->getRequestFilePath($ticketId); 
+        
+        return Storage::disk('local')->response($filePath);
     }
 
     public function closePhase(string $requirementId): JsonResponse

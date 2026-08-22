@@ -1,0 +1,254 @@
+<div class="fade-in p-4">
+  <!-- Cabecera: Requerimiento, Buscador y Botón de Cierre -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <!-- Lado Izquierdo: Badge -->
+    <div>
+      <span class="badge badge-brand rounded-pill fw-bold px-3 py-2 text-uppercase">
+        Requerimiento: {{ rrti() }}
+      </span>
+    </div>
+
+    <!-- Lado Derecho: Buscador Compacto -->
+    <div class="input-group shadow-sm" style="max-width: 350px">
+      <span class="input-group-text bg-white border-end-0 text-muted">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </span>
+      <input
+        type="text"
+        class="form-control border-start-0 shadow-none"
+        placeholder="Buscar por rol o N° de Ticket..."
+        [ngModel]="store.searchTerm()"
+        (ngModelChange)="onSearchTermChange($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Estado Vacío Absoluto -->
+  @if (store.roles().length === 0) {
+    <div class="text-center py-5 opacity-50">
+      <i class="fa-solid fa-inbox fs-1 text-brand mb-3 d-block"></i>
+      <h6 class="fw-bold text-dark">Sin roles para certificar</h6>
+    </div>
+  }
+  <!-- Estado Vacío por falta de coincidencias en el Buscador -->
+  @if (
+    store.roles().length > 0 &&
+    store.filteredPending().length === 0 &&
+    ticketsInProgress().length === 0 &&
+    ticketsCertified().length === 0
+  ) {
+    <div class="text-center py-5">
+      <i class="fa-regular fa-folder-closed fs-2 mb-2 opacity-50 d-block"></i>
+      <h6 class="fw-medium text-secondary">
+        No se encontraron resultados que coincidan con la búsqueda.
+      </h6>
+    </div>
+  }
+
+  @if (isPhaseClosed()) {
+    <div class="d-flex align-items-center mb-4 p-3 rounded-3 shadow-sm" style="background-color: #e8f5e9; border: 1px solid #c8e6c9;">
+      <i class="fa-solid fa-lock fs-3 me-3" style="color: #2e7d32;"></i>
+      <div>
+        <h6 class="fw-bold mb-1" style="color: #1b5e20;">Fase de Certificación - Roles Cerrada</h6>
+        <span class="small" style="color: #2e7d32;">Esta fase ha concluido. Todos los elementos y sus bitácoras se encuentran en estado inmutable.</span>
+      </div>
+    </div>
+  }
+
+  <!-- TABLA 1: Roles por Certificar (Permanece Intacta) -->
+  @if (store.filteredPending().length > 0) {
+    <div class="mb-5">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold mb-0 text-brand">
+          <i class="fa-solid fa-hourglass-half me-2"></i> Roles por Certificar
+        </h6>
+
+        <button
+          class="btn btn-sm rounded-pill btn-outline-brand px-3"
+          [disabled]="rolesToProcess().length === 0"
+          (click)="openTicketModal()"
+        >
+          <i class="fa-solid fa-ticket me-1"></i> Generar Ticket CSAL
+        </button>
+      </div>
+
+      <table class="table mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3" style="width: 40%">ROL</th>
+            <th class="text-center" style="width: 30%">ESTADO</th>
+            <th class="text-end pe-3" style="width: 30%">ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (role of store.filteredPending(); track role.id) {
+            <tr>
+              <td class="ps-3 align-middle fw-medium">
+                <i class="fa-solid fa-user-gear text-muted me-2"></i>
+                {{ role.requirement_role?.role_name }}
+              </td>
+              <td class="text-center align-middle">
+                <span
+                  class="badge rounded-pill fw-bold px-3 py-1"
+                  style="background-color: #fff3e0; color: #e65100; border: 1px solid #ffe0b2;"
+                >
+                  PENDIENTE
+                </span>
+              </td>
+              <td class="text-end pe-3 align-middle">
+                <div class="form-check d-inline-block m-0">
+                  <input
+                    class="form-check-input cursor-pointer shadow-none"
+                    type="checkbox"
+                    [value]="role.id"
+                    [checked]="rolesToProcess().includes(role.id)"
+                    (change)="toggleRoleSelection(role.id, $event)"
+                  />
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- TABLA 2: Tickets en Proceso (Agrupados) -->
+  @if (ticketsInProgress().length > 0) {
+    <div class="mb-5">
+      <h6 class="fw-bold mb-3 text-brand">
+        <i class="fa-solid fa-circle-notch fa-spin me-2"></i> Tickets en Proceso
+      </h6>
+
+      <table class="table mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3" style="width: 35%">TICKET CSAL</th>
+            <th class="text-center" style="width: 25%">ROLES ASOCIADOS</th>
+            <th class="text-center" style="width: 20%">ESTADO</th>
+            <th class="text-end pe-3" style="width: 20%">ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ticket of ticketsInProgress(); track ticket.ticketId) {
+            <tr>
+              <td class="ps-3 align-middle fw-medium">
+                <i class="fa-solid fa-tag text-muted me-2"></i>
+                {{ ticket.ticketNumber }}
+              </td>
+              <td class="text-center align-middle">
+                <span class="badge bg-light text-dark border px-3 py-1 fw-medium">
+                  {{ ticket.rolesCount }} Rol(es)
+                </span>
+              </td>
+              <td class="text-center align-middle">
+                <span class="badge rounded-pill badge-in-progress fw-bold px-3 py-1">
+                  EN PROCESO
+                </span>
+              </td>
+              <td class="text-end pe-3 align-middle">
+                <button
+                  class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                  (click)="openResultModal(ticket.ticketId, 'create')"
+                >
+                  <i class="fa-solid fa-file-signature me-1"></i> Dictamen
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- TABLA 3: Tickets Cerrados (Agrupados) -->
+  @if (ticketsCertified().length > 0) {
+    <div class="mb-4">
+      <h6 class="fw-bold mb-3" style="color: #2e7d32">
+        <i class="fa-solid fa-check-double me-2"></i> Tickets Cerrados
+      </h6>
+
+      <table class="table mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3" style="width: 35%">TICKET CSAL</th>
+            <th class="text-center" style="width: 25%">ROLES ASOCIADOS</th>
+            <th class="text-center" style="width: 20%">ESTADO</th>
+            <th class="text-end pe-3" style="width: 20%">ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ticket of ticketsCertified(); track ticket.ticketId) {
+            <tr>
+              <td class="ps-3 align-middle fw-medium">
+                <i class="fa-solid fa-tag text-muted me-2"></i>
+                {{ ticket.ticketNumber }}
+              </td>
+              <td class="text-center align-middle">
+                <span class="badge bg-light text-dark border px-3 py-1 fw-medium">
+                  {{ ticket.rolesCount }} Rol(es)
+                </span>
+              </td>
+              <td class="text-center align-middle">
+                <span class="badge rounded-pill badge-closed fw-bold px-3 py-1">
+                  CERRADO
+                </span>
+              </td>
+              <td class="text-end pe-3 align-middle">
+                <button
+                  class="btn btn-outline-brand btn-sm rounded-pill px-3"
+                  (click)="openResultModal(ticket.ticketId, 'view')"
+                >
+                  <i class="fa-solid fa-camera me-1"></i> Ver Snapshot
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- FOOTER DE ACCIÓN GLOBAL (Oculto si la fase está cerrada) -->
+  @if (!isPhaseClosed()) {
+    <div class="d-flex flex-wrap justify-content-between align-items-center mt-5 pt-3 border-top gap-3">
+      <div class="text-muted small fw-medium">
+        <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase, todos los roles deben estar certificados.
+      </div>
+      
+      <button 
+        class="btn btn-brand rounded-pill px-4 fw-bold shadow-sm text-nowrap"
+        [disabled]="!canClosePhase() || isSubmitting()"
+        (click)="finalizeCerPhase()"
+      >
+        <i class="fa-solid fa-flag-checkered me-2"></i> Cerrar Fase Certificación - Roles
+      </button>
+    </div>
+  }
+</div>
+
+
+<!-- Modales Standalone -->
+@if (showTicketModal()) {
+  <lib-cer-ticket-form
+    [requirementId]="requirementId()"
+    [selectedRoleIds]="rolesToProcess()"
+    [selectedRoles]="selectedRolesData()"
+    (closeForm)="showTicketModal.set(false)"
+    (ticketCreated)="onTicketSuccessfullyCreated()"
+  >
+  </lib-cer-ticket-form>
+}
+
+@if (showResultModal()) {
+  <lib-cer-result-form
+    [ticketId]="activeTicketId()"
+    [ticketNumber]="activeTicketNumber()"
+    [rolesInTicket]="activeRoles()"
+    [viewMode]="isResultViewMode()" 
+    [rrti]="rrti()"
+    (closeForm)="showResultModal.set(false)"
+    (resultRegistered)="onResultSuccessfullyRegistered()"
+  >
+  </lib-cer-result-form>
+}

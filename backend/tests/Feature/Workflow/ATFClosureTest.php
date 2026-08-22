@@ -83,14 +83,48 @@ it('rechaza el cierre de fase si no se cumple el quórum mínimo (422)', functio
             ->assertJsonValidationErrors(['quorum']);
 });
 
+// it('permite el cierre de fase si se cumple el quórum (200)', function () use (&$consultantId) {
+//     $req = Requirement::factory()->create([
+//         'functional_consultant_id' => $consultantId,
+//         'management_type'          => 'Mixto',
+//         'status'                   => 'ATF-I'
+//     ]);
+    
+//     // Usamos auth()->id() para resolver el ID del usuario autenticado sin alertas de linter
+//     AtfAgreement::factory()->create([
+//         'requirement_id'        => $req->id,
+//         'registered_by_user_id' => auth()->id() 
+//     ]);
+    
+//     RequirementRole::factory()->create(['requirement_id' => $req->id]);
+
+//     $response = $this->postJson("/api/workflow/requirements/{$req->id}/close-atf");
+
+//     $response->assertStatus(200)
+//             ->assertJsonPath('status', 'ATF-C');
+// });
+
+
 it('permite el cierre de fase si se cumple el quórum (200)', function () use (&$consultantId) {
     $req = Requirement::factory()->create([
         'functional_consultant_id' => $consultantId,
         'management_type'          => 'Mixto',
         'status'                   => 'ATF-I'
     ]);
-    
-    // Usamos auth()->id() para resolver el ID del usuario autenticado sin alertas de linter
+
+    // 1. Registrar la compuerta histórica de Estimación Realizada (ES-R)
+    DB::table('workflow.requirement_phase_history')->insert([
+        'id'                => (string) Str::uuid(),
+        'requirement_id'    => $req->id,
+        'phase_status_code' => 'ES-R',
+        'transitioned_at'   => now()->subDay(),
+        'executed_by_user_id' => auth()->id(),
+        'remarks'           => 'Estimación completada satisfactoriamente.',
+        'created_at'        => now(),
+        'updated_at'        => now(),
+    ]);
+
+    // 2. Acuerdos y Roles para el Quórum de ATF
     AtfAgreement::factory()->create([
         'requirement_id'        => $req->id,
         'registered_by_user_id' => auth()->id() 
@@ -98,11 +132,13 @@ it('permite el cierre de fase si se cumple el quórum (200)', function () use (&
     
     RequirementRole::factory()->create(['requirement_id' => $req->id]);
 
+    // 3. Ejecución del cierre
     $response = $this->postJson("/api/workflow/requirements/{$req->id}/close-atf");
 
     $response->assertStatus(200)
             ->assertJsonPath('status', 'ATF-C');
 });
+
 
 it('rechaza cualquier intento de cierre si el requerimiento ya esta bloqueado', function () use (&$consultantId) {
     $req = Requirement::factory()->create([

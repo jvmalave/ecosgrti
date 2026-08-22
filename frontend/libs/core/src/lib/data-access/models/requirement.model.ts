@@ -24,6 +24,7 @@ export interface RequirementDashboard {
   frozen_phases: string[];
   consultor_funcional: string; 
   unidad_solicitante: string;
+  progress_percentage?: number;
 }
 
 export interface RequirementDetail {

@@ -36,6 +36,7 @@ use App\Domains\Workflow\Http\Controllers\CerRoleController;
 // Controladores Certificación (CEE)
 use App\Domains\Workflow\Http\Controllers\CeeDeliverableController;
 
+
 // 
 
 
@@ -244,6 +245,7 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
 
     Route::prefix('cer')->group(function () {
         Route::get('/requirements/{requirementId}/roles-init', [CerRoleController::class, 'index']);
+
         Route::patch('/requirements/{requirementId}/close', [CerRoleController::class, 'closePhase']);
         
         Route::post('/requirements/{requirementId}/tickets', [CerRoleController::class, 'storeTicket']);
@@ -252,6 +254,10 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
         
         Route::post('/tickets/{ticketId}/results', [CerRoleController::class, 'registerResult']);
         Route::post('/tickets/{ticketId}/results-update', [CerRoleController::class, 'updateResult']);
+
+        Route::get('/tickets/{ticketId}/file', [CerRoleController::class, 'downloadFile']);
+
+        Route::get('/tickets/{ticketId}/request-file', [CerRoleController::class, 'downloadRequestFile']);
     });
 
     // ==========================================
@@ -260,15 +266,22 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
       
       Route::prefix('cee')->group(function () {
         Route::get('/requirements/{requirementId}/deliverables-init', [CeeDeliverableController::class, 'index']);
+
         Route::patch('/requirements/{requirementId}/close', [CeeDeliverableController::class, 'closePhase']);
         
         Route::post('/requirements/{requirementId}/tickets', [CeeDeliverableController::class, 'storeTicket']);
-        Route::post('/tickets/{ticketId}', [CeeDeliverableController::class, 'updateTicket']); 
-        
-        Route::post('/tickets/{ticketId}/results', [CeeDeliverableController::class, 'registerResult']);
-        Route::post('/tickets/{ticketId}/results-update', [CeeDeliverableController::class, 'updateResult']);
-      });
 
+        Route::post('/tickets/{ticketId}', [CeeDeliverableController::class, 'updateTicket']); 
+
+        Route::post('/tickets/{ticketId}/results', [CeeDeliverableController::class, 'registerResult']);
+
+        Route::post('/tickets/{ticketId}/results-update', [CeeDeliverableController::class, 'updateResult']);
+
+        Route::get('/tickets/{ticketId}/request-file', [CeeDeliverableController::class, 'downloadRequestFile']);
+
+        Route::get('/tickets/{ticketId}/result-file', [CeeDeliverableController::class, 'downloadResultFile']);
+      });
+      // api/workflow/cee/requirements/{requirementId}/deliverables-init
 
 
 

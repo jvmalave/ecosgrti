@@ -11,6 +11,7 @@ use App\Domains\Workflow\Http\Requests\StoreCeeTicketRequest;
 use App\Domains\Workflow\Http\Requests\UpdateCeeTicketRequest;
 use App\Domains\Workflow\Http\Requests\CeeResultRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class CeeDeliverableController extends Controller
 {
@@ -20,7 +21,7 @@ class CeeDeliverableController extends Controller
     {
         $this->ceeDeliverableService->initializeDeliverables($requirementId);
 
-        $deliverables = CeeDeliverable::with('deliverable')
+        $deliverables = CeeDeliverable::with(['deliverable', 'ticket'])
             ->where('requirement_id', $requirementId)
             ->get()->sortBy('deliverable.name')->values();
 
@@ -68,5 +69,19 @@ class CeeDeliverableController extends Controller
     public function closePhase(string $requirementId): JsonResponse
     {
         return response()->json($this->ceeDeliverableService->closeGlobalPhase($requirementId));
+    }
+
+    public function downloadRequestFile(string $ticketId)
+    {
+        $filePath = $this->ceeDeliverableService->getRequestFilePath($ticketId);
+        
+        return Storage::disk('local')->response($filePath);
+    }
+
+    public function downloadResultFile(string $ticketId)
+    {
+        $filePath = $this->ceeDeliverableService->getResultFilePath($ticketId);
+        
+        return Storage::disk('local')->response($filePath);
     }
 }

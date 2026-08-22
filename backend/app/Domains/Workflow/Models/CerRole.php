@@ -20,9 +20,17 @@ class CerRole extends Model
         'ticket_id', 
         'status', 
         'rejection_reason', 
+        'rejection_history',
         'created_by', 
         'updated_by'
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'rejection_history' => 'array',
+        ];
+    }
 
     public function requirement()
     {

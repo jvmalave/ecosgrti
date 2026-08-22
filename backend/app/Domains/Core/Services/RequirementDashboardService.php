@@ -63,6 +63,13 @@ class RequirementDashboardService
                 FROM workflow.coe_deliverables cd
                 WHERE cd.req_id = r.id AND cd.status = 'CLOSED'
             ) as coe_closed_deliverables_count")
+            // Conteo de Roles de Pruebas Integrales (PI) Cerrados
+            ->selectRaw("(
+                SELECT COUNT(pir.id)
+                FROM workflow.pi_roles pir
+                INNER JOIN workflow.requirements_roles rr ON pir.requirement_role_id = rr.id
+                WHERE rr.requirement_id = r.id AND pir.status = 'CLOSED'
+            ) as pi_closed_roles_count")
              // historical_frozen_string
             ->selectRaw("(
                 SELECT string_agg(SPLIT_PART(ph.phase_status_code, '-', 1), ',') 

@@ -41,49 +41,80 @@
             {{ req().management_type | titlecase }}
           </span>
           <hr class="mt-4 mb-4 opacity-10" />
-          
+
           <p class="text-muted mb-4 small">
             Seleccione la fase técnica a la que desea acceder
           </p>
 
           <!-- ========================================== -->
-          <!-- 🟢 LÍNEA DE ROLES -->
+          <!-- LÍNEA DE ROLES -->
           <!-- ========================================== -->
-          @if (req().management_type === 'Roles' || req().management_type === 'Mixto') {
+          @if (
+            req().management_type === 'Roles' ||
+            req().management_type === 'Mixto'
+          ) {
             <div class="path-container mb-5 text-start">
-              <h6 class="text-muted mb-3 text-uppercase fw-bold" style="font-size: 0.85rem;">
-                <i class="fa-solid fa-users-gear me-2 text-brand"></i> Línea de Roles
+              <h6
+                class="text-muted mb-3 text-uppercase fw-bold"
+                style="font-size: 0.85rem"
+              >
+                <i class="fa-solid fa-users-gear me-2 text-brand"></i> Línea de
+                Roles
               </h6>
-              
+
               <div class="phase-grid">
                 <!-- DISEÑO TÉCNICO -->
                 @if (showDt()) {
-                  <button class="phase-btn" [disabled]="!isDtEnabled()" (click)="navigateTo(PHASES.DT)">
-                    <div class="icon-wrapper"><i class="fa-solid fa-laptop-code"></i></div>
+                  <button
+                    class="phase-btn"
+                    [disabled]="!isDtEnabled()"
+                    (click)="navigateTo(PHASES.DT)"
+                  >
+                    <div class="icon-wrapper">
+                      <i class="fa-solid fa-laptop-code"></i>
+                    </div>
                     <span class="btn-label">Diseño<br />Técnico</span>
                   </button>
                 }
 
                 <!-- CONSTRUCCIÓN (ROLES) -->
                 @if (showCoR()) {
-                  <button class="phase-btn" [disabled]="!isCoREnabled()" (click)="navigateTo(PHASES.COR)">
-                    <div class="icon-wrapper"><i class="fa-solid fa-users-gear"></i></div>
+                  <button
+                    class="phase-btn"
+                    [disabled]="!isCoREnabled()"
+                    (click)="navigateTo(PHASES.COR)"
+                  >
+                    <div class="icon-wrapper">
+                      <i class="fa-solid fa-users-gear"></i>
+                    </div>
                     <span class="btn-label">Construcción<br />(Roles)</span>
                   </button>
                 }
 
                 <!-- PRUEBAS INTEGRALES -->
                 @if (ShowPi()) {
-                  <button class="phase-btn" (click)="navigateTo(PHASES.PI)" [disabled]="!isPiEnabled()">
-                    <div class="icon-wrapper"><i class="fa-solid fa-gauge-high"></i></div>
+                  <button
+                    class="phase-btn"
+                    (click)="navigateTo(PHASES.PI)"
+                    [disabled]="!isPiEnabled()"
+                  >
+                    <div class="icon-wrapper">
+                      <i class="fa-solid fa-gauge-high"></i>
+                    </div>
                     <span class="btn-label">Pruebas<br />Integrales</span>
                   </button>
                 }
 
-                <!-- CERTIFICACIÓN (ROLES) -->
+                <!-- 🟢 CERTIFICACIÓN (ROLES) -> AJUSTADO CON (click) -->
                 @if (showCeR()) {
-                  <button class="phase-btn" [disabled]="!isCeREnabled()">
-                    <div class="icon-wrapper"><i class="fa-solid fa-user-check"></i></div>
+                  <button
+                    class="phase-btn"
+                    [disabled]="!isCeREnabled()"
+                    (click)="navigateTo(PHASES.CER)"
+                  >
+                    <div class="icon-wrapper">
+                      <i class="fa-solid fa-user-check"></i>
+                    </div>
                     <span class="btn-label">Certificación<br />(Roles)</span>
                   </button>
                 }
@@ -91,7 +122,9 @@
                 <!-- PASE A PRODUCCIÓN -->
                 @if (showPap()) {
                   <button class="phase-btn" [disabled]="!isPapEnabled()">
-                    <div class="icon-wrapper"><i class="fa-solid fa-server"></i></div>
+                    <div class="icon-wrapper">
+                      <i class="fa-solid fa-server"></i>
+                    </div>
                     <span class="btn-label">Pase a<br />Producción</span>
                   </button>
                 }
@@ -99,7 +132,9 @@
                 <!-- ASIGNACIÓN DE USUARIOS -->
                 @if (showAu()) {
                   <button class="phase-btn" [disabled]="!isAuEnabled()">
-                    <div class="icon-wrapper"><i class="fa-solid fa-user-plus"></i></div>
+                    <div class="icon-wrapper">
+                      <i class="fa-solid fa-user-plus"></i>
+                    </div>
                     <span class="btn-label">Asignación<br />de Usuarios</span>
                   </button>
                 }
@@ -108,28 +143,51 @@
           }
 
           <!-- ========================================== -->
-          <!-- 🟢 LÍNEA DE ENTREGABLES -->
+          <!-- LÍNEA DE ENTREGABLES -->
           <!-- ========================================== -->
-          @if (req().management_type === 'Entregables' || req().management_type === 'Mixto') {
+          @if (
+            req().management_type === 'Entregables' ||
+            req().management_type === 'Mixto'
+          ) {
             <div class="path-container text-start">
-              <h6 class="text-muted mb-3 text-uppercase fw-bold" style="font-size: 0.85rem;">
-                <i class="fa-solid fa-file-signature me-2 text-brand"></i> Línea de Entregables
+              <h6
+                class="text-muted mb-3 text-uppercase fw-bold"
+                style="font-size: 0.85rem"
+              >
+                <i class="fa-solid fa-file-signature me-2 text-brand"></i> Línea
+                de Entregables
               </h6>
-              
+
               <div class="phase-grid">
                 <!-- CONSTRUCCIÓN (ENTREGABLES) -->
                 @if (showCoE()) {
-                  <button class="phase-btn" [disabled]="!isCoEEnabled()" (click)="navigateTo(PHASES.COE)">
-                    <div class="icon-wrapper"><i class="fa-solid fa-cubes"></i></div>
-                    <span class="btn-label">Construcción<br />(Entregables)</span>
+                  <button
+                    class="phase-btn"
+                    [disabled]="!isCoEEnabled()"
+                    (click)="navigateTo(PHASES.COE)"
+                  >
+                    <div class="icon-wrapper">
+                      <i class="fa-solid fa-cubes"></i>
+                    </div>
+                    <span class="btn-label"
+                      >Construcción<br />(Entregables)</span
+                    >
                   </button>
                 }
 
                 <!-- CERTIFICACIÓN (ENTREGABLES) -->
                 @if (showCeE()) {
-                  <button class="phase-btn" [disabled]="!isCeEEnabled()">
-                    <div class="icon-wrapper"><i class="fa-solid fa-clipboard-check"></i></div>
-                    <span class="btn-label">Certificación<br />(Entregables)</span>
+                  <button
+                    class="phase-btn"
+                    [disabled]="!isCeEEnabled()"
+                    (click)="navigateTo(PHASES.CEE)"
+                  >
+                    <div class="icon-wrapper">
+                      <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <span class="btn-label"
+                      >Certificación<br />(Entregables)</span
+                    >
                   </button>
                 }
               </div>
@@ -141,17 +199,91 @@
   </div>
 }
 
-<!-- RENDERIZADO CONDICIONAL DEL MODAL POLIMÓRFICO (CAPA 2) -->
+<!-- ========================================== -->
+<!-- 🟢 RENDERIZADO CONDICIONAL DE LAS FASES (CAPA 2) -->
+<!-- ========================================== -->
 @if (activePhaseConfig()) {
-  <lib-phase-roles-modal
-    [requirementId]="req().id"
-    [config]="activePhaseConfig()!"
-    [rrti]="req().rrti"
-    [frozenPhases]="req().frozen_phases"
-    [consultantName]="req().consultor_funcional"
-    [functionalUnit]="req().unidad_solicitante"
-    (closeModal)="closeActivePhase()"
-  >
-  </lib-phase-roles-modal>
-}
+  <!-- FASES ANTERIORES (Modal Polimórfico) -->
+  @if (
+    activePhaseConfig()?.phaseCode !== 'CER' &&
+    activePhaseConfig()?.phaseCode !== 'CEE'
+  ) {
+    <lib-phase-roles-modal
+      [requirementId]="req().id"
+      [config]="activePhaseConfig()!"
+      [rrti]="req().rrti"
+      [frozenPhases]="req().frozen_phases"
+      [consultantName]="req().consultor_funcional"
+      [functionalUnit]="req().unidad_solicitante"
+      (closeModal)="closeActivePhase()"
+    >
+    </lib-phase-roles-modal>
+  }
 
+  <!-- NUESTRA NUEVA FASE: CERTIFICACIÓN DE ROLES (CER) -->
+  @if (activePhaseConfig()?.phaseCode === 'CER') {
+    <div class="modal-overlay">
+      <div class="modal-dialog-custom">
+        <!-- CABECERA CORPORATIVA IGUAL A PI -->
+        <div
+          class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center"
+        >
+          <h5 class="m-0 fw-bold">
+            <i class="fa-solid fa-user-check me-2"></i> Roles en Certificación
+          </h5>
+          <button
+            type="button"
+            class="btn text-white fs-5 p-0 border-0 shadow-none"
+            (click)="closeActivePhase()"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- CUERPO DEL MODAL (Fondo blanco y scroll) -->
+        <div class="modal-body-scroll bg-white">
+          <lib-cer-roles
+            [requirementId]="req().id"
+            [rrti]="req().rrti"
+            [reqPhase]="req().status"
+            (phaseClosed)="onPhaseStatusChanged($event)"
+          ></lib-cer-roles>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- COMPONENTE CEE (Certificación de Entregables) -->
+  @if (activePhaseConfig()?.phaseCode === 'CEE') {
+    <div class="modal-overlay">
+      <div class="modal-dialog-custom">
+        <!-- CABECERA CORPORATIVA CEE -->
+        <div
+          class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center"
+        >
+          <h5 class="m-0 fw-bold">
+            <i class="fa-solid fa-file-circle-check me-2"></i> Certificación de
+            Entregables
+          </h5>
+          <button
+            type="button"
+            class="btn text-white fs-5 p-0 border-0 shadow-none"
+            (click)="closeActivePhase()"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- CUERPO DEL MODAL -->
+        <div class="modal-body-scroll bg-white">
+          <lib-cee-deliverables
+            [requirementId]="req().id"
+            [rrti]="req().rrti"
+            [reqPhase]="req().status"
+            (phaseClosed)="onPhaseStatusChanged($event)"
+          ></lib-cee-deliverables>
+        </div>
+      </div>
+    </div>
+  }
+}

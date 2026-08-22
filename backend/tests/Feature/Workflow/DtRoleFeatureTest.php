@@ -147,7 +147,7 @@ test('CU-032: permite cerrar un rol si posee documentación técnica', function 
     ]);
 
     $response = patchJson("/api/workflow/dt/roles/{$dtRole->id}/status", [
-        'action' => 'CLOSE'
+        'new_status' => 'CLOSED'
     ]);
 
     $response->assertStatus(200)

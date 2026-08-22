@@ -34,7 +34,7 @@ trait ManagesCertificationTickets
 
 
     /**
-     * SUBFLUJO A: Registrar Solicitud de Ticket
+     * Registrar Solicitud de Ticket
      */
     public function storeTicket(string $requirementId, array $data, UploadedFile $file, array $componentIds): Model
     {
@@ -98,7 +98,7 @@ trait ManagesCertificationTickets
     }
 
     /**
-     * SUBFLUJO C: Actualizar Solicitud de Ticket (Sincronización en Cascada)
+     * Actualizar Solicitud de Ticket (Sincronización en Cascada)
      */
     public function updateTicket(string $ticketId, array $data, ?UploadedFile $file, array $newComponentIds): Model
     {
@@ -150,7 +150,7 @@ trait ManagesCertificationTickets
     }
 
     /**
-     * SUBFLUJO A (Resultados): Registrar Dictamen y Bifurcar
+     * (Resultados): Registrar Dictamen y Bifurcar
      */
     public function registerResult(string $ticketId, array $data, UploadedFile $file, array $evaluations): Model
     {
@@ -158,7 +158,7 @@ trait ManagesCertificationTickets
     }
 
     /**
-     * SUBFLUJO B (Resultados): Actualización Post-Cierre con Desafío de Seguridad
+     * (Resultados): Actualización Post-Cierre con Desafío de Seguridad
      */
     public function updateResultWithChallenge(string $ticketId, array $data, ?UploadedFile $file, array $evaluations, string $specialAuthToken): Model
     {
@@ -166,7 +166,7 @@ trait ManagesCertificationTickets
         
         return $this->processResultTransaction($ticketId, $data, $file, $evaluations, true);
     }
-
+    
     /**
      * Motor Privado de Procesamiento de Resultados (Atomicidad y Snapshots)
      */
@@ -190,17 +190,37 @@ trait ManagesCertificationTickets
                 $ticket->result_file = $file->store("{$this->getTicketPrefix()}_results/{$requirementId}", 'local');
             }
 
-            // 2. Evaluación Granular por Componente (Bifurcación)
+            // 2. Evaluación Granular por Componente (Bifurcación e Historial)
             $approvedCount = 0;
             $totalCount = count($evaluations);
 
             foreach ($evaluations as $eval) {
                 $component = $componentModel::findOrFail($eval['id']);
+                
                 if ($eval['is_approved']) {
-                    $component->update(['status' => 'CERTIFIED', 'rejection_reason' => null, 'updated_by' => auth()->id()]);
+                    $component->update([
+                        'status' => 'CERTIFIED', 
+                        'rejection_reason' => null, // Limpiamos el motivo activo
+                        'updated_by' => auth()->id()
+                    ]);
                     $approvedCount++;
                 } else {
-                    $component->update(['status' => 'PENDING_CERTIFICATION', 'rejection_reason' => $eval['rejection_reason'], 'updated_by' => auth()->id()]);
+                    // 🟢 NUEVO: Construimos el delta del historial de rechazos
+                    $history = $component->rejection_history ?? [];
+                    
+                    $history[] = [
+                        'ticket_number' => $ticket->ticket_number,
+                        'reason'        => $eval['rejection_reason'],
+                        'rejected_by'   => auth()->id(),
+                        'rejected_at'   => now()->toDateTimeString(),
+                    ];
+
+                    $component->update([
+                        'status'            => 'PENDING_CERTIFICATION', 
+                        'rejection_reason'  => $eval['rejection_reason'], // Mantenemos el último para lectura rápida en frontend
+                        'rejection_history' => $history, // Guardamos la colección completa inmutable
+                        'updated_by'        => auth()->id()
+                    ]);
                 }
             }
 
@@ -270,7 +290,23 @@ trait ManagesCertificationTickets
                 } else {
                     $requirement->update(['progress_percentage' => $calculatedProgress]);
                 }
+
+                $this->auditService->logModelChange(
+                    'INITIATE_GLOBAL_PHASE',
+                    "Apertura global de la fase " . $phaseCode . ($isVanguard ? " (Nueva Vanguardia)" : " (Proceso Paralelo)"),
+                    [
+                        'requirement_id' => $requirementId,
+                        'new_status' => $requirement->status, 
+                        'progress_reached' => $calculatedProgress,
+                        'is_vanguard_update' => $isVanguard
+                    ],
+                    (string) auth()->id(),
+                    $requirementId
+                );
+
                 Cache::put(CacheKeyDictionary::requirementProgress($requirementId), $calculatedProgress, now()->addDays(1));
+
+                $this->purgeCertificationCache($requirementId);
             }
         }
     }

@@ -6,9 +6,7 @@
       @if (isEditing()) {
         <i class="fa-solid fa-pen-to-square me-2 fs-5"></i>
       }
-      {{
-        isEditing() ? 'Editando Requerimiento' : 'Detalle de Requerimiento'
-      }}
+      {{ isEditing() ? 'Editando Requerimiento' : 'Detalle de Requerimiento' }}
     </h4>
     <button
       type="button"
@@ -19,7 +17,7 @@
   </div>
 
   <div class="modal-body p-4 bg-light">
-      <!-- Bloque Izquierdo: Código del Requerimiento -->
+    <!-- Bloque Izquierdo: Código del Requerimiento -->
     <div class="d-flex align-items-center">
       <span class="text-muted fw-bold me-2 small">Requerimiento:</span>
       <span
@@ -33,12 +31,11 @@
         {{ editForm.get('rrti')?.value }}
       </span>
     </div>
-    
 
     <div class="modal-body p-4">
-      @if (currentRequirement()?.is_locked) {
+      @if (currentRequirement()?.status === 'RF') {
         <div
-          class="alert alert-success d-flex align-items-center mb-4 shadow-sm border-success border-rounded" 
+          class="alert alert-success d-flex align-items-center mb-4 shadow-sm border-success border-rounded"
           role="alert"
         >
           <i class="fa-solid fa-lock me-3 fs-4"></i>
@@ -58,8 +55,9 @@
         <lib-progress-dashboard
           [globalProgress]="currentRequirement()?.progress_percentage ?? 0"
           [globalStatus]="currentRequirement()?.status ?? 'Registrado'"
-          [requirement]="currentRequirement()">
+          [requirement]="currentRequirement()"
         >
+          >
         </lib-progress-dashboard>
       </div>
 

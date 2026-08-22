@@ -9,6 +9,7 @@ use App\Domains\Workflow\Traits\ManagesCertificationTickets;
 use App\Domains\Workflow\Models\CeeDeliverable;
 use App\Domains\Workflow\Models\CeeTicket;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class CeeDeliverableService extends AbstractPhaseComponentService
@@ -58,5 +59,33 @@ class CeeDeliverableService extends AbstractPhaseComponentService
         ";
 
         DB::statement($sql, [$requirementId]);
+    }
+
+    /**
+     * Obtiene la ruta física del documento de solicitud original
+     */
+    public function getRequestFilePath(string $ticketId): string
+    {
+        $ticket = CeeTicket::findOrFail($ticketId);
+        
+        if (!$ticket->file_path || !Storage::disk('local')->exists($ticket->file_path)) {
+            abort(404, 'Documento de solicitud no encontrado en el servidor.');
+        }
+        
+        return $ticket->file_path;
+    }
+
+    /**
+     * Obtiene la ruta física del acta de dictamen
+     */
+    public function getResultFilePath(string $ticketId): string
+    {
+        $ticket = CeeTicket::findOrFail($ticketId);
+        
+        if (!$ticket->result_file || !Storage::disk('local')->exists($ticket->result_file)) {
+            abort(404, 'Acta de dictamen no encontrada en el servidor.');
+        }
+        
+        return $ticket->result_file;
     }
 }
