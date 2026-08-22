@@ -1,12 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Domains\Workflow\Http\Controllers\ATFAgreementController;
+
 use App\Domains\Workflow\Http\Controllers\ProgressDashboardController;
 use App\Domains\Workflow\Http\Controllers\RequirementRoleController;
 use App\Domains\Workflow\Http\Controllers\DeliverableController;
 use App\Domains\Workflow\Http\Controllers\ATFClosureController;
+
+// Controladores ATF
+use App\Domains\Workflow\Http\Controllers\ATFAgreementController;
 use App\Domains\Workflow\Http\Controllers\UpdateManagementTypeController;
+
+// Controladores Construcción Operativa (COE)
 use App\Domains\Workflow\Http\Controllers\CoeDeliverableController;
 use App\Domains\Workflow\Http\Controllers\CoeActivityController;
 
@@ -17,6 +22,27 @@ use App\Domains\Workflow\Http\Controllers\DtRegisterController;
 // Controladores Construcción-Roles (COR)
 use App\Domains\Workflow\Http\Controllers\CorRoleController;
 use App\Domains\Workflow\Http\Controllers\CorRegisterController;
+
+// Controladores Pruebas Integrales (PI)
+use App\Domains\Workflow\Http\Controllers\PiRegisterController;
+use App\Domains\Workflow\Http\Controllers\PiTestUserController;
+use App\Domains\Workflow\Http\Controllers\PiApprovalController;
+use App\Domains\Workflow\Http\Controllers\PiRoleController;
+
+// Controladores Certificación (CER)
+
+use App\Domains\Workflow\Http\Controllers\CerRoleController;
+
+// Controladores Certificación (CEE)
+use App\Domains\Workflow\Http\Controllers\CeeDeliverableController;
+
+
+// 
+
+
+
+
+
 
 // Middleware a todo el grupo de workflow para centralizar la seguridad
 Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
@@ -177,6 +203,87 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
     });
 
   });
+  /*
+  |--------------------------------------------------------------------------
+  | GESTIÓN FASE PRUEBAS INTEGRALES (PI))
+  |--------------------------------------------------------------------------
+  */
+
+  // CU-040: Inicialización y Promoción a Pruebas Integrales (PI)
+    Route::get('/requirements/{id}/pi/roles-init', [PiRoleController::class, 'index']);
+  
+  
+    // CU-041: Acceder a Gestión de Pruebas Integrales
+    Route::get('/pi/roles/{role_id}/test-users', [PiTestUserController::class, 'index']);
+    // Crear Usuario de pruebas 
+    Route::post('/pi/roles/{role_id}/test-users', [PiTestUserController::class, 'store']);
+    // Borrar Usiario de pruebas
+    Route::delete('/pi/test-users/{user_id}', [PiTestUserController::class, 'destroy']);
+
+    // Listar registros en la botacora de Pruebas Integrales
+    Route::get('/pi/roles/{role_id}/registers', [PiRegisterController::class, 'index']);
+    // Crear una nueva registro en la bitácora
+    Route::post('/requirements/{req_id}/pi/roles/{role_id}/registers', [PiRegisterController::class, 'store']);
+    // Actualizar registro en la bitacora
+    Route::put('/pi/registers/{reg_id}/roles/{role_id}', [PiRegisterController::class, 'update']);
+    // Borrar registro de la bitacora
+    Route::delete('/pi/registers/{reg_id}/roles/{role_id}', [PiRegisterController::class, 'destroy']);
+
+    // Agregar Aprobación
+    Route::post('/requirements/{req_id}/pi/roles/{role_id}/approvals', [PiApprovalController::class, 'store']);
+    // Descargar Aprobación
+    Route::get('/requirements/{req_id}/pi/roles/{role_id}/approvals/download', [PiApprovalController::class, 'download']); 
+    // Cierre individual de Rol PI
+    Route::patch('/pi/roles/{role_id}/status', [PiRoleController::class, 'changeStatus']);
+    // Cierre Global de la Fase PI
+    Route::patch('/requirements/{req_id}/pi/close', [PiRoleController::class, 'closePhase']);
+  
+
+    // ==========================================
+    // FASE CER (Certificación de Roles) - US33
+    // ==========================================
+
+    Route::prefix('cer')->group(function () {
+        Route::get('/requirements/{requirementId}/roles-init', [CerRoleController::class, 'index']);
+
+        Route::patch('/requirements/{requirementId}/close', [CerRoleController::class, 'closePhase']);
+        
+        Route::post('/requirements/{requirementId}/tickets', [CerRoleController::class, 'storeTicket']);
+        // Usamos POST (simulando PUT desde Angular) para soportar envío de archivos PDF (Multipart)
+        Route::post('/tickets/{ticketId}', [CerRoleController::class, 'updateTicket']); 
+        
+        Route::post('/tickets/{ticketId}/results', [CerRoleController::class, 'registerResult']);
+        Route::post('/tickets/{ticketId}/results-update', [CerRoleController::class, 'updateResult']);
+
+        Route::get('/tickets/{ticketId}/file', [CerRoleController::class, 'downloadFile']);
+
+        Route::get('/tickets/{ticketId}/request-file', [CerRoleController::class, 'downloadRequestFile']);
+    });
+
+    // ==========================================
+    // FASE CEE (Certificación de Entregables) - US34
+    // ==========================================
+      
+      Route::prefix('cee')->group(function () {
+        Route::get('/requirements/{requirementId}/deliverables-init', [CeeDeliverableController::class, 'index']);
+
+        Route::patch('/requirements/{requirementId}/close', [CeeDeliverableController::class, 'closePhase']);
+        
+        Route::post('/requirements/{requirementId}/tickets', [CeeDeliverableController::class, 'storeTicket']);
+
+        Route::post('/tickets/{ticketId}', [CeeDeliverableController::class, 'updateTicket']); 
+
+        Route::post('/tickets/{ticketId}/results', [CeeDeliverableController::class, 'registerResult']);
+
+        Route::post('/tickets/{ticketId}/results-update', [CeeDeliverableController::class, 'updateResult']);
+
+        Route::get('/tickets/{ticketId}/request-file', [CeeDeliverableController::class, 'downloadRequestFile']);
+
+        Route::get('/tickets/{ticketId}/result-file', [CeeDeliverableController::class, 'downloadResultFile']);
+      });
+      // api/workflow/cee/requirements/{requirementId}/deliverables-init
+
+
 
   /*
   |--------------------------------------------------------------------------

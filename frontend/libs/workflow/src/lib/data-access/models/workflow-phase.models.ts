@@ -1,4 +1,6 @@
-// libs/workflow/src/lib/data-access/models/workflow-phase.models.ts
+// =========================================================================
+// ENTIDADES BASE Y PAYLOADS GENÉRICOS
+// =========================================================================
 
 /**
  * Representa la transacción individual en la bitácora (Registro o Actividad)
@@ -17,12 +19,13 @@ export interface WorkflowRecord {
  */
 export interface WorkflowPhaseItem {
   id: string;
-  status: string;
-  // Propiedades exclusivas de COR
+  status: string; // Puede ser 'IN_PROGRESS', 'CLOSED', 'PENDING_CERTIFICATION', 'CERTIFIED'
+  // Propiedades exclusivas de COR / PI / CER
   name?: string;
   requirement_id?: string;
   requirement_role_id?: string;
-  // Propiedades exclusivas de COE
+  is_approved?: boolean; //  US32: Bandera para la Aprobación Funcional en PI
+  // Propiedades exclusivas de COE / CEE
   req_id?: string;
   deliverable_id?: string;
   master_deliverable?: {
@@ -31,15 +34,44 @@ export interface WorkflowPhaseItem {
   };
   // Propiedad inyectada por withCount() en Laravel
   registers_count?: number; 
+  // Propiedad inyectada para CEE/CER relacionada a los tickets
+  ticket_id?: string; 
 }
+
+/**
+ * Representa el payload genérico para guardar o actualizar bitácoras
+ */
+export interface WorkflowRegisterPayload {
+  title: string;
+  date: string;
+  description: string;
+}
+
+
+// =========================================================================
+// RESPUESTAS DE ESTADOS Y CICLO DE VIDA (FASES)
+// =========================================================================
 
 /**
  * Respuesta del endpoint de inicialización (roles-init / deliverables-init)
  */
 export interface RolesInitResponse {
   requirement_id: string;
-  roles_list: WorkflowPhaseItem[]; // 🟢 Adiós al any[]
+  roles_list: WorkflowPhaseItem[]; 
 }
+
+export interface RoleStatusUpdateResponse {
+  new_status: string;
+}
+
+export interface PhaseCloseResponse {
+  message: string;
+}
+
+
+// =========================================================================
+// RESPUESTAS DE BITÁCORAS (REGISTROS / ACTIVIDADES)
+// =========================================================================
 
 /**
  * Respuesta cruda (Raw) del backend al consultar la bitácora de un componente.
@@ -66,20 +98,57 @@ export interface WorkflowRegistersResponse {
   records: WorkflowRecord[]; 
 }
 
-/**
- * Representa el payload genérico para guardar o actualizar
- */
-export interface WorkflowRegisterPayload {
-  title: string;
-  date: string;
-  description: string;
+// =========================================================================
+// ENTIDADES DE FASE PI (PRUEBAS INTEGRALES - USUARIOS DE PRUEBA)
+// =========================================================================
+
+export interface PiTestUserItem {
+  id: string;
+  requirement_id: string;
+  pi_role_id: string;
+  identifier: string;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
 }
 
-export interface RoleStatusUpdateResponse {
-  new_status: string;
+export interface PiTestUserListResponse {
+  data: PiTestUserItem[];
 }
 
-export interface PhaseCloseResponse {
+export interface PiTestUserActionResponse {
+  message: string;
+  data: PiTestUserItem;
+}
+
+export interface PiTestUserDeleteResponse {
   message: string;
 }
 
+export interface PiTestUserPayload {
+  requirement_id: string;
+  identifier: string;
+  force: boolean;
+}
+
+// =========================================================================
+// ENTIDADES DE FASE PI (APROBACIÓN FUNCIONAL)
+// =========================================================================
+
+export interface PiFunctionalApprovalItem {
+  id: string;
+  pi_role_id: string;
+  file_path: string;
+  file_size: number;
+  original_name: string;
+  created_by?: string;
+  updated_by?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
+}
+
+export interface PiFunctionalApprovalResponse {
+  message: string;
+  data: PiFunctionalApprovalItem;
+}

@@ -12,9 +12,13 @@ import {
   RawRegistersResponse, 
   WorkflowRecord, 
   WorkflowRegisterPayload,
+  PiTestUserListResponse,
+  PiTestUserActionResponse,
+  PiTestUserDeleteResponse,
+  PiTestUserPayload,
+  PiFunctionalApprovalResponse
 } from '../models/workflow-phase.models';
 import { PhaseConfig } from '../models/phase-config.interface';
-
 
 @Injectable({
   providedIn: 'root'
@@ -34,19 +38,15 @@ export class WorkflowPhaseService {
     return this.http.get<RolesInitResponse>(`${this.workflowApiUrl}/requirements/${reqId}/${config.apiEndpoint}/${config.initEndpoint}`);
   }
 
-  // changeComponentStatus(parentId: string, config: PhaseConfig, newStatus: string): Observable<RoleStatusUpdateResponse> {
-  //   return this.http.patch<RoleStatusUpdateResponse>(`${this.workflowApiUrl}/${config.apiEndpoint}/${config.parentEntityPath}/${parentId}/status`, { new_status: newStatus });
-  // }
 
   changeComponentStatus(parentId: string, config: PhaseConfig, newStatus: string): Observable<RoleStatusUpdateResponse> {
-    
-    // 🟢 Truco de Retrocompatibilidad Polimórfica: 
     // Mapeamos 'CLOSED' a 'CLOSE' y 'IN_PROGRESS' a 'REOPEN' para satisfacer a DT
     const actionVal = newStatus === 'CLOSED' ? 'CLOSE' : 'REOPEN';
 
     const payload = {
-      new_status: newStatus, // Para COR y COE
-      action: actionVal      // Para el controlador legacy de DT
+      status: newStatus,     // PARA PI (Satisface al PiRoleController)
+      new_status: newStatus, // PARA COR y COE (Retrocompatibilidad)
+      action: actionVal      // PARA DT (Retrocompatibilidad Legacy)
     };
 
     return this.http.patch<RoleStatusUpdateResponse>(
@@ -55,9 +55,14 @@ export class WorkflowPhaseService {
     );
   }
 
+
   closePhase(reqId: string, config: PhaseConfig): Observable<PhaseCloseResponse> {
     return this.http.patch<PhaseCloseResponse>(`${this.workflowApiUrl}/requirements/${reqId}/${config.apiEndpoint}/close-phase`, {});
   }
+
+  
+
+
 
   // =========================================================================
   // GESTIÓN DE BITÁCORAS CON PATRÓN ADAPTADOR (Tipado Estricto)
@@ -89,4 +94,47 @@ export class WorkflowPhaseService {
   deleteChildRegister(childId: string, parentId: string, config: PhaseConfig): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.workflowApiUrl}/${config.apiEndpoint}/${config.childEntityPath}/${childId}/${config.parentEntityPath}/${parentId}`);
   }
+
+  // =========================================================================
+  // GESTIÓN DE USUARIOS DE PRUEBA (CU-042 - FASE PI)
+  // =========================================================================
+
+  getPiTestUsers(roleId: string): Observable<PiTestUserListResponse> {
+    return this.http.get<PiTestUserListResponse>(`${this.workflowApiUrl}/pi/roles/${roleId}/test-users`);
+  }
+
+  addPiTestUser(roleId: string, requirementId: string, identifier: string, force = false): Observable<PiTestUserActionResponse> {
+    const payload: PiTestUserPayload = {
+      requirement_id: requirementId,
+      identifier: identifier,
+      force: force
+    };
+    return this.http.post<PiTestUserActionResponse>(`${this.workflowApiUrl}/pi/roles/${roleId}/test-users`, payload);
+  }
+
+  deletePiTestUser(userId: string): Observable<PiTestUserDeleteResponse> {
+    return this.http.delete<PiTestUserDeleteResponse>(`${this.workflowApiUrl}/pi/test-users/${userId}`);
+  }
+
+  // =========================================================================
+  // GESTIÓN DE APROBACIÓN FUNCIONAL (CU-044 - FASE PI)
+  // =========================================================================
+
+  uploadFunctionalApproval(reqId: string, roleId: string, file: File): Observable<PiFunctionalApprovalResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<PiFunctionalApprovalResponse>(
+      `${this.workflowApiUrl}/requirements/${reqId}/pi/roles/${roleId}/approvals`, 
+      formData
+    );
+  }
+
+  downloadFunctionalApproval(reqId: string, roleId: string): Observable<Blob> {
+    return this.http.get(
+      `${this.workflowApiUrl}/requirements/${reqId}/pi/roles/${roleId}/approvals/download`, 
+      { responseType: 'blob' } // Para manejar archivo binario
+    );
+  }
+  
 }

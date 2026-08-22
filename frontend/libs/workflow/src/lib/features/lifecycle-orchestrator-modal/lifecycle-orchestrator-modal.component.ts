@@ -2,24 +2,23 @@ import { Component, input, output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PhaseRolesModalComponent } from '../phase-roles-modal/phase-roles-modal.component';
 import { PHASE_CONFIGURATIONS, PhaseConfig } from '../../data-access/models/phase-config.interface';
+import { DashboardRequirement } from '../../data-access/models/lifecycle-orchestrator.model';
+import { CerRolesComponent } from '../../features/cer-roles/cer-roles.component';
+import { CeeDeliverablesComponent } from '../../features/cee-deliverables/cee-deliverables.component';
 
-export interface DashboardRequirement {
-  id: string;
-  rrti: string;
-  management_type: string;
-  status: string;
-  roles_count: number;
-  has_roles: boolean | number | string;
-  dt_closed_roles_count?: number;
-  deliverables_count?: number;
-}
+
 
 export type PhaseAction = 'DT' | 'COR' | 'COE' | 'CER' | 'CEE' | 'PI' | 'PAP' | 'AU';
 
 @Component({
   selector: 'lib-lifecycle-orchestrator-modal',
   standalone: true,
-  imports: [CommonModule, PhaseRolesModalComponent],
+  imports: [
+    CommonModule, 
+    PhaseRolesModalComponent, 
+    CerRolesComponent,
+    CeeDeliverablesComponent
+  ],
   templateUrl: './lifecycle-orchestrator-modal.component.html',
   styleUrls: ['./lifecycle-orchestrator-modal.component.scss']
 })
@@ -59,12 +58,12 @@ export class LifecycleOrchestratorModalComponent {
     return Number(count) > 0;
   });
 
-  // Habilitar COR solo si hay roles cerrados en DT
+  // Habilita COR solo si hay roles cerrados en DT
   isCoREnabled = computed(() => {
-    // Extraemos el valor, asegurando que sea un número (fallback a 0)
+    // Extrae el valor, asegurando que sea un número (fallback a 0)
     const closedDtRoles = this.req().dt_closed_roles_count || 0;
     
-    console.log('Auditoría Hard-Gate COR -> Roles cerrados en DT:', closedDtRoles);
+    console.log('Auditoría Hard-Gate DT -> Roles cerrados en ATF:', closedDtRoles);
     
     // El botón solo se habilita si hay al menos 1 rol en estado CLOSED en DT
     return Number(closedDtRoles) > 0;
@@ -74,37 +73,91 @@ export class LifecycleOrchestratorModalComponent {
     const req = this.req();
     if (!req) return false;
 
-    // 🟢 Lógica de Lista Negra: NO se habilita en fases prematuras
+    // Lógica de Lista Negra: NO se habilita en fases prematuras
     const invalidStatuses = ['RC', 'EST', 'ATF-I'];
     const isValidStatus = !invalidStatuses.includes(req.status);
     
     const deliverablesCount = req.deliverables_count || 0; 
+
+    console.log('Auditoría Hard-Gate COE -> Entregables cerrados en ATF:', deliverablesCount);
     
     return isValidStatus && (deliverablesCount > 0);
   });
+
+
+  isPiEnabled = computed(() => {
+    const PiReq = this.req();
+    if (!PiReq) return false;
+
+    const invalidStatuses = ['RC', 'EST', 'ATF-I', 'DT-I', 'COE-I'];
+    const isValidStatus = !invalidStatuses.includes(PiReq.status);
+
+    const hasClosedCorRoles = (PiReq.cor_closed_roles_count ?? 0) > 0;
+    const hasClosedCorCount = (PiReq.dt_closed_roles_count ?? 0);
+
+    console.log('Auditoría Hard-Gate Pi -> Roles cerrados en COR:', hasClosedCorCount);
+
+    return isValidStatus && hasClosedCorRoles;
+  });
+
+  isCeREnabled = computed(() => {
+    const req = this.req();
+    if (!req) return false;
+
+    // Bloquea la apertura si el requerimiento está en fases muy tempranas
+    const invalidStatuses = ['RC', 'EST', 'ATF-I', 'DT-I', 'COE-I', 'PI-I'];
+    const isValidStatus = !invalidStatuses.includes(req.status);
+
+    // Verifica si hay roles que hayan superado la fase de Pruebas Integrales (PI)
+    const hasClosedPiRoles = (req.pi_closed_roles_count ?? 0) > 0;
+
+    console.log('Auditoría Hard-Gate CER -> Roles cerrados en PI:', req.pi_closed_roles_count);
+
+    return isValidStatus && hasClosedPiRoles;
+  });
+
+  isCeEEnabled = computed(() => {
+    const req = this.req();
+    if (!req) return false;
+
+    // Lógica de Lista Negra: NO se habilita en fases prematuras
+    const invalidStatuses = ['RC', 'EST', 'ATF-I', 'ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C', 'COE-I'];
+    const isValidStatus = !invalidStatuses.includes(req.status);
+
+    // HARD-GATE: Verifica si hay entregables que hayan superado la fase de Construcción (COE)
+    const hasClosedCoEDeliverables = (req.coe_closed_deliverables_count ?? 0) > 0;
+
+    console.log('Auditoría Hard-Gate CEE -> Entregables cerrados en COE:', req.coe_closed_deliverables_count);
+
+    return isValidStatus && hasClosedCoEDeliverables;
+  });
   
-  isCeREnabled = computed(() => false);
-  isCeEEnabled = computed(() => false);
-  isPiEnabled = computed(() => false);
   isPapEnabled = computed(() => false);
   isAuEnabled = computed(() => false);
 
-  // 5. CAMBIO CLAVE: Esta señal ya no guarda un string ('DT'), sino que guarda el objeto PhaseConfig completo
   activePhaseConfig = signal<PhaseConfig | null>(null);
 
   triggerClose(): void {
     this.closeModal.emit();
   }
 
-  // 6. Modificamos navigateTo para recibir el objeto de configuración
+  // Modifica navigateTo para recibir el objeto de configuración
   navigateTo(config: PhaseConfig): void {
     this.activePhaseConfig.set(config);
     // Emitimos el string extraído de la configuración por si el Dashboard lo está escuchando
     this.openPhase.emit(config.phaseCode as PhaseAction); 
   }
 
-  // 7. Nuevo método para que el modal hijo pueda avisarle al orquestador que se cerró
+  // Método para que el modal hijo pueda avisarle al orquestador que se cerró
   closeActivePhase(): void {
     this.activePhaseConfig.set(null);
+  }
+  // Output para reenviar la data al componente padre (Dashboard)
+  public requirementUpdated = output<{req_id: string, phase_actual: string, progreso_global: number}>();
+
+  // Función para reenviar la data al componente padre
+  public onPhaseStatusChanged(data: {req_id: string, phase_actual: string, progreso_global: number}): void {
+    // Reenviamos el evento hacia el Dashboard padre, el cual sí posee el Store global
+    this.requirementUpdated.emit(data);
   }
 }

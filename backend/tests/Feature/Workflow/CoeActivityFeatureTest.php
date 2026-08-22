@@ -34,7 +34,7 @@ beforeEach(function () {
     DB::table('security.functional_consultants')->insert(['id' => $consultantId, 'person_id' => $personId, 'requesting_unit_id' => $unitId, 'created_at' => now(), 'updated_at' => now()]);
 
     $this->requirement = Requirement::factory()->create([
-        'status' => 'COR-C',
+        'status' => 'ATF-C',
         'functional_consultant_id' => $consultantId
     ]);
 

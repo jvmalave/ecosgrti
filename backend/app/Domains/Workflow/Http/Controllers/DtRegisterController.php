@@ -20,9 +20,7 @@ class DtRegisterController extends Controller
 
     /**
      * GET /workflow/dt/roles/{role_id}/registers
-     * 
-     * CONSULTA DE LISTA DE REGISTROS DE DISEÑO TÉCNICO POR ROL DEL REQUERIMIENTO
-     * */
+     */
     public function index(string $roleId): JsonResponse
     {
         $role = DtRole::findOrFail($roleId);
@@ -38,21 +36,19 @@ class DtRegisterController extends Controller
 
     /**
      * POST /workflow/requirements/{id}/dt/roles/{role_id}/registers
-     * 
-     * AGREGAR REGISTRO DE DISEÑO TÉCNICO A ROL DEL REQUERIMIENTO
      */
-    public function store(StoreDtRegisterRequest $request, string $requirementId, string $roleId,): JsonResponse
+    public function store(StoreDtRegisterRequest $request, string $requirementId, string $roleId): JsonResponse
     {
-        $role = DtRole::findOrFail($roleId);
-        $register = $this->dtRegisterService->storeRegister($role, $request->validated());
+        DtRole::findOrFail($roleId); // Validación de existencia en BD 
+        
+        // 🟢 Se adapta al llamado polimórfico: storeRegister(string $parentId, array $data, string $requirementId)
+        $register = $this->dtRegisterService->storeRegister($roleId, $request->validated(), $requirementId);
         
         return response()->json($register, 201);
     }
 
     /**
      * PUT /workflow/dt/registers/{reg_id}
-     * 
-     * ACTUALIZAR REGISTRO DE DISEÑO TÉCNICO DE ROL DEL REQUERIMIENTO
      */
     public function update(UpdateDtRegisterRequest $request, string $registerId, string $roleId): JsonResponse
     {
@@ -64,8 +60,6 @@ class DtRegisterController extends Controller
 
     /**
      * DELETE /workflow/dt/registers/{reg_id}
-     * 
-     * ELIMINAR REGISTRO DE DISEÑO TÉCNICO DE ROL DEL REQUERIMIENTO
      */
     public function destroy(string $registerId, string $roleId): JsonResponse
     {

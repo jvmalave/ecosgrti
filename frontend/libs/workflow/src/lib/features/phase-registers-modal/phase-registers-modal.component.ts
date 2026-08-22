@@ -8,7 +8,11 @@ import Swal from 'sweetalert2';
 import { WorkflowPhaseService } from '../../data-access/services/workflow-phase.service';
 import { NotificationService } from '../../data-access/services/notification.services';
 import { PhaseConfig } from '../../data-access/models/phase-config.interface';
-import { WorkflowRecord, WorkflowRegisterPayload, WorkflowRegistersResponse } from '../../data-access/models/workflow-phase.models';
+import { 
+  WorkflowRecord, 
+  WorkflowRegisterPayload, 
+  WorkflowRegistersResponse, 
+} from '../../data-access/models/workflow-phase.models';
 
 @Component({
   selector: 'lib-phase-registers-modal',
@@ -20,10 +24,11 @@ import { WorkflowRecord, WorkflowRegisterPayload, WorkflowRegistersResponse } fr
 export class PhaseRegistersModalComponent implements OnInit {
   
   // =========================================================================
-  // INPUTS & OUTPUTS REQUERIDOS (Conectados al HTML Padre)
+  // 1. INPUTS & OUTPUTS REQUERIDOS (Conectados al HTML Padre)
   // =========================================================================
   requirementId = input.required<string>();
-  // Inputs polimórficos actualizados
+  
+  // Inputs polimórficos
   parentId = input.required<string>();
   parentName = input.required<string>();
   parentStatus = input.required<string>();
@@ -34,14 +39,14 @@ export class PhaseRegistersModalComponent implements OnInit {
   closeModal = output<void>();
 
   // =========================================================================
-  // SERVICIOS
+  // 2. SERVICIOS (Inyección de Dependencias)
   // =========================================================================
   private readonly fb = inject(FormBuilder);
   private readonly phaseService = inject(WorkflowPhaseService);
   private readonly notificationService = inject(NotificationService);
 
   // =========================================================================
-  // ESTADOS REACTIVOS (Signals)
+  // 3. ESTADOS REACTIVOS (Signals)
   // =========================================================================
   registerForm!: FormGroup;
   records = signal<WorkflowRecord[]>([]);
@@ -50,22 +55,22 @@ export class PhaseRegistersModalComponent implements OnInit {
   editingRecordId = signal<string | null>(null);
 
   // =========================================================================
-  // COMPUTADOS POLIMÓRFICOS
+  // 4. COMPUTADOS POLIMÓRFICOS (Computed)
   // =========================================================================
   
   // Fase COE
-  isCoePhase = computed(() => {
-    return this.config().phaseCode === 'COE';
-  });
+  isCoePhase = computed(() => this.config().phaseCode === 'COE');
 
   // Sustantivos dinámicos según la fase
   parentLabel = computed(() => this.isCoePhase() ? 'Entregable' : 'Rol');
   recordName = computed(() => this.isCoePhase() ? 'actividad' : 'registro');
   recordNamePlural = computed(() => this.isCoePhase() ? 'actividades' : 'registros');
   
-
   modalTitle = computed(() => `Bitácora de ${this.config().phaseName}`);
 
+  // =========================================================================
+  // 5. CICLO DE VIDA E INICIALIZACIÓN
+  // =========================================================================
 
   ngOnInit(): void {
     this.initForm();
@@ -81,9 +86,14 @@ export class PhaseRegistersModalComponent implements OnInit {
     });
   }
   
+  // =========================================================================
+  // 6. GESTIÓN DE DATOS Y TRANSACCIONES HTTP
+  // =========================================================================
+
   loadRecords(): void {
     this.isLoading.set(true);
-    // 🟢 Inyección del config completo y uso del nuevo método getChildRegisters
+    
+    // Inyección del config completo y uso del nuevo método getChildRegisters
     this.phaseService.getChildRegisters(this.parentId(), this.config()).subscribe({
       next: (response: WorkflowRegistersResponse) => {
         this.records.set(response.records || []);
@@ -112,7 +122,9 @@ export class PhaseRegistersModalComponent implements OnInit {
     const noun = this.recordName();
 
     if (currentEditId) {
+      // ----------------------------------------------------
       // MODO ACTUALIZACIÓN (PUT)
+      // ----------------------------------------------------
       this.phaseService.updateChildRegister(currentEditId, this.parentId(), this.config(), payload).subscribe({
         next: (updatedRecord: WorkflowRecord) => {
           this.records.update(current => 
@@ -121,23 +133,67 @@ export class PhaseRegistersModalComponent implements OnInit {
           this.resetForm();
           this.isSaving.set(false);
           this.notificationService.toastSuccess(`${noun.charAt(0).toUpperCase() + noun.slice(1)} actualizado correctamente.`);
+          
+          // 🟢 REACTIVIDAD: Avisar al Dashboard que los porcentajes pudieron haber cambiado
+          this.phaseService.refreshDashboard$.next();
         },
         error: (err: HttpErrorResponse) => this.handleError(err, `No se pudo actualizar el ${noun}.`)
       });
 
     } else {
+      // ----------------------------------------------------
       // MODO CREACIÓN (POST)
+      // ----------------------------------------------------
       this.phaseService.storeChildRegister(this.requirementId(), this.parentId(), this.config(), payload).subscribe({
         next: (newRecord: WorkflowRecord) => {
           this.records.update(current => [newRecord, ...current]);
           this.resetForm();
           this.isSaving.set(false);
           this.notificationService.toastSuccess(`${noun.charAt(0).toUpperCase() + noun.slice(1)} guardado exitosamente.`);
+          
+          // 🟢 REACTIVIDAD: Avisar al Dashboard para reflejar el estado PI-I y la nueva barra de progreso
+          this.phaseService.refreshDashboard$.next();
         },
         error: (err: HttpErrorResponse) => this.handleError(err, `No se pudo crear el ${noun}.`)
       });
     }
   }
+
+  /**
+   * Elimina un registro de la bitácora (Físico para DT, Lógico para COR/COE/PI)
+   */
+  async deleteRecord(regId: string): Promise<void> {
+    const regToDelete = this.records().find(r => r.id === regId);
+    if (!regToDelete) return;
+    
+    const noun = this.recordName();
+    const isConfirmed = await this.notificationService.confirm(
+      `Eliminar ${noun.charAt(0).toUpperCase() + noun.slice(1)}`,
+      `¿Estás seguro que deseas eliminar "${regToDelete.title}"? Esta acción es irreversible.`
+    );
+
+    if (isConfirmed) {
+      this.phaseService.deleteChildRegister(regId, this.parentId(), this.config()).subscribe({
+        next: () => {
+          this.records.update(current => current.filter(r => r.id !== regId));
+          this.notificationService.toastSuccess(`${noun.charAt(0).toUpperCase() + noun.slice(1)} eliminado exitosamente.`);
+          
+          if (this.editingRecordId() === regId) this.resetForm();
+
+          // 🟢 REACTIVIDAD: Avisar al Dashboard ante cualquier cambio de estado
+          this.phaseService.refreshDashboard$.next();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.notificationService.showError('Error', `No se pudo eliminar el ${noun}.`);
+          console.error(err.message);
+        }
+      });
+    }
+  }
+
+  // =========================================================================
+  // 7. FUNCIONES DE UI Y MANEJO DE ESTADO
+  // =========================================================================
 
   /**
    * Prepara el formulario para EDICIÓN
@@ -159,35 +215,6 @@ export class PhaseRegistersModalComponent implements OnInit {
     this.registerForm.reset({
       date: new Date().toISOString().substring(0, 10)
     });
-  }
-
-  /**
-   * Elimina un registro de la bitácora (Físico para DT, Lógico para COR/COE)
-   */
-  async deleteRecord(regId: string): Promise<void> {
-    const regToDelete = this.records().find(r => r.id === regId);
-    if (!regToDelete) return;
-    
-    const noun = this.recordName();
-    const isConfirmed = await this.notificationService.confirm(
-      `Eliminar ${noun.charAt(0).toUpperCase() + noun.slice(1)}`,
-      `¿Estás seguro que deseas eliminar "${regToDelete.title}"? Esta acción es irreversible.`
-    );
-
-    if (isConfirmed) {
-      this.phaseService.deleteChildRegister(regId, this.parentId(), this.config()).subscribe({
-        next: () => {
-          this.records.update(current => current.filter(r => r.id !== regId));
-          this.notificationService.toastSuccess(`${noun.charAt(0).toUpperCase() + noun.slice(1)} eliminado exitosamente.`);
-          
-          if (this.editingRecordId() === regId) this.resetForm();
-        },
-        error: (err: HttpErrorResponse) => {
-          this.notificationService.showError('Error', `No se pudo eliminar el ${noun}.`);
-          console.error(err.message);
-        }
-      });
-    }
   }
 
   /**
@@ -280,4 +307,5 @@ export class PhaseRegistersModalComponent implements OnInit {
     }
     console.error(fallbackMessage, err.message);
   }
+
 }

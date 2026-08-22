@@ -12,6 +12,8 @@ class CoeDeliverableController extends AbstractPhaseController
 {
     public function __construct(CoeDeliverableService $phaseService)
     {
+        // Vincula el motor específico de Construcción Operativa (COE) 
+        // a la propiedad protegida de la clase abstracta padre.
         $this->phaseService = $phaseService;
     }
 

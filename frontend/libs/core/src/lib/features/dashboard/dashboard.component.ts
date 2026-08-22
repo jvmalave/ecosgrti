@@ -528,4 +528,32 @@ public isGrEnabled(status: string): boolean {
     this.selectedReqForOrchestrator.set(null);
   }
 
+public onRequirementPhaseUpdated(event: {req_id: string, phase_actual: string, progreso_global: number}): void {
+    
+    // 1. Mutamos la lista principal del Dashboard
+    this.requirements.update(reqs => 
+      reqs.map(req => 
+        req.id === event.req_id 
+          ? { 
+              ...req, 
+              status: event.phase_actual, 
+              progress_percentage: event.progreso_global 
+            } 
+          : req
+      )
+    );
+
+    // 2. Mutamos el requerimiento abierto en el Orquestador
+    const currentOrchestratorReq = this.selectedReqForOrchestrator();
+    if (currentOrchestratorReq && currentOrchestratorReq.id === event.req_id) {
+      this.selectedReqForOrchestrator.set({
+        ...currentOrchestratorReq,
+        status: event.phase_actual,
+        progress_percentage: event.progreso_global 
+      });
+    }
+
+    console.log('✅ Requerimiento mutado reactivamente a fase:', event.phase_actual);
+  }
+
 }

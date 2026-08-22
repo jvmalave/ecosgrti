@@ -10,6 +10,7 @@ use App\Domains\Workflow\Models\CoeDeliverable;
 use App\Domains\Workflow\Models\CoeActivity;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use App\Domains\Core\Dictionaries\CacheKeyDictionary; 
 
 class CoeDeliverableService extends AbstractPhaseComponentService
 {
@@ -19,9 +20,16 @@ class CoeDeliverableService extends AbstractPhaseComponentService
     // IMPLEMENTACIÓN DEL CONTRATO DEL SERVICIO BASE
     // =========================================================================
     protected function getComponentModel(): string { return CoeDeliverable::class; }
-    protected function getCacheKeyPrefix(): string { return 'coe_deliverables'; }
+    
+    protected function getCacheKeyPrefix(): string { return 'coe_deliverables'; } 
+    
     protected function getPhaseCode(): string { return 'COE-C'; }
     protected function getPhaseInitCode(): string { return 'COE-I'; }
+
+    protected function getRequiredPredecessorPhases(): array {
+        return ['ATF-C']; // COE corre paralelo a DT y COR, solo depende de ATF
+    }
+
 
     // =========================================================================
     // IMPLEMENTACIÓN DEL CONTRATO DEL TRAIT DE BITÁCORAS
@@ -31,8 +39,8 @@ class CoeDeliverableService extends AbstractPhaseComponentService
 
     protected function countRegistersInRequirement(string $requirementId): int
     {
-        return DB::table('workflow.coe_activities as ca') // Verificar: coe_activities
-            ->join('workflow.coe_deliverables as cd', 'ca.coe_deliverable_id', '=', 'cd.id') // Verificar: coe_deliverable_id
+        return DB::table('workflow.coe_activities as ca') 
+            ->join('workflow.coe_deliverables as cd', 'ca.coe_deliverable_id', '=', 'cd.id') 
             ->where('cd.req_id', $requirementId) 
             ->whereNull('ca.deleted_at')
             ->whereNull('cd.deleted_at')
@@ -75,34 +83,24 @@ class CoeDeliverableService extends AbstractPhaseComponentService
             ON CONFLICT (req_id, deliverable_id) DO NOTHING
         ", [$userId, $userId, $requirementId]);
 
-        // 3. Recuperar datos con ordenamiento nativo (RN-COE-10)
-        $cacheKey = "req_{$requirementId}_coe_deliverables_meta";
+        // 3. Recuperar datos con ordenamiento nativo utilizando el DICCIONARIO (RN-COE-10)
+        $cacheKey = CacheKeyDictionary::phaseComponentsList($requirementId, $this->getPhaseInitCode());
         
-        // El diagrama menciona ORDER BY name ASC[cite: 5], por lo que debemos incluir el join si el nombre está en la tabla maestra, 
-        // pero dado que CoeDeliverable es el modelo principal, lo haremos a través de Eloquent.
         $deliverablesList = Cache::remember($cacheKey, 600, function () use ($requirementId) {
-            return CoeDeliverable::with('masterDeliverable:id,name') // Carga eager del nombre original
+            return CoeDeliverable::with('masterDeliverable:id,name') 
                         ->where('req_id', $requirementId)
-                        ->withCount('registers') // Cuenta las actividades asociadas
+                        ->withCount('registers') 
                         ->get()
                         ->sortBy(function($deliverable) {
                             return $deliverable->masterDeliverable->name ?? '';
                         })
-                        ->values() // Re-indexar tras el sortBy collection
+                        ->values() 
                         ->toArray();
         });
 
-        // Trazabilidad de Auditoría (RN-COE-02)
-        // $this->auditService->logModelChange(
-        //     'ACCESS_COE_DELIVERABLES',
-        //     "Inicialización o acceso a la fase de Construcción-Entregables.",
-        //     ['requirement_id' => $requirementId],
-        //     $userId
-        // );
-
         return [
             'requirement_id' => $requirementId,
-            'roles_list' => $deliverablesList // Mantenemos la llave 'roles_list' para no romper el front-end polimórfico
+            'roles_list' => $deliverablesList 
         ];
     }
 
@@ -127,7 +125,6 @@ class CoeDeliverableService extends AbstractPhaseComponentService
         }
     }
 
-    // En CoeDeliverableService.php
     protected function getRequirementColumn(): string 
     {
         return 'req_id'; // Adaptación específica para COE

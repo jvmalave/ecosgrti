@@ -281,7 +281,7 @@
                               (click)="openDetailModal(req.id)"
                               title="Ver Detalle"
                             >
-                            <i class="fa-solid fa-eye"></i>
+                              <i class="fa-solid fa-eye"></i>
                               <!-- <img
                                 src="assets/icons/show-details.png"
                                 alt="Ver Detalles"
@@ -294,7 +294,7 @@
                               (click)="openEstimationModal(req)"
                               title="Gestionar Estimación"
                             >
-                            <i class="bi bi-calendar3"></i>
+                              <i class="bi bi-calendar3"></i>
                               <!-- <img
                                 src="assets/icons/estimation.png"
                                 alt="Estimación"
@@ -309,7 +309,7 @@
                               [disabled]="!isAtfEnabled(req.status)"
                               title="Gestionar Acuerdos"
                             >
-                            <i class="fa-solid fa-handshake"></i>
+                              <i class="fa-solid fa-handshake"></i>
                               <!-- <img
                                 src="assets/icons/acuerdo.png"
                                 alt="ATF"
@@ -325,7 +325,7 @@
                               [class.opacity-50]="!isGrEnabled(req.status)"
                               [disabled]="!isGrEnabled(req.status)"
                             >
-                            <i class="fa-solid fa-gear"></i>
+                              <i class="fa-solid fa-gear"></i>
                               <!-- <img
                                 src="assets/icons/manage-req.png"
                                 alt="Gestionar Requerimiento"
@@ -338,8 +338,7 @@
                               [class.opacity-50]="!isGrEnabled(req.status)"
                               [disabled]="!isGrEnabled(req.status)"
                             >
-                            <i class="fa-solid fa-lock"></i>
-                              
+                              <i class="fa-solid fa-lock"></i>
                             </button>
                           </div>
                         </td>
@@ -477,8 +476,8 @@
           <lib-lifecycle-orchestrator-modal
             [req]="selectedReqForOrchestrator()!"
             (closeModal)="closeLifecycleOrchestrator()"
-          >
-          </lib-lifecycle-orchestrator-modal>
+            (requirementUpdated)="onRequirementPhaseUpdated($event)"
+          ></lib-lifecycle-orchestrator-modal>
         }
       </section>
     </main>

@@ -11,13 +11,14 @@ use Illuminate\Support\Facades\DB;
 use App\Domains\Audit\Services\AuditService;
 use App\Domains\Workflow\Services\PhaseTransitionService;
 use App\Domains\Workflow\Services\ProgressCalculationService;
-use Illuminate\Support\Facades\Cache;
+use App\Domains\Core\Dictionaries\CacheKeyDictionary;
 use InvalidArgumentException;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class RequirementService
 {
@@ -49,14 +50,13 @@ class RequirementService
      */
     public function createRequirement(array $validatedData, UploadedFile $itRequestDoc, UploadedFile $needsSpreadsheet): array
     {
-        // Envolvemos todo en una transacción ACID para garantizar la integridad
         return DB::transaction(function () use ($validatedData, $itRequestDoc, $needsSpreadsheet) {
 
-            // 1. Almacenamiento seguro de archivos binarios
+            // Almacenamiento seguro de archivos binarios
             $itDocPath = $itRequestDoc->store('requirements/it_docs');
             $needsDocPath = $needsSpreadsheet->store('requirements/needs_docs');
 
-            // 2. Captura del Grafo Organizacional y el ID Real del Consultor
+            // Captura del Grafo Organizacional y el ID Real del Consultor
             $snapshot = DB::table('security.functional_consultants as fc')
                 ->join('catalogs.requesting_units as ru', 'fc.requesting_unit_id', '=', 'ru.id')
                 ->join('catalogs.systems as sys', 'ru.system_id', '=', 'sys.id')
@@ -70,9 +70,8 @@ class RequirementService
                 )
                 ->first();
 
-            // REGLA 1: Búsqueda de la Matriz de Progreso Activa filtrada por el tipo de gestión
+            // Búsqueda de la Matriz de Progreso Activa
             $searchType = rtrim(trim($validatedData['management_type']), 'sS') . '%';
-            
             $activeMatrix = DB::table('catalogs.progress_matrices')
                 ->where('is_active', true)
                 ->where('management_type', 'ilike', $searchType)
@@ -84,7 +83,7 @@ class RequirementService
 
             $requirementId = Str::uuid()->toString();
 
-            // 3. Persistencia del Requerimiento Principal
+            // Persistencia Inicial (Esqueleto del Requerimiento)
             DB::table('core.requirements')->insert([
                 'id' => $requirementId,
                 'rrti' => $validatedData['rrti'],
@@ -93,48 +92,20 @@ class RequirementService
                 'progress_matrix_id' => $activeMatrix->id, // Snapshot Inmutable inicial
                 'creation_date' => $validatedData['creation_date'],
                 'description' => $validatedData['description'],
-                'status' => 'RC',
+                'status' => 'RC', // Nace en vanguardia RC (Recepción)
+                'progress_percentage' => 0, // Se calculará dinámicamente en milisegundos
                 'is_locked' => false,
-
-                // === Usamos el ID real que acabamos de extraer ===
                 'functional_consultant_id' => $snapshot->real_consultant_id,
-
                 'it_request_doc_path' => $itDocPath,
                 'needs_spreadsheet_path' => $needsDocPath,
-
                 'snapshot_society_name' => $snapshot->society_name,
                 'snapshot_system_name' => $snapshot->system_name,
                 'snapshot_unit_name' => $snapshot->unit_name,
-
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            // 4. Registro Forense (Audit Trail)
-            DB::table('audit.audit_logs')->insert([
-                'id' => Str::uuid()->toString(),
-                'user_id' => auth()->id(), 
-                'action' => 'CREATE_REQUIREMENT',
-                'description' => "Creación del requerimiento RRTI: {$validatedData['rrti']}",
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-                'payload' => json_encode([
-                    'entity' => 'core.requirements',
-                    'entity_id' => $requirementId,
-                    'rrti' => $validatedData['rrti'],
-                    'requirement_type' => $validatedData['requirement_type'],
-                    'management_type' => $validatedData['management_type'],
-                    'progress_matrix_id' => $activeMatrix->id,
-                    'functional_consultant_id' => $snapshot->real_consultant_id,
-                    'snapshot_unit' => $snapshot->unit_name,
-                    'snapshot_system' => $snapshot->system_name,
-                    'snapshot_society' => $snapshot->society_name
-                ]),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            // 5. Mapeo e inserción en la tabla pivote de Consultores CSPE
+            // Mapeo e inserción en la tabla pivote de Consultores CSPE
             $cspePivotData = collect($validatedData['cspe_consultants'])->map(function ($cspeId) use ($requirementId) {
                 return [
                     'id' => Str::uuid()->toString(),
@@ -144,9 +115,13 @@ class RequirementService
                     'updated_at' => now(),
                 ];
             })->toArray();
-
             DB::table('core.cspe_consultant_requirement')->insert($cspePivotData);
 
+            // =====================================================================
+            // ORDEN LÓGICO DE TRANSACCIÓN Y VANGUARDIA (Nacimiento)
+            // =====================================================================
+            
+            // Registro Histórico Transaccional
             $this->phaseTransitionService->recordTransition(
                 $requirementId,
                 'RC',
@@ -154,15 +129,34 @@ class RequirementService
                 'Creación inicial del requerimiento'
             );
 
-            // 6. Cálculo y persistencia del progreso inicial
+            // Cálculo y persistencia del progreso inicial (Lee el historial)
             $requirementModel = Requirement::find($requirementId);
             $initialProgress = $this->progressService->calculateGlobalProgress($requirementModel);
-            DB::table('core.requirements')->where('id', $requirementId)->update(['progress_percentage' => $initialProgress]);
+            
+            // Actualización (RC es la vanguardia por defecto al nacer)
+            $requirementModel->update(['progress_percentage' => $initialProgress]);
 
-            // 7. Higienización de Caché (CRÍTICO PARA ANGULAR)
-            Redis::del("req_detail_v2_{$requirementId}");
-            Redis::del("req_detail_{$requirementId}");
-            Redis::incr('dashboard_version');
+            // Registro Forense Centralizado
+            $this->auditService->logModelChange(
+                'CREATE_REQUIREMENT',
+                "Creación del requerimiento RRTI: {$validatedData['rrti']}",
+                [
+                    'entity_id' => $requirementId,
+                    'rrti' => $validatedData['rrti'],
+                    'management_type' => $validatedData['management_type'],
+                    'progress_matrix_id' => $activeMatrix->id,
+                    'functional_consultant_id' => $snapshot->real_consultant_id,
+                    'initial_progress' => $initialProgress
+                ],
+                (string) auth()->id(),
+                $requirementId
+            );
+
+            // E. Higienización de Caché con el Diccionario
+            Redis::del(CacheKeyDictionary::allRequirementDetailKeys($requirementId));
+            Redis::del(CacheKeyDictionary::requirementProgress($requirementId));
+            Redis::incr(CacheKeyDictionary::globalDashboardVersion());
+            Cache::tags([CacheKeyDictionary::dashboardTag()])->flush();
 
             return ['id' => $requirementId, 'rrti' => $validatedData['rrti']];
         });
@@ -171,11 +165,14 @@ class RequirementService
     /**
      * Obtiene el detalle completo del requerimiento usando caché en Redis (Fast Path)
      */
+    /**
+     * Obtiene el detalle completo del requerimiento usando caché en Redis (Fast Path)
+     */
     public function getFullDetail(string $id): ?array
     {
         $cacheKey = "req_detail_v2_{$id}";
 
-        // 1. Intentar desde Redis
+        // Intentar desde Redis
         $cachedData = Redis::get($cacheKey);
         if ($cachedData) {
             return [
@@ -184,18 +181,47 @@ class RequirementService
             ];
         }
 
-        // 2. Cache Miss: Ir a la Base de Datos
+        // Cache Miss: Ir a la Base de Datos con inyección de subconsultas para el Mapa
         $requirement = Requirement::with([
             'cspeConsultants',
             'functionalConsultant.person',
             'progressMatrix'
-        ])->find($id);
+        ])
+        ->select('core.requirements.*') // Seleccionamos todas las columnas base
+        
+        // INYECCIÓN 1: Fases Cerradas (Verdes en el mapa)
+        ->selectRaw("(
+            SELECT string_agg(SPLIT_PART(ph.phase_status_code, '-', 1), ',') 
+            FROM workflow.requirement_phase_history ph 
+            WHERE ph.requirement_id = core.requirements.id AND ph.phase_status_code LIKE '%-C'
+        ) as historical_frozen_string")
+        
+        // INYECCIÓN 2: Fases Iniciadas/Activas (Azules en el mapa)
+        ->selectRaw("(
+            SELECT string_agg(SPLIT_PART(ph.phase_status_code, '-', 1), ',') 
+            FROM workflow.requirement_phase_history ph 
+            WHERE ph.requirement_id = core.requirements.id AND ph.phase_status_code LIKE '%-I'
+        ) as historical_active_string")
+        
+        ->find($id);
 
         if (!$requirement) {
             return null;
         }
 
-        // 3. Guardar en Redis (TTL de 5 minutos)
+        // 3. TRANSFORMACIÓN PARA EL FRONTEND (Igual que en el Dashboard)
+        $frozen = !empty($requirement->historical_frozen_string) ? array_unique(explode(',', $requirement->historical_frozen_string)) : [];
+        $active = !empty($requirement->historical_active_string) ? array_unique(explode(',', $requirement->historical_active_string)) : [];
+        
+        // Asignamos las propiedades dinámicas que Angular espera
+        $requirement->frozen_phases = array_values($frozen);
+        $requirement->open_phases = array_values(array_diff($active, $frozen));
+        
+        // Limpiamos la basura temporal
+        unset($requirement->historical_frozen_string);
+        unset($requirement->historical_active_string);
+
+        // 4. Guardar en Redis (TTL de 5 minutos)
         Redis::setex($cacheKey, 300, json_encode($requirement));
 
         return [
@@ -267,7 +293,7 @@ class RequirementService
 
             $baseData = collect($data)->except(['cspe_consultants', 'persona_id'])->toArray();
 
-            // REGLA 2: Actualización de Matriz si cambia el Tipo de Gestión antes de ES-R
+            // Actualización de Matriz si cambia el Tipo de Gestión antes de ES-R
             if (isset($baseData['management_type']) && $baseData['management_type'] !== $requirement->management_type) {
                 
                 $searchType = rtrim(trim($baseData['management_type']), 'sS') . '%';
@@ -315,9 +341,9 @@ class RequirementService
             // ------------------------------------------
             // INVALIDACIÓN EXACTA DE CACHÉ
             // ------------------------------------------
-            Redis::del("req_detail_v2_{$id}");
-            Redis::del("req_detail_{$id}");
-            Redis::incr('dashboard_version');
+            Redis::del(CacheKeyDictionary::allRequirementDetailKeys($id));
+            Redis::incr(CacheKeyDictionary::globalDashboardVersion());
+            Cache::tags([CacheKeyDictionary::dashboardTag()])->flush();
 
             return $requirement;
         });
@@ -380,10 +406,12 @@ class RequirementService
                 targetId: $id
             );
 
-            // Invalidación de caché en Redis para la reactividad en el Dashboard Angular
-            Redis::del("req_detail_v2_{$id}");
-            Redis::del("req_detail_{$id}");
-            Redis::incr('dashboard_version');
+            // ------------------------------------------
+            // INVALIDACIÓN EXACTA DE CACHÉ
+            // ------------------------------------------
+            Redis::del(CacheKeyDictionary::allRequirementDetailKeys($id));
+            Redis::incr(CacheKeyDictionary::globalDashboardVersion());
+            Cache::tags([CacheKeyDictionary::dashboardTag()])->flush();
         }
 
             return $requirement;
@@ -481,10 +509,12 @@ class RequirementService
                 ],
                 userId: $userId
             );
-
-            Cache::forget("req_detail_{$requirementId}");
-            Cache::forget("req_detail_v2_{$requirementId}");
-            Redis::incr('dashboard_version');
+            // ------------------------------------------
+            // INVALIDACIÓN EXACTA DE CACHÉ
+            // ------------------------------------------
+            Redis::del(CacheKeyDictionary::allRequirementDetailKeys($requirementId));
+            Redis::incr(CacheKeyDictionary::globalDashboardVersion());
+            Cache::tags([CacheKeyDictionary::dashboardTag()])->flush();
         });
     }
 
@@ -543,41 +573,94 @@ class RequirementService
     /**
      * Cerrar la fase de Planificación de manera irreversible.
      */
-    public function closePlanningPhase(string $requirementId, string $userId, string $justification): Requirement
+   public function closePlanningPhase(string $requirementId, string $userId, string $justification): Requirement
     {
         return DB::transaction(function () use ($requirementId, $userId, $justification) {
             $requirement = Requirement::findOrFail($requirementId);
 
+            // 🚀 1. Verificación de Idempotencia (Bloqueo de doble ejecución)
             if ($requirement->is_locked) {
                 throw new InvalidArgumentException("Operación inválida: La fase de planificación ya fue cerrada.");
             }
 
-            $requirement->is_locked = true;
-            $requirement->status = 'ES-R';
-            $requirement->save();
+            // =====================================================================
+            // Validación de fase previa (Requerimiento Creado)
+            // =====================================================================
+            $hasRC = DB::table('workflow.requirement_phase_history')
+                ->where('requirement_id', $requirementId)
+                ->where('phase_status_code', 'RC')
+                ->exists();
 
+            if (!$hasRC && $requirement->status !== 'RC') {
+                throw new InvalidArgumentException("Validación fallida: No se puede cerrar la planificación porque el requerimiento no cuenta con el estatus o hito inicial de Requerimiento Creado (RC).");
+            }
+
+            // =====================================================================
+            // ORDEN LÓGICO DE TRANSACCIÓN Y VANGUARDIA
+            // =====================================================================
+            
+            // Registro Histórico
             $this->phaseTransitionService->recordTransition($requirementId, 'ES-R', $userId, $justification);
 
-            $newProgress = $this->progressService->calculateGlobalProgress($requirement->fresh());
+            // Cálculo de Progreso
+            $newProgress = $this->progressService->calculateGlobalProgress($requirement);
 
-            $requirement->forceFill(['progress_percentage' => $newProgress])->save();
+            // Evaluación de Vanguardia
+            $isVanguard = $this->phaseTransitionService->isVanguardStatus('ES-R', $requirement->status);
 
+            $updateData = [
+                'is_locked' => true,
+                'progress_percentage' => $newProgress,
+                'updated_at' => now()
+            ];
+
+            if ($isVanguard) {
+                $updateData['status'] = 'ES-R';
+                $requirement->status = 'ES-R'; // Para memoria en auditoría
+            }
+
+            $requirement->update($updateData);
+
+            // Auditoría Forense
             $this->auditService->logModelChange(
                 action: 'CLOSE_PLANNING_PHASE',
-                description: "Cierre de fase de planificación - RRTI: {$requirement->rrti}",
+                description: "Cierre de fase de planificación - RRTI: {$requirement->rrti}" . ($isVanguard ? " (Nueva Vanguardia)" : " (Proceso Paralelo)"),
                 payload: [
-                    'status' => 'ES-R',
+                    'status' => $requirement->status, 
                     'is_locked' => true,
                     'progress_percentage' => $newProgress,
+                    'is_vanguard_update' => $isVanguard,
                     'justification' => $justification
                 ],
                 userId: $userId,
                 targetId: $requirementId
             );
 
-            Redis::del("req_detail_v2_{$requirementId}");
-            Redis::del("req_detail_{$requirementId}");
-            Redis::incr('dashboard_version');
+            // =========================================================================
+            // DESTRUCCIÓN DEL CACHÉ (DOBLE INVALIDACIÓN Y DICCIONARIO)
+            // =========================================================================
+            
+            // Purgas de llaves específicas con doble driver
+            $keysToPurge = [
+                CacheKeyDictionary::requirementProgress($requirementId),
+                CacheKeyDictionary::requirementDashboardSummary($requirementId),
+                CacheKeyDictionary::progressDashboardData($requirementId)
+            ];
+
+            foreach ($keysToPurge as $key) {
+                Cache::forget($key);
+                Redis::del($key);
+            }
+
+            // Evicción masiva de detalles (se mantiene puramente en Redis si es un patrón de hash/wildcard)
+            Redis::del(CacheKeyDictionary::allRequirementDetailKeys($requirementId));
+            
+            // Reactividad global del Dashboard garantizada
+            Redis::incr(CacheKeyDictionary::globalDashboardVersion());
+            
+            if (config('cache.default') === 'redis') {
+                Cache::tags([CacheKeyDictionary::dashboardTag()])->flush();
+            }
 
             return $requirement->fresh();
         });
@@ -586,29 +669,65 @@ class RequirementService
     /**
      * Método para realizar transiciones de fase atómicas y auditable
      */
+    /**
+     * ⚠️ ATENCIÓN: MÉTODO DE SOPORTE ADMINISTRATIVO (BACKDOOR)
+     * * Este método ignora intencionalmente todas las reglas de negocio (Hard Gates, 
+     * validación de quórum, secuencialidad de componentes, etc.).
+     * * Su propósito EXCLUSIVO es servir como herramienta de rescate para Super Administradores
+     * en caso de que un requerimiento sufra inconsistencias de datos severas. Ejecuta una 
+     * transición de fase forzada, recalcula el progreso (Vanguardia) y sella la acción 
+     * con un rastro de auditoría forense explícito.
+     *
+     * @param string $requirementId ID del requerimiento a intervenir.
+     * @param string $newStatusCode Código de fase destino al que se forzará el salto.
+     * @param string $userId        ID del administrador de soporte que ejecuta la acción.
+     * @param string $remarks       Justificación técnica obligatoria del rescate.
+     */
     public function transitionPhase(string $requirementId, string $newStatusCode, string $userId, string $remarks = ''): void
     {
         DB::transaction(function () use ($requirementId, $newStatusCode, $userId, $remarks) {
             $requirement = Requirement::findOrFail($requirementId);
 
-            $this->phaseTransitionService->recordTransition($requirementId, $newStatusCode, $userId);
+            // 1. Registro Histórico Forzado
+            $this->phaseTransitionService->recordTransition($requirementId, $newStatusCode, $userId, $remarks);
 
-            $requirement->update([
-                'status' => $newStatusCode,
-                'updated_at' => now()
-            ]);
-
+            // 2. Cálculo de Progreso
             $newProgress = $this->progressService->calculateGlobalProgress($requirement);
 
-            $requirement->update(['progress_percentage' => $newProgress]);
+            // 3. Evaluación de Vanguardia
+            $isVanguard = $this->phaseTransitionService->isVanguardStatus($newStatusCode, $requirement->status);
 
+            $updateData = [
+                'progress_percentage' => $newProgress,
+                'updated_at' => now()
+            ];
+
+            if ($isVanguard) {
+                $updateData['status'] = $newStatusCode;
+                $requirement->status = $newStatusCode;
+            }
+
+            $requirement->update($updateData);
+
+            // 4. Auditoría Forense de Intervención Manual
             $this->auditService->logModelChange(
-                action: 'PHASE_CHANGE',
-                description: "Transición a fase: {$newStatusCode}",
-                payload: ['new_status' => $newStatusCode, 'progress' => $newProgress],
+                action: 'ADMIN_FORCE_PHASE_CHANGE', // Etiqueta especial para monitoreo de seguridad
+                description: "INTERVENCIÓN ADMINISTRATIVA: Transición forzada a fase {$newStatusCode}" . ($isVanguard ? " (Nueva Vanguardia)" : " (Proceso Paralelo)"),
+                payload: [
+                    'new_status' => $requirement->status,
+                    'progress' => $newProgress,
+                    'is_vanguard_update' => $isVanguard,
+                    'admin_justification' => $remarks
+                ],
                 userId: $userId,
                 targetId: $requirementId
             );
+
+            // 5. Diccionario de Caché
+            Redis::del(CacheKeyDictionary::allRequirementDetailKeys($requirementId));
+            Redis::del(CacheKeyDictionary::requirementProgress($requirementId));
+            Redis::incr(CacheKeyDictionary::globalDashboardVersion());
+            Cache::tags([CacheKeyDictionary::dashboardTag()])->flush();
         });
     }
 }

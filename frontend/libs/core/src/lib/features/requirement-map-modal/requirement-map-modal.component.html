@@ -1,0 +1,121 @@
+<div class="modal-overlay">
+  <!-- Agregamos overflow-hidden en el CSS para que el fondo morado no se desborde -->
+  <div class="modal-dialog-custom">
+    <!-- Header: Estilo Corporativo CANTV -->
+    <div
+      class="modal-header brand-gradient pb-3 pt-4 px-4 d-flex justify-content-between align-items-center"
+    >
+      <h4 class="mb-0 fw-bold text-white d-flex align-items-center">
+        <i class="fa-solid fa-map-location-dot me-2 fs-5"></i> Mapa de Ciclo de
+        Vida
+      </h4>
+      <button
+        type="button"
+        class="btn-close btn-close-white shadow-none"
+        aria-label="Cerrar modal"
+        title="Cerrar"
+        (click)="closeModal.emit()"
+      ></button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body p-4 p-md-5">
+      <!-- Info del Requerimiento centrada (Estilo Orquestador) -->
+      <div class="text-center mb-5">
+        <h5
+          class="fw-bold d-flex justify-content-center align-items-center gap-2 mb-3"
+        >
+          Requerimiento
+          <span
+            class="badge badge-soft-brand fs-6 rounded-pill px-3 py-2 shadow-sm border"
+          >
+            {{ requirement().rrti }}
+          </span>
+        </h5>
+        <span class="text-muted small fw-semibold">
+          Tipo de Gestión:
+          <span
+            class="badge bg-light text-dark border rounded-pill px-3 py-1"
+            >{{ requirement().management_type }}</span
+          >
+        </span>
+        <hr class="mt-4 mb-0 opacity-10 w-75 mx-auto" />
+      </div>
+
+      <!-- Ruta de Roles -->
+      @if (rolesPath().length > 0) {
+        <div class="path-container mb-5">
+          <h6 class="text-muted mb-4 text-uppercase fw-bold">
+            <i class="fa-solid fa-users-gear me-2 text-brand"></i> Línea de
+            Roles
+          </h6>
+          <div class="stepper-wrapper">
+            @for (node of rolesPath(); track node.code; let last = $last) {
+              <div
+                class="stepper-item"
+                [class.completed]="node.state === 'COMPLETED'"
+                [class.in-progress]="node.state === 'ACTIVE'"
+              >
+                <div class="step-icon-wrapper">
+                  <i [class]="node.icon"></i>
+                </div>
+                <div class="step-name">{{ node.name }}</div>
+                @if (!last) {
+                  <div
+                    class="step-divider"
+                    [class.divider-active]="node.state === 'COMPLETED'"
+                  ></div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Ruta de Entregables -->
+      @if (deliverablesPath().length > 0) {
+        <div class="path-container">
+          <h6 class="text-muted mb-4 text-uppercase fw-bold">
+            <i class="fa-solid fa-file-signature me-2 text-brand"></i> Línea de
+            Entregables
+          </h6>
+          <div class="stepper-wrapper">
+            @for (
+              node of deliverablesPath();
+              track node.code;
+              let last = $last
+            ) {
+              <div
+                class="stepper-item"
+                [class.completed]="node.state === 'COMPLETED'"
+                [class.in-progress]="node.state === 'ACTIVE'"
+              >
+                <div class="step-icon-wrapper">
+                  <i [class]="node.icon"></i>
+                </div>
+                <div class="step-name">{{ node.name }}</div>
+                @if (!last) {
+                  <div
+                    class="step-divider"
+                    [class.divider-active]="node.state === 'COMPLETED'"
+                  ></div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer px-4 pb-4 pt-0 border-0 text-end">
+      <!-- Usamos btn-outline-brand para mantener consistencia con los botones de cierre -->
+      <button
+        class="btn btn-outline-brand rounded-pill px-4 fw-bold"
+        (click)="closeModal.emit()"
+      >
+        Cerrar Mapa
+      </button>
+    </div>
+  </div>
+</div>

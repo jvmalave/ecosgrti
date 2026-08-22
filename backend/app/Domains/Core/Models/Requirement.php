@@ -15,85 +15,134 @@ use App\Domains\Catalogs\Models\ProgressMatrix;
 
 class Requirement extends Model
 {
-    
-    use HasUuid;
-    use HasFactory;
-    use SoftDeletes;
 
-    protected $table = 'core.requirements';
+  use HasUuid;
+  use HasFactory;
+  use SoftDeletes;
 
-    // 1. Le decimos que NO es autoincremental
-    public $incrementing = false;
+  protected $table = 'core.requirements';
 
-    // 2. Le decimos que el ID es un texto (UUID)
-    protected $keyType = 'string';
+  // 1. Le decimos que NO es autoincremental
+  public $incrementing = false;
 
-    protected $with = ['progressMatrix'];
+  // 2. Le decimos que el ID es un texto (UUID)
+  protected $keyType = 'string';
 
+  protected $with = ['progressMatrix'];
 
-    protected $fillable = [
-      'id',
-      'rrti', 
-      'requirement_type',
-      'creation_date',
-      'description', 
-      'management_type',
-      'progress_matrix_id',  
-      'needs_spreadsheet_path',
-      'it_request_doc_path',
-      'functional_consultant_id',
-      'status', 
-      'is_locked',
-      'snapshot_society_name',
-      'snapshot_system_name',
-      'snapshot_unit_name',
-      'progress_percentage'
-    ];
+  // 🟢 INYECCIÓN ESTRUCTURAL: Agregamos el atributo virtual al array JSON resultante
+  protected $appends = ['frozen_phases'];
 
+  protected $fillable = [
+    'id',
+    'rrti',
+    'requirement_type',
+    'creation_date',
+    'description',
+    'management_type',
+    'progress_matrix_id',
+    'needs_spreadsheet_path',
+    'it_request_doc_path',
+    'functional_consultant_id',
+    'status',
+    'is_locked',
+    'snapshot_society_name',
+    'snapshot_system_name',
+    'snapshot_unit_name',
+    'progress_percentage'
+  ];
 
-    protected static function newFactory()
-    {
-        return \Database\Factories\Core\RequirementFactory::new(); 
+  protected static function newFactory()
+  {
+    return \Database\Factories\Core\RequirementFactory::new();
+  }
+
+    // =========================================================================
+    // ACCESORES Y MUTADORES (LÓGICA ESTRUCTURAL)
+    // =========================================================================
+
+  /**
+   * Calcula las fases inmutables leyendo directamente el historial de eventos,
+   * garantizando soporte perfecto para topologías concurrentes (Mixto).
+   */
+  public function getFrozenPhasesAttribute(): array
+  {
+    // 1. Cierre Global Absoluto
+    if ($this->status === 'RC') {
+      $all = ['ATF', 'DT', 'COR', 'COE', 'PI', 'CER', 'CEE', 'PAP', 'AU'];
+      if ($this->management_type === 'Roles') return array_values(array_diff($all, ['COE', 'CEE']));
+      if ($this->management_type === 'Entregables') return array_values(array_intersect($all, ['ATF', 'COE', 'CEE']));
+      return $all;
     }
 
-    /**
-     * Relación: Un requerimiento pertenece a un Consultor Funcional
-     */
-    public function functionalConsultant()
-    {
-        // Apuntamos al modelo que ya creamos en el dominio de Seguridad
-        return $this->belongsTo(FunctionalConsultant::class, 'functional_consultant_id');
+    $frozen = [];
+
+    // 2. Extraer del historial (Event Sourcing)
+    $histories = $this->relationLoaded('phaseHistories')
+      ? $this->phaseHistories
+      : $this->phaseHistories()->get();
+
+    foreach ($histories as $history) {
+      // 🟢 CORRECCIÓN: Usamos phase_status_code
+      if (str_ends_with($history->phase_status_code, '-C')) {
+        // Separamos 'DT-C' y nos quedamos con 'DT'
+        $parts = explode('-', $history->phase_status_code);
+        if (isset($parts[0])) {
+          $frozen[] = $parts[0];
+        }
+      }
     }
 
-    public function cspeConsultants()
-    {
-        return $this->belongsToMany(
-            CspeConsultant::class, 
-            'core.cspe_consultant_requirement',
-            'requirement_id',
-            'cspe_consultant_id'
-        )
-        ->using(RequirementCspePivot::class) 
-        ->withTimestamps(); 
+    // 3. Fallback en tiempo real para el status maestro actual
+    if (str_ends_with($this->status, '-C')) {
+      $parts = explode('-', $this->status);
+      if (isset($parts[0])) {
+        $frozen[] = $parts[0];
+      }
     }
 
-    /**
-     * Relación 1 a 1: Un Requerimiento tiene una (y solo una) Estimación de Cronograma (Camino de Hierro).
-     * * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function scheduleEstimation()
-    {
-        return $this->hasOne(ScheduleEstimation::class, 'requirement_id');
-    }
+    return array_values(array_unique($frozen));
+  }
 
-    public function phaseHistories()
-    {
-        return $this->hasMany(RequirementPhaseHistory::class, 'requirement_id');
-    }
+    // =========================================================================
+    // RELACIONES
+    // =========================================================================
 
-    
-    public function progressMatrix()
-    {
-        return $this->belongsTo(ProgressMatrix::class, 'progress_matrix_id');
-    }
+  /**
+   * Relación: Un requerimiento pertenece a un Consultor Funcional
+   */
+  public function functionalConsultant()
+  {
+    return $this->belongsTo(FunctionalConsultant::class, 'functional_consultant_id');
+  }
+
+  public function cspeConsultants()
+  {
+    return $this->belongsToMany(
+      CspeConsultant::class,
+      'core.cspe_consultant_requirement',
+      'requirement_id',
+      'cspe_consultant_id'
+    )
+      ->using(RequirementCspePivot::class)
+      ->withTimestamps();
+  }
+
+  /**
+   * Relación 1 a 1: Un Requerimiento tiene una (y solo una) Estimación de Cronograma (Camino de Hierro).
+   */
+  public function scheduleEstimation()
+  {
+    return $this->hasOne(ScheduleEstimation::class, 'requirement_id');
+  }
+
+  public function phaseHistories()
+  {
+    return $this->hasMany(RequirementPhaseHistory::class, 'requirement_id');
+  }
+
+  public function progressMatrix()
+  {
+    return $this->belongsTo(ProgressMatrix::class, 'progress_matrix_id');
+  }
 }

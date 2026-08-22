@@ -1,0 +1,159 @@
+/* ========================================================
+  MODAL DE USUARIOS DE PRUEBA (CANTV)
+   ======================================================== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Fondo oscuro semitransparente */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1060; /* Ligeramente superior al modal padre para sobreponerse */
+  backdrop-filter: blur(2px); /* Efecto cristal */
+}
+
+.modal-dialog-custom {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 700px; /* Ancho controlado para un formulario simple */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  overflow: hidden; /* Permite que el header morado abrace las curvas */
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; /* Previene que el modal se salga de la pantalla */
+}
+
+.modal-body-scroll {
+  overflow-y: auto;
+  max-height: calc(90vh - 70px); /* Calcula el alto restando el header */
+  
+  /* Estilo de barra de desplazamiento (Scrollbar) */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #c5cae9;
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: #9fa8da;
+  }
+}
+
+/* ========================================================
+  TABLA RESPONSIVA Y FIJA
+   ======================================================== */
+.table-responsive {
+  max-height: 350px;
+  overflow-y: auto;
+  border-radius: 8px;
+  
+  table {
+    margin-bottom: 0;
+  }
+
+  /* Mantiene el encabezado fijo mientras se hace scroll en los usuarios */
+  thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa; /* bg-light de Bootstrap */
+    z-index: 1;
+    border-bottom: 2px solid #dee2e6;
+  }
+}
+
+/* ========================================================
+  AJUSTES ESPECÍFICOS DE FORMULARIO
+   ======================================================== */
+input {
+  &::placeholder {
+    color: #adb5bd;
+    font-size: 0.9rem;
+  }
+  
+  /* Efecto Focus Corporativo */
+  &:focus {
+    border-color: #d500f9 !important;
+    box-shadow: 0 0 0 0.2rem rgba(213, 0, 249, 0.25) !important;
+  }
+}
+
+.brand-gradient {
+  background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%);
+  border-bottom: 3px solid #ea80fc;
+}
+
+.modal-body-scroll {
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: #fcfcfc;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #e0e0e0;
+    border-radius: 3px;
+  }
+}
+
+.text-brand {
+  color: #d500f9 !important;
+}
+
+.btn-brand {
+  background: linear-gradient(90deg, #aa00ff 0%, #d500f9 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: linear-gradient(90deg, #7b1fa2 0%, #aa00ff 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4);
+    transform: translateY(-1px);
+  }
+  
+  &:disabled {
+    background: #e1bee7;
+    color: #9e9e9e;
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+// Botón Outline Corporativo
+  .btn-outline-brand { 
+    border-color: #d500f9; 
+    color: #d500f9; 
+    font-weight: 500;
+    transition: all 0.3s ease; 
+    background: transparent;
+
+    &:hover { 
+      background: #d500f9; 
+      color: white; 
+      box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4); 
+      transform: translateY(-1px);
+    }
+    
+    &:disabled {
+      background: #e1bee7;
+      color: #9e9e9e;
+      box-shadow: none;
+      transform: none;
+    }
+  }
+
+  .alert{
+      border-left: 4px solid rgba(3, 21, 1, 0.4) !important; 
+    }

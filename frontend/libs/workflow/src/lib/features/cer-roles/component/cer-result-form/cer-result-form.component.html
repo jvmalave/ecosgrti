@@ -1,0 +1,215 @@
+<div class="modal-overlay">
+  <div class="modal-dialog-custom">
+    <!-- CABECERA CORPORATIVA -->
+    <div
+      class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center"
+    >
+      <h5 class="m-0 fw-bold">
+        <i class="fa-solid fa-clipboard-check me-2"></i> 
+        {{ viewMode() ? 'Dictamen Funcional (Snapshot)' : 'Registrar Dictamen Funcional' }}
+      </h5>
+      <button
+        type="button"
+        class="btn text-white fs-5 p-0 border-0 shadow-none"
+        (click)="closeModal()"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- CUERPO DEL MODAL -->
+    <div class="modal-body-scroll bg-white p-4">
+      <div class="mb-4">
+        <span class="badge badge-brand rounded-pill fw-bold px-3 py-2 small shadow-sm text-uppercase">
+          Requerimiento: {{ rrti() }}
+        </span>
+      </div>
+
+      <!-- Panel de Información General -->
+      <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded-3 border">
+        <div class="d-flex gap-4">
+          <div>
+            <span class="text-muted small fw-bold d-block text-uppercase mb-1">Ticket CSAL Asociado</span>
+            <span
+              class="badge rounded-pill fw-bold px-3 py-2"
+              style="background-color: #f3e8f5; color: #8e1482; border: 1px solid #8e1482; font-size: 0.9rem;"
+            >
+              <i class="fa-solid fa-tag me-1"></i> {{ ticketNumber() }}
+            </span>
+          </div>
+          <div class="ms-2 ps-4 border-start">
+            <span class="text-muted small fw-bold d-block text-uppercase mb-1">Documento Base</span>
+            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" (click)="viewRequestDocument()">
+              <i class="fa-solid fa-file-pdf me-1"></i> Ver Solicitud
+            </button>
+          </div>
+        </div>
+        <div class="text-end">
+          <span class="text-muted small fw-bold d-block text-uppercase mb-1">Componentes Evaluados</span>
+          <span class="fs-5 fw-bold text-dark">{{ rolesInTicket().length }} Rol(es)</span>
+        </div>
+      </div>
+
+      <!-- INICIO DEL FORMULARIO REACTIVO -->
+      <form [formGroup]="resultForm" (ngSubmit)="!viewMode() && submitResult()">
+        
+        <!-- Documento de Acta (Oculto en modo lectura) -->
+        @if (!viewMode()) {
+          <div class="mb-4">
+            <label for="fileInput" class="form-label fw-bold text-secondary small mb-1">
+              Acta de Aprobación/Rechazo (PDF) <span class="text-danger">*</span>
+            </label>
+            <input
+              type="file"
+              id="fileInput"
+              class="form-control focus-ring-none bg-light"
+              accept="application/pdf"
+              (change)="onFileSelected($event)"
+            />
+            <div class="form-text small text-muted mt-1">
+              <i class="fa-solid fa-paperclip me-1"></i>Peso máximo permitido: 5MB.
+            </div>
+          </div>
+        }
+
+        <!-- Tabla de Evaluación Individual -->
+        <h6 class="fw-bold text-brand mb-3 border-bottom pb-2">
+          <i class="fa-solid fa-list-check me-2"></i> Evaluación Individual
+        </h6>
+
+        <div class="table-responsive mb-4">
+          <table class="table table-bordered align-middle mb-0">
+            <thead class="table-light text-muted small text-uppercase">
+              <tr>
+                <th class="ps-3" style="width: 35%">Rol Técnico</th>
+                <th class="text-center" style="width: 20%">Veredicto</th>
+                <th style="width: 45%">Justificación y Trazabilidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (role of rolesInTicket(); track role.id; let i = $index) {
+                <tr>
+                  <td class="ps-3 fw-medium text-dark">
+                    {{ role.requirement_role?.role_name }}
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-group shadow-sm" role="group">
+                      <input
+                        type="radio"
+                        class="btn-check"
+                        [id]="'approve_' + role.id"
+                        [name]="'verdict_' + role.id"
+                        value="APPROVED"
+                        [formControlName]="'verdict_' + role.id"
+                      />
+                      <label class="btn btn-outline-success btn-sm px-3" [for]="'approve_' + role.id">
+                        <i class="fa-solid fa-check"></i>
+                      </label>
+
+                      <input
+                        type="radio"
+                        class="btn-check"
+                        [id]="'reject_' + role.id"
+                        [name]="'verdict_' + role.id"
+                        value="REJECTED"
+                        [formControlName]="'verdict_' + role.id"
+                      />
+                      <label class="btn btn-outline-danger btn-sm px-3" [for]="'reject_' + role.id">
+                        <i class="fa-solid fa-xmark"></i>
+                      </label>
+                    </div>
+                  </td>
+                  <td class="p-3">
+                    <textarea
+                      class="form-control focus-ring-none"
+                      rows="2"
+                      style="resize: none"
+                      [formControlName]="'reason_' + role.id"
+                      placeholder="Redacte la justificación técnica del rechazo..."
+                      [class.is-invalid]="
+                        resultForm.get('reason_' + role.id)?.invalid &&
+                        resultForm.get('reason_' + role.id)?.touched
+                      "
+                    ></textarea>
+
+                    <!-- TIMELINE DE RECHAZOS HISTÓRICOS -->
+                    @if (role.rejection_history && role.rejection_history.length > 0) {
+                      <div class="mt-3 pt-3 border-top">
+                        <h6 class="text-danger fw-bold mb-3" style="font-size: 0.85rem;">
+                          <i class="fa-solid fa-clock-rotate-left me-1"></i> Historial de Rechazos
+                        </h6>
+                        <div class="ps-2 border-start border-danger border-2 ms-1">
+                          
+                          @for (history of role.rejection_history; track history.rejected_at) {
+                            <div class="mb-2 position-relative">
+                              <!-- El "punto" en la línea de tiempo -->
+                              <span 
+                                class="position-absolute top-0 start-0 translate-middle p-1 bg-danger border border-white rounded-circle" 
+                                style="margin-left: -9px; margin-top: 10px;"
+                              ></span>
+                              
+                              <div class="ps-2">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                  <span class="badge bg-light text-dark border shadow-sm" style="font-size: 0.7rem;">
+                                    <i class="fa-solid fa-tag me-1"></i> {{ history.ticket_number }}
+                                  </span>
+                                  <small class="text-muted" style="font-size: 0.7rem;">
+                                    {{ history.rejected_at | date:'dd/MM/yyyy HH:mm' }}
+                                  </small>
+                                </div>
+                                <p class="text-secondary mb-0 bg-light p-2 rounded border" style="font-size: 0.8rem;">
+                                  {{ history.reason }}
+                                </p>
+                              </div>
+                            </div>
+                          }
+
+                        </div>
+                      </div>
+                    }
+
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- BOTONERA DE ACCIÓN DUAL -->
+        <div class="d-flex justify-content-end gap-2 mt-2 pt-3 border-top">
+          <button
+            type="button"
+            class="btn btn-light px-4 fw-medium text-secondary"
+            (click)="closeModal()"
+            [disabled]="isSubmitting()"
+          >
+            {{ viewMode() ? 'Cerrar' : 'Cancelar' }}
+          </button>
+          
+          @if (viewMode()) {
+            <button
+              type="button"
+              class="btn btn-brand px-4 rounded-pill"
+              (click)="viewPdfDocument()"
+            >
+              <i class="fa-solid fa-file-pdf me-2"></i> Ver Dictamen PDF
+            </button>
+          } @else {
+            <button
+              type="submit"
+              class="btn btn-brand px-4 rounded-pill"
+              [disabled]="isSubmitting()"
+            >
+              @if (isSubmitting()) {
+                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                Procesando...
+              } @else {
+                <i class="fa-solid fa-save me-2"></i> Registrar Dictamen
+              }
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
