@@ -37,10 +37,9 @@ use App\Domains\Workflow\Http\Controllers\CerRoleController;
 use App\Domains\Workflow\Http\Controllers\CeeDeliverableController;
 
 
-// 
-
-
-
+// Controladores Pase a Producción (PAP)
+use App\Domains\Workflow\Http\Controllers\PapRoleController;
+use App\Domains\Workflow\Http\Controllers\PapOrderController;
 
 
 
@@ -281,7 +280,25 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
 
         Route::get('/tickets/{ticketId}/result-file', [CeeDeliverableController::class, 'downloadResultFile']);
       });
-      // api/workflow/cee/requirements/{requirementId}/deliverables-init
+      
+      // ==========================================
+      // FASE PAP (Pase a Producción) - US35
+      // ==========================================
+
+      Route::prefix('pap')->group(function () {
+    // Inicializar roles (Promoción desde CER)
+        Route::get('/requirements/{requirementId}/roles-init', [PapRoleController::class, 'initRoles']);
+
+        Route::post('/requirements/{requirementId}/orders', [PapOrderController::class, 'store']);
+
+        Route::post('/orders/{orderId}/results', [PapOrderController::class, 'registerResult']);
+
+        Route::get('/orders/{orderId}/download-file', [PapOrderController::class, 'downloadOrderFile']);
+
+        Route::get('/orders/{orderId}/download-result', [PapOrderController::class, 'downloadResultFile']);
+
+        Route::patch('/requirements/{requirementId}/close-phase', [PapRoleController::class, 'closePhase']);
+});
 
 
 

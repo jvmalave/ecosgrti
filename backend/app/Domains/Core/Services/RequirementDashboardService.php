@@ -39,7 +39,7 @@ class RequirementDashboardService
             ->selectRaw('COUNT(aa.id) > 0 as has_atf_agreements')
             // Conteo de Roles
             ->selectRaw('(SELECT COUNT(*) FROM workflow.requirements_roles WHERE requirements_roles.requirement_id = r.id) as roles_count')
-            // Conteo de Roles
+            // Conteo de Roles (Booleano)
             ->selectRaw('(SELECT COUNT(*) FROM workflow.requirements_roles WHERE requirements_roles.requirement_id = r.id) > 0 as has_roles')
             // Conteo de Entregables
             ->selectRaw('(SELECT COUNT(*) FROM workflow.deliverables WHERE workflow.deliverables.requirement_id = r.id) as deliverables_count')
@@ -57,7 +57,7 @@ class RequirementDashboardService
                 INNER JOIN workflow.requirements_roles rr ON cr.requirement_role_id = rr.id
                 WHERE rr.requirement_id = r.id AND cr.status = 'CLOSED'
             ) as cor_closed_roles_count")
-            //Conteo de Entregables Operativos (COE) Cerrados
+            // Conteo de Entregables Operativos (COE) Cerrados
             ->selectRaw("(
                 SELECT COUNT(cd.id)
                 FROM workflow.coe_deliverables cd
@@ -70,6 +70,14 @@ class RequirementDashboardService
                 INNER JOIN workflow.requirements_roles rr ON pir.requirement_role_id = rr.id
                 WHERE rr.requirement_id = r.id AND pir.status = 'CLOSED'
             ) as pi_closed_roles_count")
+            // Conteo de Roles de Certificados
+            ->selectRaw("(
+                SELECT COUNT(cerr.id)
+                FROM workflow.cer_roles cerr
+                INNER JOIN workflow.requirements_roles rr ON cerr.requirement_role_id = rr.id
+                WHERE rr.requirement_id = r.id AND cerr.status = 'CERTIFIED'
+            ) as cer_closed_roles_count")
+            
              // historical_frozen_string
             ->selectRaw("(
                 SELECT string_agg(SPLIT_PART(ph.phase_status_code, '-', 1), ',') 

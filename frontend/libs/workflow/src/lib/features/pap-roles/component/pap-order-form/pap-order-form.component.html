@@ -1,0 +1,84 @@
+<!-- Capa oscura de fondo con Blur -->
+<div class="modal-overlay">
+  
+  <!-- Contenedor del Modal Corporativo -->
+  <div class="modal-dialog-custom">
+    
+    <!-- CABECERA CORPORATIVA -->
+    <div class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center">
+      <h5 class="m-0 fw-bold">
+        <i class="fa-solid fa-truck-fast me-2"></i> Registrar Orden de Transporte
+      </h5>
+      <button type="button" class="btn text-white fs-5 p-0 border-0 shadow-none" (click)="closeModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- CUERPO DEL MODAL -->
+    <div class="modal-body-scroll bg-white p-4">
+      
+      <div class="alert custom-alert rounded-3 mb-4 p-3">
+        <div class="d-flex align-items-center mb-2">
+          <i class="fa-solid fa-circle-info fs-4 text-brand me-3"></i>
+          <small class="mb-0 fw-medium">
+            Está a punto de iniciar el despliegue para <strong>{{ selectedRoles().length }}</strong> rol(es):
+          </small>
+        </div>
+        
+        <div class="d-flex flex-wrap gap-2" style="margin-left: 2.8rem;">
+          @for (role of selectedRoles(); track role.id) {
+            <span class="badge bg-white text-dark border shadow-sm px-3 py-2 fw-medium rounded-pill">
+              <i class="fa-solid fa-server text-muted me-1"></i> {{ role.requirement_role?.role_name }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <form [formGroup]="orderForm" (ngSubmit)="submitOrder()">
+        
+        <div class="mb-3">
+          <label for="orderNumberInput" class="form-label fw-bold text-secondary small mb-1">
+            N° de Orden de Transporte (CSPE) <span class="text-danger">*</span>
+          </label>
+          <input type="text" id="orderNumberInput" class="form-control focus-ring-none bg-light" formControlName="order_number" placeholder="Ej: OT-2026-999">
+          @if (orderForm.get('order_number')?.invalid && orderForm.get('order_number')?.touched) {
+            <div class="text-danger small mt-1 fw-medium"><i class="fa-solid fa-triangle-exclamation me-1"></i>El número de orden es obligatorio.</div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label for="orderDateInput" class="form-label fw-bold text-secondary small mb-1">
+            Fecha de la Orden <span class="text-danger">*</span>
+          </label>
+          <input type="date" id="orderDateInput" class="form-control focus-ring-none bg-light" formControlName="date">
+          @if (orderForm.get('date')?.invalid && orderForm.get('date')?.touched) {
+            <div class="text-danger small mt-1 fw-medium"><i class="fa-solid fa-triangle-exclamation me-1"></i>La fecha es obligatoria.</div>
+          }
+        </div>
+
+        <div class="mb-4">
+          <label for ="fileInput" class="form-label fw-bold text-secondary small mb-1">
+            Documento de Soporte (PDF) <span class="text-danger">*</span>
+          </label>
+          <input type="file" id="fileInput" class="form-control focus-ring-none bg-light" accept="application/pdf" (change)="onFileSelected($event)">
+          <div class="form-text small text-muted mt-1"><i class="fa-solid fa-paperclip me-1"></i>Peso máximo permitido: 5MB.</div>
+        </div>
+
+        <!-- BOTONERA DE ACCIÓN -->
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+          <button type="button" class="btn btn-light px-4 fw-medium text-secondary" (click)="closeModal()" [disabled]="isSubmitting()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-brand px-4 rounded-pill" [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+              <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span> Procesando...
+            } @else {
+              <i class="fa-solid fa-cloud-arrow-up me-2"></i> Registrar Orden
+            }
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>

@@ -97,16 +97,22 @@ export class CeeDeliverablesComponent implements OnInit {
   
   public isPhaseClosed = computed<boolean>(() => {
     const phase = this.reqPhase();
-    // 🟢 Solo mostramos el banner si el requerimiento está explícitamente en CEE-C o fases posteriores
+    // Solo muestra el banner si el requerimiento está explícitamente en CEE-C o fases posteriores
     const closedPhases = ['CEE-C', 'PI-I', 'PI-C', 'PAP-I', 'PAP-C', 'AU', 'RF'];
     return closedPhases.includes(phase);
   });
 
   public canClosePhase = computed<boolean>(() => {
-    const hasDeliverables = this.store.deliverables().length > 0;
-    const noPending = this.store.filteredPending().length === 0;
-    const noInProgress = this.store.filteredInProgress().length === 0;
-    return hasDeliverables && noPending && noInProgress && !this.isPhaseClosed();
+    const allDeliverables = this.store.deliverables();
+    
+    // Si no hay entregables, bloqueamos el cierre
+    if (allDeliverables.length === 0) return false;
+
+    // Evaluamos el estado absoluto ignorando el buscador
+    const hasPending = allDeliverables.some(d => d.status === 'PENDING_CERTIFICATION');
+    const hasInProgress = allDeliverables.some(d => d.status === 'IN_PROGRESS');
+    
+    return !hasPending && !hasInProgress && !this.isPhaseClosed();
   });
 
   // ==========================================

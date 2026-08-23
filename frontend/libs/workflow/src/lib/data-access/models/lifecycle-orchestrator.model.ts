@@ -13,4 +13,5 @@ export interface DashboardRequirement {
   cor_closed_roles_count?: number;
   pi_closed_roles_count?: number;
   coe_closed_deliverables_count?: number;
+  cer_closed_roles_count?: number;
 }

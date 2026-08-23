@@ -5,6 +5,7 @@ import { PHASE_CONFIGURATIONS, PhaseConfig } from '../../data-access/models/phas
 import { DashboardRequirement } from '../../data-access/models/lifecycle-orchestrator.model';
 import { CerRolesComponent } from '../../features/cer-roles/cer-roles.component';
 import { CeeDeliverablesComponent } from '../../features/cee-deliverables/cee-deliverables.component';
+import { PapRolesComponent } from '../../features/pap-roles/pap-roles.component';
 
 
 
@@ -17,7 +18,8 @@ export type PhaseAction = 'DT' | 'COR' | 'COE' | 'CER' | 'CEE' | 'PI' | 'PAP' | 
     CommonModule, 
     PhaseRolesModalComponent, 
     CerRolesComponent,
-    CeeDeliverablesComponent
+    CeeDeliverablesComponent,
+    PapRolesComponent
   ],
   templateUrl: './lifecycle-orchestrator-modal.component.html',
   styleUrls: ['./lifecycle-orchestrator-modal.component.scss']
@@ -132,8 +134,34 @@ export class LifecycleOrchestratorModalComponent {
     return isValidStatus && hasClosedCoEDeliverables;
   });
   
-  isPapEnabled = computed(() => false);
+  isPapEnabled = computed(() => {
+    const req = this.req();
+    if (!req) return false;
+
+    // Lógica de Lista Negra: NO se habilita en fases prematuras
+    const invalidStatuses = ['RC', 'EST', 'ATF-I', 'ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C', 'PI-I', 'PI-C',];
+    const isValidStatus = !invalidStatuses.includes(req.status);
+
+    // HARD-GATE: Verifica si hay roles que hayan superado la fase de Certificación (CER)
+    // Asumiendo que tu backend devuelve "cer_closed_roles_count"
+    const hasCertifiedRoles = (req.cer_closed_roles_count ?? 0) > 0;
+
+    console.log('Auditoría Hard-Gate PAP -> Roles certificados en CER:', req.cer_closed_roles_count);
+
+    return isValidStatus && hasCertifiedRoles;
+  });
   isAuEnabled = computed(() => false);
+
+
+  isCerClosed = computed(() => {
+    const req = this.req();
+    if (!req) return false;
+
+    // Lista de estatus que indican que CER ya pasó a la historia
+    const closedStatuses = ['CER-C', 'PAP-I', 'PAP-C', 'AU-I', 'AU-C', 'FC'];
+    
+    return closedStatuses.includes(req.status);
+  });
 
   activePhaseConfig = signal<PhaseConfig | null>(null);
 

@@ -16,14 +16,11 @@ use App\Domains\Security\Services\SpecialOperationService;
 
 use Exception;
 
-
 /**
  * @property \App\Domains\Audit\Services\AuditService $auditService
  * @property \App\Domains\Workflow\Services\PhaseTransitionService $phaseTransitionService
  * @property \App\Domains\Workflow\Services\ProgressCalculationService $progressService
-
-*/
-
+ */
 trait ManagesCertificationTickets
 {
     abstract protected function getTicketModel(): string;
@@ -32,41 +29,61 @@ trait ManagesCertificationTickets
     abstract protected function getTicketPrefix(): string; // Ej: 'CER' o 'CEE'
     abstract protected function generatesTicketNumberAutomatically(): bool;
 
+    // =========================================================================
+    // CONFIGURACIÓN POLIMÓRFICA DE COLUMNAS Y ESTADOS (Defaults para CER/CEE)
+    // =========================================================================
+    protected function getTicketIdentifierColumn(): string { return 'ticket_number'; }
+    protected function getTicketForeignKey(): string { return 'ticket_id'; }
+    protected function getTicketInProgressStatus(): string { return 'TKT_IN_PROGRESS'; }
+    protected function getDateColumn(): string { return 'request_date'; }
+    protected function getTicketClosedStatus(): string { return 'TKT_CLOSED'; }
+    protected function getComponentPendingStatus(): string { return 'PENDING_CERTIFICATION'; }
+    protected function getComponentInProgressStatus(): string { return 'IN_PROGRESS'; }
+    protected function getComponentCertifiedStatus(): string { return 'CERTIFIED'; }
+    protected function getRejectionReasonColumn(): string { return 'rejection_reason'; }
+    protected function getAuditActionCreate(): string { return 'CREATE_CERTIFICATION_TICKET'; }
+    protected function getAuditActionUpdate(): string { return 'UPDATE_CERTIFICATION_TICKET'; }
+    protected function getAuditActionRegisterResult(): string { return 'REGISTER_CERTIFICATION_RESULT'; }
+
 
     /**
-     * Registrar Solicitud de Ticket
+     * Registrar Solicitud de Ticket/Orden
      */
     public function storeTicket(string $requirementId, array $data, UploadedFile $file, array $componentIds): Model
     {
         $ticketModel = $this->getTicketModel();
         $componentModel = $this->getComponentModel();
-
+      
         return DB::transaction(function () use ($ticketModel, $componentModel, $requirementId, $data, $file, $componentIds) {
             
             // =====================================================================
-            // 1. Asignación o Generación de Número de Ticket (Adaptable CER/CEE)
+            // 1. Asignación o Generación de Número de Registro (Adaptable CER/CEE/PAP)
             // =====================================================================
+            $identifierCol = $this->getTicketIdentifierColumn();
+
             if ($this->generatesTicketNumberAutomatically()) {
                 // Para CEE: El sistema lo genera (Ej. CEE-000001)
                 $ticketNumber = $this->generateTicketNumber();
             } else {
-                // Para CER: Viene en el Request digitado por el usuario (CSAL)
-                if (empty($data['ticket_number'])) {
-                    throw new Exception("El número de ticket es obligatorio y debe ser provisto por el ente certificador.", 422);
+                // Para CER/PAP: Viene en el Request digitado por el usuario
+                if (empty($data[$identifierCol])) {
+                    throw new Exception("El identificador (ticket/orden) es obligatorio.", 422);
                 }
-                $ticketNumber = $data['ticket_number'];
+                $ticketNumber = $data[$identifierCol];
             }
             
             // 2. Almacenamiento del PDF
             $path = $file->store("{$this->getTicketPrefix()}_tickets/{$requirementId}", 'local');
 
-            // 3. Creación del Ticket
+            // 3. Creación del Registro
+            $dateCol = $this->getDateColumn(); 
+
             $ticket = $ticketModel::create([
                 'requirement_id' => $requirementId,
-                'ticket_number'  => $ticketNumber,
-                'request_date'   => $data['request_date'],
+                $identifierCol   => $ticketNumber,
+                $dateCol         => $data['request_date'] ?? ($data['date'] ?? null), // Asignación dinámica
                 'file_path'      => $path,
-                'status'         => 'TKT_IN_PROGRESS',
+                'status'         => $this->getTicketInProgressStatus(),
                 'created_by'     => auth()->id(),
             ]);
 
@@ -74,19 +91,19 @@ trait ManagesCertificationTickets
             $componentModel::whereIn('id', $componentIds)
                 ->where('requirement_id', $requirementId)
                 ->update([
-                    'status'     => 'IN_PROGRESS',
-                    'ticket_id'  => $ticket->id,
-                    'updated_by' => auth()->id()
+                    'status'                     => $this->getComponentInProgressStatus(),
+                    $this->getTicketForeignKey() => $ticket->id,
+                    'updated_by'                 => auth()->id()
                 ]);
 
-            // 5. Disparador Transaccional Global (Avance automático a CER-I / CEE-I)
+            // 5. Disparador Transaccional Global (Avance automático a CER-I / PAP-I)
             $this->triggerPhaseInitiation($requirementId);
 
             // 6. Auditoría y Caché
             $this->auditService->logModelChange(
-                'CREATE_CERTIFICATION_TICKET',
-                "Creación de Ticket {$ticketNumber} en fase {$this->getPhaseInitCode()}",
-                ['ticket_id' => $ticket->id, 'components_assigned' => $componentIds],
+                $this->getAuditActionCreate(),
+                "Creación de registro {$ticketNumber} en fase {$this->getPhaseInitCode()}",
+                [$this->getTicketForeignKey() => $ticket->id, 'components_assigned' => $componentIds],
                 (string) auth()->id(),
                 $requirementId
             );
@@ -98,18 +115,19 @@ trait ManagesCertificationTickets
     }
 
     /**
-     * Actualizar Solicitud de Ticket (Sincronización en Cascada)
+     * Actualizar Solicitud de Ticket/Orden (Sincronización en Cascada)
      */
     public function updateTicket(string $ticketId, array $data, ?UploadedFile $file, array $newComponentIds): Model
     {
         $ticketModel = $this->getTicketModel();
         $componentModel = $this->getComponentModel();
+        $foreignKey = $this->getTicketForeignKey();
 
-        return DB::transaction(function () use ($ticketModel, $componentModel, $ticketId, $data, $file, $newComponentIds) {
+        return DB::transaction(function () use ($ticketModel, $componentModel, $ticketId, $data, $file, $newComponentIds, $foreignKey) {
             $ticket = $ticketModel::findOrFail($ticketId);
 
-            if ($ticket->status !== 'TKT_IN_PROGRESS') {
-                throw new Exception("Solo se pueden modificar tickets en proceso.", 422);
+            if ($ticket->status !== $this->getTicketInProgressStatus()) {
+                throw new Exception("Solo se pueden modificar registros en proceso.", 422);
             }
 
             // 1. Reemplazo opcional de archivo
@@ -120,30 +138,36 @@ trait ManagesCertificationTickets
                 $ticket->file_path = $file->store("{$this->getTicketPrefix()}_tickets/{$ticket->requirement_id}", 'local');
             }
 
-            $ticket->request_date = $data['request_date'] ?? $ticket->request_date;
+            $dateCol = $this->getDateColumn(); 
+            $ticket->$dateCol = $data['request_date'] ?? ($data['date'] ?? $ticket->$dateCol);
+            
             $ticket->updated_by = auth()->id();
             $ticket->save();
 
-            // 2. Sincronización en Cascada de Componentes (RN-CER-22)
+            // 2. Sincronización en Cascada de Componentes
             // Liberar los que fueron desmarcados
-            $componentModel::where('ticket_id', $ticketId)
+            $componentModel::where($foreignKey, $ticketId)
                 ->whereNotIn('id', $newComponentIds)
                 ->update([
-                    'status'    => 'PENDING_CERTIFICATION',
-                    'ticket_id' => null,
+                    'status'    => $this->getComponentPendingStatus(),
+                    $foreignKey => null,
                     'updated_by'=> auth()->id()
                 ]);
 
             // Asociar los nuevos seleccionados
             $componentModel::whereIn('id', $newComponentIds)
                 ->update([
-                    'status'    => 'IN_PROGRESS',
-                    'ticket_id' => $ticketId,
+                    'status'    => $this->getComponentInProgressStatus(),
+                    $foreignKey => $ticketId,
                     'updated_by'=> auth()->id()
                 ]);
+            
+            $identifier = $ticket->{$this->getTicketIdentifierColumn()};
 
-            $this->auditService->logModelChange('UPDATE_CERTIFICATION_TICKET', "Edición de Ticket {$ticket->ticket_number}", ['ticket_id' => $ticket->id], (string) auth()->id());
-            $this->purgeCertificationCache((string) $ticket->requirement_id);
+            $this->auditService->logModelChange(
+              $this->getAuditActionCreate(),
+              "Actualización de registro {$identifier}", [$foreignKey => $ticket->id], (string) auth()->id());
+              $this->purgeCertificationCache((string) $ticket->requirement_id);
 
             return $ticket;
         });
@@ -174,13 +198,15 @@ trait ManagesCertificationTickets
     {
         $ticketModel = $this->getTicketModel();
         $componentModel = $this->getComponentModel();
+        $foreignKey = $this->getTicketForeignKey();
+        $rejectionReasonCol = $this->getRejectionReasonColumn();
 
-        return DB::transaction(function () use ($ticketModel, $componentModel, $ticketId, $data, $file, $evaluations, $isException) {
+        return DB::transaction(function () use ($ticketModel, $componentModel, $ticketId, $data, $file, $evaluations, $isException, $foreignKey, $rejectionReasonCol) {
             $ticket = $ticketModel::findOrFail($ticketId);
             $requirementId = (string) $ticket->requirement_id;
 
             // SNAPSHOT PREVIO (Para auditoría de actualización excepcional)
-            $prevSnapshot = $isException ? $componentModel::where('ticket_id', $ticketId)->get()->toArray() : null;
+            $prevSnapshot = $isException ? $componentModel::where($foreignKey, $ticketId)->get()->toArray() : null;
 
             // 1. Procesamiento de Evidencia de Resultado
             if ($file) {
@@ -193,31 +219,31 @@ trait ManagesCertificationTickets
             // 2. Evaluación Granular por Componente (Bifurcación e Historial)
             $approvedCount = 0;
             $totalCount = count($evaluations);
+            $identifierColValue = $ticket->{$this->getTicketIdentifierColumn()};
 
             foreach ($evaluations as $eval) {
                 $component = $componentModel::findOrFail($eval['id']);
                 
                 if ($eval['is_approved']) {
                     $component->update([
-                        'status' => 'CERTIFIED', 
-                        'rejection_reason' => null, // Limpiamos el motivo activo
+                        'status' => $this->getComponentCertifiedStatus(), 
+                        $rejectionReasonCol => null, // Limpiamos el motivo activo
                         'updated_by' => auth()->id()
                     ]);
                     $approvedCount++;
                 } else {
-                    // 🟢 NUEVO: Construimos el delta del historial de rechazos
                     $history = $component->rejection_history ?? [];
                     
                     $history[] = [
-                        'ticket_number' => $ticket->ticket_number,
+                        $this->getTicketIdentifierColumn() => $identifierColValue,
                         'reason'        => $eval['rejection_reason'],
                         'rejected_by'   => auth()->id(),
                         'rejected_at'   => now()->toDateTimeString(),
                     ];
 
                     $component->update([
-                        'status'            => 'PENDING_CERTIFICATION', 
-                        'rejection_reason'  => $eval['rejection_reason'], // Mantenemos el último para lectura rápida en frontend
+                        'status'            => $this->getComponentPendingStatus(), 
+                        $rejectionReasonCol => $eval['rejection_reason'], // Mantenemos el último para lectura rápida en frontend
                         'rejection_history' => $history, // Guardamos la colección completa inmutable
                         'updated_by'        => auth()->id()
                     ]);
@@ -226,21 +252,30 @@ trait ManagesCertificationTickets
 
             // 3. Categorización Automática
             $ticket->result_category = $this->calculateResultCategory($totalCount, $approvedCount);
-            $ticket->status = 'TKT_CLOSED';
+            $ticket->status = $this->getTicketClosedStatus();
             $ticket->updated_by = auth()->id();
             $ticket->save();
 
             // 4. Auditoría
             if ($isException) {
-                $newSnapshot = $componentModel::where('ticket_id', $ticketId)->get()->toArray();
+                $newSnapshot = $componentModel::where($foreignKey, $ticketId)->get()->toArray();
                 $this->auditService->logModelChange(
                     "UPDATE_CLOSED_{$this->getTicketPrefix()}_TICKET", 
-                    "Intervención de Coordinador sobre resultado de ticket {$ticket->ticket_number}", 
+                    "Intervención de Coordinador sobre resultado de {$identifierColValue}", 
                     ['prev_snapshot' => $prevSnapshot, 'new_snapshot' => $newSnapshot], 
                     (string) auth()->id()
                 );
             } else {
-                $this->auditService->logModelChange("REGISTER_{$this->getTicketPrefix()}_RESULT", "Dictamen registrado para ticket {$ticket->ticket_number}", [], (string) auth()->id());
+                $this->auditService->logModelChange(
+                    $this->getAuditActionRegisterResult(), 
+                    "Dictamen registrado para {$identifierColValue}", 
+                    [
+                        $foreignKey => $ticket->id, 
+                        'evaluations' => $evaluations,
+                        'result_category' => $ticket->result_category
+                    ], 
+                    (string) auth()->id()
+                );
             }
 
             $this->purgeCertificationCache($requirementId);
@@ -280,7 +315,7 @@ trait ManagesCertificationTickets
                 ->exists();
 
             if (!$hasInitHistory) {
-                $this->phaseTransitionService->recordTransition($requirementId, $phaseCode, (string) auth()->id(), "Inicio de fase {$phaseCode} al crear ticket.");
+                $this->phaseTransitionService->recordTransition($requirementId, $phaseCode, (string) auth()->id(), "Inicio de fase {$phaseCode} al crear ticket/orden.");
                 
                 $calculatedProgress = $this->progressService->calculateGlobalProgress($requirement);
                 $isVanguard = $this->phaseTransitionService->isVanguardStatus($phaseCode, $requirement->status);
@@ -318,7 +353,7 @@ trait ManagesCertificationTickets
         Cache::forget($listKey);
         Redis::del($listKey);
         
-        // Purgamos también cualquier lista específica de tickets que pudieses tener (Opcional según tu Dictionary)
+        // Purgamos también cualquier lista específica de tickets que pudieses tener
         Redis::incr(CacheKeyDictionary::globalDashboardVersion());
     }
 }

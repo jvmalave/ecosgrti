@@ -92,14 +92,20 @@ export class CerRolesComponent implements OnInit {
     return this.reqPhase() !== 'CER-I';
   });
   
-
   public canClosePhase = computed<boolean>(() => {
-    const hasRoles = this.store.roles().length > 0;
-    const noPending = this.store.filteredPending().length === 0;
-    const noInProgress = this.store.filteredInProgress().length === 0;
-    // No permitir cerrar si YA está cerrada
-    return hasRoles && noPending && noInProgress && !this.isPhaseClosed();
+    const allRoles = this.store.roles();
+    
+    // Si no hay roles en absoluto, no se puede cerrar la fase.
+    if (allRoles.length === 0) return false;
+
+    // Evaluamos el estado crudo (sin filtros de búsqueda)
+    const hasPending = allRoles.some(r => r.status === 'PENDING_CERTIFICATION');
+    const hasInProgress = allRoles.some(r => r.status === 'IN_PROGRESS');
+    
+    // Solo permitir cerrar si no hay pendientes ni en proceso, y si la fase no está cerrada ya
+    return !hasPending && !hasInProgress && !this.isPhaseClosed();
   });
+
 
   // ==========================================
   // SIGNALS PARA EL MODAL DE RESULTADOS
