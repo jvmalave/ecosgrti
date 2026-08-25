@@ -1,0 +1,482 @@
+<div class="fade-in p-4">
+  <!-- Cabecera: Requerimiento, Buscador y Botón de Cierre -->
+  <div
+    class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3"
+  >
+    <!-- Lado Izquierdo: Badge y Botón Estatus -->
+    <div class="d-flex align-items-center gap-3">
+      <span
+        class="badge badge-brand rounded-pill fw-bold px-3 py-2 text-uppercase"
+      >
+        Requerimiento: {{ rrti() }}
+      </span>
+      <button
+        class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm"
+        (click)="openRolesStatusModal()"
+      >
+        <i class="fa-solid fa-users-viewfinder me-1"></i> Estatus de Roles
+      </button>
+    </div>
+
+    <!-- Lado Derecho: Buscador Compacto -->
+    <div class="input-group shadow-sm" style="max-width: 350px">
+      <span class="input-group-text bg-white border-end-0 text-muted">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </span>
+      <input
+        type="text"
+        class="form-control border-start-0 shadow-none"
+        placeholder="Buscar por rol o N° de Ticket..."
+        [ngModel]="searchTerm()"
+        (ngModelChange)="onSearchTermChange($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Estado Vacío Absoluto -->
+  @if (rolesDataset().length === 0) {
+    <div class="text-center py-5 opacity-50">
+      <i class="fa-solid fa-users-slash fs-1 text-brand mb-3 d-block"></i>
+      <h6 class="fw-bold text-dark">Sin roles para asignación a usuarios</h6>
+    </div>
+  }
+
+  <!-- Estado Vacío por falta de coincidencias en el Buscador -->
+  @if (
+    rolesDataset().length > 0 &&
+    filteredPending().length === 0 &&
+    ticketsInProgress().length === 0 &&
+    closedTicketsGroups().length === 0
+  ) {
+    <div class="text-center py-5">
+      <i class="fa-regular fa-folder-closed fs-2 mb-2 opacity-50 d-block"></i>
+      <h6 class="fw-medium text-secondary">
+        No se encontraron resultados que coincidan con la búsqueda.
+      </h6>
+    </div>
+  }
+
+  <!-- Mensaje de Fase Cerrada -->
+  @if (isPhaseClosed()) {
+    <div
+      class="d-flex align-items-center mb-4 p-3 rounded-3 shadow-sm"
+      style="background-color: #e8f5e9; border: 1px solid #c8e6c9"
+    >
+      <i class="fa-solid fa-lock fs-3 me-3" style="color: #2e7d32"></i>
+      <div>
+        <h6 class="fw-bold mb-1" style="color: #1b5e20">
+          Fase de Asignación de Usuarios Cerrada
+        </h6>
+        <span class="small" style="color: #2e7d32">
+          Esta fase ha concluido. Todos los accesos han sido otorgados y se
+          encuentran en estado inmutable.
+        </span>
+      </div>
+    </div>
+  }
+
+  <!-- TABLA 1: Roles por Asignar -->
+  @if (filteredPending().length > 0) {
+    <div class="mb-5">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold mb-0 text-brand">
+          <i class="fa-solid fa-user-clock me-2"></i> Roles por Asignar Usuario
+        </h6>
+
+        <button
+          class="btn btn-sm rounded-pill btn-outline-brand px-3 shadow-sm"
+          [disabled]="rolesToProcess().length === 0"
+          (click)="openTicketModal()"
+        >
+          <i class="fa-solid fa-file-signature me-1"></i> Iniciar Ticket CSAL
+        </button>
+      </div>
+
+      <table class="table mb-0 shadow-sm rounded overflow-hidden">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3" style="width: 40%">ROL</th>
+            <th class="text-center" style="width: 30%">ESTADO</th>
+            <th class="text-end pe-3" style="width: 30%">ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (role of filteredPending(); track role.id) {
+            <tr>
+              <td class="ps-3 align-middle fw-medium">
+                <i class="fa-solid fa-user-shield text-muted me-2"></i>
+                <!-- Se ajusta a la posible anidación del backend -->
+                {{ role.requirement_role?.role_name || role.role_name }}
+              </td>
+              <td class="text-center align-middle">
+                <span
+                  class="badge rounded-pill fw-bold px-3 py-1"
+                  style="
+                    background-color: #fff3e0;
+                    color: #e65100;
+                    border: 1px solid #ffe0b2;
+                  "
+                >
+                  PENDIENTE AU
+                </span>
+              </td>
+              <td class="text-end pe-3 align-middle">
+                <div class="form-check d-inline-block m-0">
+                  <input
+                    class="form-check-input cursor-pointer shadow-none border-secondary"
+                    type="checkbox"
+                    [value]="role.id"
+                    [checked]="rolesToProcess().includes(role.id)"
+                    (change)="toggleRoleSelection(role.id, $event)"
+                    [disabled]="isPhaseClosed()"
+                  />
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- TABLA 2: Tickets en Proceso (Agrupados) -->
+  @if (ticketsInProgress().length > 0) {
+    <div class="mb-5">
+      <h6 class="fw-bold mb-3 text-brand">
+        <i class="fa-solid fa-circle-notch fa-spin me-2"></i> Tickets en Proceso
+      </h6>
+
+      <table class="table mb-0 shadow-sm rounded overflow-hidden">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3" style="width: 35%">N° DE TICKET</th>
+            <th class="text-center" style="width: 25%">ROLES ASOCIADOS</th>
+            <th class="text-center" style="width: 20%">ESTADO</th>
+            <th class="text-end pe-3" style="width: 20%">ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (group of ticketsInProgress(); track group.ticketId) {
+            <tr>
+              <td class="ps-3 align-middle fw-medium">
+                <i class="fa-solid fa-ticket text-muted me-2"></i>
+                {{ group.ticketNumber }}
+              </td>
+              <td class="text-center align-middle">
+                <span
+                  class="badge bg-light text-dark border px-3 py-1 fw-medium"
+                >
+                  {{ group.rolesCount }} Rol(es)
+                </span>
+              </td>
+              <td class="text-center align-middle">
+                <span
+                  class="badge rounded-pill badge-in-progress fw-bold px-3 py-1"
+                  style="
+                    background-color: #e3f2fd;
+                    color: #1565c0;
+                    border: 1px solid #bbdefb;
+                  "
+                >
+                  EN PROCESO
+                </span>
+              </td>
+              <td class="text-end pe-3 align-middle">
+                <button
+                  class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                  (click)="
+                    openResultModal(
+                      group.ticketId,
+                      group.ticketNumber,
+                      'create'
+                    )
+                  "
+                >
+                  <i class="fa-solid fa-file-circle-check me-1"></i> Dictamen
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- TABLA 3: Tickets Cerrados (Agrupados) -->
+  @if (closedTicketsGroups().length > 0) {
+    <div class="mb-4">
+      <h6 class="fw-bold mb-3" style="color: #2e7d32">
+        <i class="fa-solid fa-check-double me-2"></i> Tickets Finalizados
+      </h6>
+
+      <table class="table mb-0 shadow-sm rounded overflow-hidden">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3" style="width: 35%">N° DE TICKET</th>
+            <th class="text-center" style="width: 25%">ROLES ASOCIADOS</th>
+            <th class="text-center" style="width: 20%">ESTADO</th>
+            <th class="text-end pe-3" style="width: 20%">ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (group of closedTicketsGroups(); track group.ticketNumber) {
+            <tr>
+              <td class="fw-medium text-dark ps-3">
+                <i class="fa-solid fa-ticket-simple text-muted me-2"></i>
+                {{ group.ticketNumber }}
+              </td>
+              <td class="text-center text-secondary small fw-bold">
+                {{ group.rolesCount }} Rol(es)
+              </td>
+              <td class="text-center">
+                <span
+                  class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2"
+                  style="font-size: 0.75rem"
+                >
+                  CERRADO
+                </span>
+              </td>
+              <td class="text-end pe-3">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                  (click)="
+                    openResultModal(group.ticketId, group.ticketNumber, 'view')
+                  "
+                >
+                  <i class="fa-solid fa-eye me-1"></i> Ver Detalle
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- FOOTER DE ACCIÓN GLOBAL -->
+  @if (!isPhaseClosed()) {
+    <div
+      class="d-flex flex-wrap justify-content-between align-items-center mt-5 pt-3 border-top gap-3"
+    >
+      <div class="text-muted small fw-medium">
+        <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase, el
+        100% de los roles debe tener el acceso asignado.
+      </div>
+
+      <button
+        class="btn btn-brand rounded-pill px-4 fw-bold shadow-sm text-nowrap"
+        [disabled]="!canClosePhase() || isLoading()"
+        (click)="finalizeAuPhase()"
+      >
+        @if (isLoading()) {
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          Procesando...
+        } @else {
+          <i class="fa-solid fa-flag-checkered me-2"></i> Cerrar Fase Asignación
+          de Usuarios
+        }
+      </button>
+    </div>
+  }
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL DE ESTATUS GLOBAL (VISIÓN DE AUDITORÍA) -->
+<!-- ========================================== -->
+@if (showRolesStatusModal()) {
+  <div
+    class="modal fade show d-block"
+    tabindex="-1"
+    style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px)"
+  >
+    <div
+      class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+    >
+      <div
+        class="modal-content shadow-lg border-0"
+        style="border-radius: 10px; border-left: 4px solid #d500f9 !important"
+      >
+        <!-- CABECERA SUTIL CON RRTI -->
+        <div
+          class="modal-header bg-white border-bottom-0 pb-3 pt-4 px-4"
+          style="border-top: 4px solid #d500f9 !important"
+        >
+          <div class="d-flex align-items-center">
+            <h5
+              class="modal-title fw-bold text-dark mb-0 d-flex align-items-center"
+            >
+              <i class="fa-solid fa-users-viewfinder text-brand me-3 fs-4"></i>
+              Estatus Global de Roles
+            </h5>
+            <!-- Badge Corporativo con el N° de Requerimiento -->
+            <div
+              class="badge badge-brand rounded-pill ms-3 px-3 py-2 border-brand text-uppercase shadow-sm"
+            >
+              <i class="fa-solid fa-hashtag me-1 opacity-75"></i> Req:
+              {{ rrti() }}
+            </div>
+          </div>
+          <button
+            type="button"
+            class="btn-close shadow-none"
+            aria-label="Cerrar"
+            (click)="closeAllModals()"
+          ></button>
+        </div>
+
+        <div class="modal-body bg-light pt-3">
+          <div class="row g-4">
+            <!-- 1. Pendientes -->
+            <div class="col-md-4">
+              <div class="card h-100 border-0 shadow-sm rounded-3">
+                <div
+                  class="card-header bg-warning bg-opacity-25 border-warning border-bottom text-dark fw-bold d-flex justify-content-between align-items-center py-3"
+                >
+                  <span
+                    ><i class="fa-solid fa-user-clock me-2"></i> Pendientes por
+                    Asignar</span
+                  >
+                  <span class="badge bg-dark rounded-pill">{{
+                    rolesPorAsignarTotal().length
+                  }}</span>
+                </div>
+                <ul class="list-group list-group-flush small">
+                  @for (role of rolesPorAsignarTotal(); track role.id) {
+                    <li class="list-group-item text-truncate py-2">
+                      <i
+                        class="fa-solid fa-circle fs-6 text-warning me-2"
+                        style="font-size: 0.5rem"
+                      ></i>
+                      {{ role.requirement_role?.role_name || role.role_name }}
+                    </li>
+                  } @empty {
+                    <li
+                      class="list-group-item text-muted text-center fst-italic py-4"
+                    >
+                      <i
+                        class="fa-solid fa-check-double mb-2 d-block fs-4 text-opacity-50"
+                      ></i>
+                      No hay roles pendientes
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+
+            <!-- 2. En Proceso -->
+            <div class="col-md-4">
+              <div class="card h-100 border-0 shadow-sm rounded-3">
+                <div
+                  class="card-header bg-info bg-opacity-25 border-info border-bottom text-dark fw-bold d-flex justify-content-between align-items-center py-3"
+                >
+                  <span
+                    ><i class="fa-solid fa-gears me-2"></i> En Trámite
+                    CSAL</span
+                  >
+                  <span class="badge bg-dark rounded-pill">{{
+                    rolesEnProcesoTotal().length
+                  }}</span>
+                </div>
+                <ul class="list-group list-group-flush small">
+                  @for (role of rolesEnProcesoTotal(); track role.id) {
+                    <li class="list-group-item text-truncate py-2">
+                      <i
+                        class="fa-solid fa-circle-notch fa-spin text-info me-2"
+                      ></i>
+                      {{ role.requirement_role?.role_name || role.role_name }}
+                    </li>
+                  } @empty {
+                    <li
+                      class="list-group-item text-muted text-center fst-italic py-4"
+                    >
+                      <i
+                        class="fa-regular fa-folder-open mb-2 d-block fs-4 text-opacity-50"
+                      ></i>
+                      Sin tickets en curso
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+
+            <!-- 3. Asignados -->
+            <div class="col-md-4">
+              <div class="card h-100 border-0 shadow-sm rounded-3">
+                <div
+                  class="card-header bg-success bg-opacity-25 border-success border-bottom text-dark fw-bold d-flex justify-content-between align-items-center py-3"
+                >
+                  <span
+                    ><i class="fa-solid fa-shield-halved me-2"></i> Roles
+                    Asignados</span
+                  >
+                  <span class="badge bg-success rounded-pill">{{
+                    rolesAsignadosTotal().length
+                  }}</span>
+                </div>
+                <ul class="list-group list-group-flush small">
+                  @for (role of rolesAsignadosTotal(); track role.id) {
+                    <li class="list-group-item text-truncate py-2">
+                      <i class="fa-solid fa-check text-success me-2"></i>
+                      {{ role.requirement_role?.role_name || role.role_name }}
+                    </li>
+                  } @empty {
+                    <li
+                      class="list-group-item text-muted text-center fst-italic py-4"
+                    >
+                      <i
+                        class="fa-solid fa-lock mb-2 d-block fs-4 text-opacity-50"
+                      ></i>
+                      Aún no hay accesos otorgados
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 bg-light">
+          <button
+            type="button"
+            class="btn btn-secondary rounded-pill px-4 fw-medium shadow-sm"
+            (click)="closeAllModals()"
+          >
+            Cerrar Vista
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ========================================== -->
+<!-- MODALES DE NEGOCIO STANDALONE              -->
+<!-- ========================================== -->
+
+@if (showTicketModal()) {
+  <lib-au-ticket-form
+    [requirementId]="requirementId()"
+    [selectedRoles]="selectedRolesData()"
+    (closeForm)="closeAllModals()"
+    (ticketCreated)="initializeWorkflow(); closeAllModals()"
+    requireDashboardRefresh.emit();
+    closeAllModals()
+  />
+}
+
+<!-- ========================================== -->
+<!-- MODAL: REGISTRAR DICTAMEN CSAL (CU-064)    -->
+<!-- ========================================== -->
+@if (showResultModal()) {
+  <lib-au-result-form
+    [requirementId]="rrti()"
+    [ticketId]="activeTicketId()!"
+    [ticketNumber]="activeTicketNumber()"
+    [roles]="selectedRolesData()"
+    (closeModal)="closeAllModals()"
+    [isViewMode]="isResultViewMode()"
+    (resultRegistered)="
+      initializeWorkflow(); requireDashboardRefresh.emit(); closeAllModals()
+    "
+  ></lib-au-result-form>
+}

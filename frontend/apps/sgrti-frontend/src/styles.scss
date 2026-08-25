@@ -3,3 +3,38 @@
 .swal2-container {
   z-index: 9999 !important;
 }
+
+
+/* ==============================================================
+  BOTONES CORPORATIVOS ECOSGRTI (GLOBAL)
+   ============================================================== */
+// Botón Primario Corporativo
+.btn-brand {
+  background: linear-gradient(90deg, #aa00ff 0%, #d500f9 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: linear-gradient(90deg, #7b1fa2 0%, #aa00ff 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4);
+    transform: translateY(-1px);
+  }
+  
+  &:disabled {
+    background: #e1bee7;
+    color: #9e9e9e;
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+.border-brand {
+  border-color: rgba(213, 0, 249, 0.4) !important;
+  &:focus {
+    box-shadow: 0 0 0 0.25rem rgba(213, 0, 249, 0.25);
+    border-color: #d500f9 !important;
+  }
+}

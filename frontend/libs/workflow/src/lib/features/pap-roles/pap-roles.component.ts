@@ -84,9 +84,48 @@ export class PapRolesComponent implements OnInit {
   // ==========================================
   // HARD GATES Y VALIDACIÓN DE CIERRE
   // ==========================================
+  // public isPhaseClosed = computed<boolean>(() => {
+  //   const closedStatuses = ['PAP-C', 'AU-I', 'AU-C', 'FC', 'RC'];
+  //   return closedStatuses.includes(this.reqPhase() ?? '');
+  // });
+
+  // public canClosePhase = computed<boolean>(() => {
+  //   const allRoles = this.store.roles();
+    
+  //   // Si no hay roles en absoluto, no se puede cerrar la fase.
+  //   if (allRoles.length === 0) return false;
+
+  //   // Evaluamos el estado crudo
+  //   const hasPending = allRoles.some(r => r.status === 'PENDING_PAP');
+  //   const hasInProgress = allRoles.some(r => r.status === 'IN_PROGRESS');
+    
+  //   // Si hay roles pendientes o en progreso y la la fase anterior (CER) no haya sido cerrada, no se puede cerrar la fase
+  //   return !hasPending && 
+  //         !hasInProgress && 
+  //         !this.isPhaseClosed() && 
+  //         this.isCerPhaseClosed(); 
+  // });
+
+
   public isPhaseClosed = computed<boolean>(() => {
-    const closedStatuses = ['PAP-C', 'AU-I', 'AU-C', 'FC', 'RC'];
-    return closedStatuses.includes(this.reqPhase() ?? '');
+    const currentPhase = this.reqPhase() ?? '';
+    const allRoles = this.store.roles();
+    
+    // Verificamos si absolutamente todos los roles de PAP ya terminaron su ciclo
+    const hasRoles = allRoles.length > 0;
+    const allProductive = hasRoles && allRoles.every(r => r.status === 'IN_PRODUCTION');
+
+    // 1. Cierre explícito (El requerimiento está exactamente cerrado en PAP-C)
+    if (currentPhase === 'PAP-C') return true;
+
+    // 2. Fases de Vanguardia (El proyecto avanzó a AU, FC, RC, etc.)
+    const vanguardStatuses = ['AU-I', 'AU-C', 'FC', 'RC'];
+    const isVanguardAhead = vanguardStatuses.includes(currentPhase);
+
+    // 🟢 EL FIX: Si el proyecto avanzó globalmente, PAP SOLO se bloquea si ya 
+    // no le quedan roles activos. Si le quedan roles, se mantiene desbloqueada 
+    // para permitir el paralelismo.
+    return isVanguardAhead && allProductive;
   });
 
   public canClosePhase = computed<boolean>(() => {
@@ -99,7 +138,8 @@ export class PapRolesComponent implements OnInit {
     const hasPending = allRoles.some(r => r.status === 'PENDING_PAP');
     const hasInProgress = allRoles.some(r => r.status === 'IN_PROGRESS');
     
-    // Si hay roles pendientes o en progreso y la la fase anterior (CER) no haya sido cerrada, no se puede cerrar la fase
+    // La regla original se mantiene intacta, pero ahora isPhaseClosed() no emitirá falsos positivos:
+    // Sin pendientes, sin en proceso, la fase no está cerrada aún, y CER sí lo está.
     return !hasPending && 
           !hasInProgress && 
           !this.isPhaseClosed() && 

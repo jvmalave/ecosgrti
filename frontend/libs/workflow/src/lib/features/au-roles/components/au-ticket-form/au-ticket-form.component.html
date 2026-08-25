@@ -1,0 +1,241 @@
+<!-- Modal Backdrop con desenfoque (Blur) -->
+<div
+  class="modal fade show d-block"
+  tabindex="-1"
+  style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px)"
+>
+  <div
+    class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+  >
+    <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+      <!-- CABECERA -->
+      <div class="modal-header brand-gradient text-white border-bottom-0 pb-3 pt-3 px-4 d-flex justify-content-between align-items-center w-100">
+        <h5 class="modal-title fw-bold d-flex align-items-center m-0">
+          <div class="bg-white text-brand rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm" style="width: 40px; height: 40px;">
+            <i class="fa-solid fa-file-signature"></i>
+          </div>
+          Registrar Ticket de Asignación de Usuarios
+        </h5>
+        <!-- Botón de cierre con ms-auto para empujarlo obligatoriamente a la derecha -->
+        <button type="button" class="btn text-white fs-5 p-0 border-0 shadow-none ms-auto" aria-label="Cerrar" (click)="closeForm.emit()" [disabled]="isSubmitting()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <!-- CUERPO -->
+      <div class="modal-body bg-light px-4 pb-4 pt-2">
+        <!-- Resumen Informativo -->
+        <div
+          class="alert alert-info border-0 shadow-sm d-flex align-items-center mt-2 mb-4 rounded-3"
+        >
+          <i class="fa-solid fa-circle-info fs-3 me-3 opacity-75"></i>
+          <div>
+            <strong class="d-block mb-1"
+              >Se agruparán {{ selectedRoles().length }} rol(es) en esta
+              solicitud.</strong
+            >
+            <span class="small opacity-75"
+              >Asegúrese de adjuntar la planilla individual correspondiente a
+              cada uno de los roles seleccionados.</span
+            >
+          </div>
+        </div>
+
+        <form [formGroup]="ticketForm">
+          <!-- ========================================== -->
+          <!-- SECCIÓN 1: DATOS GENERALES                 -->
+          <!-- ========================================== -->
+          <h6 class="fw-bold text-brand mb-3 text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">1. Datos Generales del Trámite</h6>
+
+          <div class="card border-0 shadow-sm mb-4 rounded-3">
+            <div class="card-body p-4 row g-3">
+              <!-- N° de Ticket -->
+              <div class="col-md-6">
+                <label for="ticketNumberInput" class="form-label fw-medium small text-dark"
+                  >N° de Ticket (CSAL) <span class="text-danger">*</span></label
+                >
+                <div class="input-group shadow-sm">
+                  <span
+                    class="input-group-text bg-white text-muted border-end-0"
+                    ><i class="fa-solid fa-hashtag"></i
+                  ></span>
+                  <input
+                    type="text"
+                    id="ticketNumberInput"
+                    class="form-control border-start-0 ps-0"
+                    formControlName="ticket_number"
+                    placeholder="Ej. AU-2026-001"
+                  />
+                </div>
+                @if (
+                  ticketForm.get('ticket_number')?.touched &&
+                  ticketForm.get('ticket_number')?.hasError('required')
+                ) {
+                  <div class="text-danger small mt-1 fw-medium">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                    Requerido
+                  </div>
+                }
+              </div>
+
+              <!-- Fecha de Solicitud -->
+              <div class="col-md-6">
+                <label for="requestDateInput" class="form-label fw-medium small text-dark"
+                  >Fecha de Solicitud <span class="text-danger">*</span></label
+                >
+                <div class="input-group shadow-sm">
+                  <span
+                    class="input-group-text bg-white text-muted border-end-0"
+                    ><i class="fa-solid fa-calendar-day"></i
+                  ></span>
+                  <input
+                    type="date"
+                    id="requestDateInput"
+                    class="form-control border-start-0 ps-0"
+                    formControlName="request_date"
+                  />
+                </div>
+                @if (
+                  ticketForm.get('request_date')?.touched &&
+                  ticketForm.get('request_date')?.hasError('required')
+                ) {
+                  <div class="text-danger small mt-1 fw-medium">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                    Requerida
+                  </div>
+                }
+              </div>
+
+              <!-- PDF General -->
+              <div class="col-12 mt-4">
+                <label for="file" class="form-label fw-medium small text-dark"
+                  >Soporte General de la Solicitud (PDF)
+                  <span class="text-danger">*</span></label
+                >
+                <input
+                  type="file"
+                  id="file" 
+                  class="form-control shadow-sm"
+                  accept="application/pdf"
+                  (change)="onGeneralFileChange($event)"
+                />
+
+                @if (generalFile()) {
+                  <div class="form-text text-success mt-2 fw-medium">
+                    <i class="fa-solid fa-check-circle me-1"></i> Archivo listo:
+                    {{ generalFile()?.name }}
+                  </div>
+                } @else if (
+                  ticketForm.get('file')?.touched &&
+                  ticketForm.get('file')?.hasError('required')
+                ) {
+                  <div class="text-danger small mt-1 fw-medium">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Debe
+                    adjuntar el documento general.
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================== -->
+          <!-- SECCIÓN 2: PLANILLAS INDIVIDUALES (ARRAY)  -->
+          <!-- ========================================== -->
+          <h6 class="fw-bold text-brand mb-3 mt-4 text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">2. Planillas Individuales</h6>
+
+          <div class="row g-3">
+            <!-- Iteramos sobre el input Signal que nos mandó el componente padre -->
+            @for (role of selectedRoles(); track role.id; let i = $index) {
+              <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-3">
+                  <div
+                    class="card-body p-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3"
+                  >
+                    <!-- Info del Rol -->
+                    <div class="d-flex align-items-center">
+                      <div
+                        class="bg-secondary bg-opacity-10 rounded-circle p-2 me-3 text-dark"
+                      >
+                        <i class="fa-solid fa-user-shield fs-5"></i>
+                      </div>
+                      <div>
+                        <span class="d-block fw-bold text-dark mb-1">{{
+                          role.requirement_role?.role_name || role.role_name
+                        }}</span>
+                        <!-- <span
+                          class="badge bg-light text-secondary border"
+                          style="font-size: 0.7rem"
+                          >ID:
+                          {{ role.requirement_role_id | slice: 0 : 8 }}...</span
+                        > -->
+                      </div>
+                    </div>
+
+                    <!-- Input de Archivo específico para el index 'i' del FormArray -->
+                    <div class="flex-grow-1 ms-md-4" style="max-width: 450px">
+                      <label for="planilla" class="visually-hidden"
+                        >Planilla para {{ role.role_name }}</label
+                      >
+                      <input
+                        type="file"
+                        id="planilla"
+                        class="form-control form-control-sm border-secondary shadow-sm"
+                        accept="application/pdf"
+                        (change)="onPlanillaFileChange($event, role.id, i)"
+                      />
+
+                      <!-- Validación específica por índice -->
+                      @if (
+                        planillasFormArray.at(i).touched &&
+                        planillasFormArray.at(i).hasError('required')
+                      ) {
+                        <div class="text-danger small mt-1 fw-medium">
+                          <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                          Debe adjuntar el PDF para este rol.
+                        </div>
+                      } @else if (planillasFormArray.at(i).valid) {
+                        <div class="text-success small mt-1 fw-medium">
+                          <i class="fa-solid fa-check me-1"></i> Planilla
+                          vinculada
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </form>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer bg-white border-top px-4 py-3">
+        <button
+          type="button"
+          class="btn btn-outline-secondary rounded-pill px-4 fw-medium shadow-sm"
+          (click)="closeForm.emit()"
+          [disabled]="isSubmitting()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-brand rounded-pill px-4 shadow-sm fw-bold"
+          (click)="submit()"
+          [disabled]="ticketForm.invalid || isSubmitting()"
+        >
+          @if (isSubmitting()) {
+            <span
+              class="spinner-border spinner-border-sm me-2"
+              role="status"
+              aria-hidden="true"
+            ></span>
+            Procesando Trámite...
+          } @else {
+            <i class="fa-solid fa-cloud-arrow-up me-2"></i> Registrar Ticket
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

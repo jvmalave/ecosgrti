@@ -18,30 +18,91 @@ export class NotificationService implements INotificationService {
     });
   }
 
-  showError(title: string, message: string): void {
-    Swal.fire(title, message, 'error');
+
+  public showSuccess(title: string, message: string): void {
+    Swal.fire({
+      title: title,
+      html: message, 
+      icon: 'success',
+      confirmButtonText: 'OK',
+      buttonsStyling: false, 
+      customClass: {
+        confirmButton: 'btn btn-brand rounded-pill px-5 py-2 fw-bold shadow-sm',
+        popup: 'rounded-4 border-top border-4 border-brand',
+        title: 'fs-4 text-dark fw-bold'
+      }
+    });
   }
 
-  showSuccess(title: string, message: string): void {
-    Swal.fire(title, message, 'success');
+  /**
+   * Alerta de Error con estilo corporativo (Opcional, pero recomendado)
+   */
+  public showError(title: string, message: string): void {
+    Swal.fire({
+      title: title,
+      html: message,
+      icon: 'error',
+      confirmButtonText: 'Entendido',
+      buttonsStyling: false, 
+      customClass: {
+        confirmButton: 'btn btn-brand rounded-pill px-5 py-2 fw-bold shadow-sm',
+        popup: 'rounded-4 border-top border-4 border-brand',
+        title: 'fs-4 text-dark fw-bold'
+      }
+    });
   }
 
-  showWarning(title: string, message: string): void {
-    Swal.fire(title, message, 'warning');
+
+  public showWarning(title: string, message: string): void {
+    Swal.fire({
+      title: title,
+      html: message,
+      icon: 'warning',
+      confirmButtonText: 'Entendido',
+      buttonsStyling: false, 
+      customClass: {
+        confirmButton: 'btn btn-brand rounded-pill px-5 py-2 fw-bold shadow-sm', 
+        popup: 'rounded-4 border-top border-4 border-brand',
+        title: 'fs-4 text-dark fw-bold'
+      }
+    });
   }
 
-  async confirm(title: string, text: string): Promise<boolean> {
-    const result = await Swal.fire({
-      title,
-      text,
+
+  
+
+  // showError(title: string, message: string): void {
+  //   Swal.fire(title, message, 'error');
+  // }
+
+  // showSuccess(title: string, message: string): void {
+  //   Swal.fire(title, message, 'success');
+  // }
+
+  // showWarning(title: string, message: string): void {
+  //   Swal.fire(title, message, 'warning');
+  // }
+
+
+  async confirm(title: string, htmlContent: string, confirmButtonText= 'Sí, continuar'): Promise<boolean> {
+    return Swal.fire({
+      title: title,
+      html: htmlContent, 
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, continuar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: confirmButtonText,
+      cancelButtonText: 'Cancelar',
+      buttonsStyling: false, 
+      customClass: {
+        // Inyectamos tus clases de Bootstrap y la clase corporativa morada
+        confirmButton: 'btn btn-brand rounded-pill px-4 mx-2 fw-bold shadow-sm', 
+        cancelButton: 'btn btn-outline-secondary rounded-pill px-4 mx-2 fw-medium',
+        popup: 'rounded-4 border-top border-4 border-brand',
+        title: 'fs-4 text-dark fw-bold'
+      }
+    }).then((result) => {
+      return result.isConfirmed;
     });
-    return result.isConfirmed;
   }
 
   async promptText(title: string, htmlText: string, placeholder: string): Promise<string | null> {

@@ -208,7 +208,7 @@ export class DashboardComponent implements OnInit {
  */
 public isAtfEnabled(status: string): boolean {
     // Array con los estados válidos donde ATF debe estar accesible
-    const allowedStatuses = ['ES-R', 'ATF-I', 'ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C', 'COE-I', 'COE-C', 'CEE-I', 'CEE-C', 'CER-I', 'CER-C', 'PI-I', 'PI-C', 'PAP-I', 'PAP-C', 'AU', 'RF'];
+    const allowedStatuses = ['ES-R', 'ATF-I', 'ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C', 'COE-I', 'COE-C', 'CEE-I', 'CEE-C', 'CER-I', 'CER-C', 'PI-I', 'PI-C', 'PAP-I', 'PAP-C', 'AU-I', 'AU-C', 'RF'];
     return allowedStatuses.includes(status);
 }
 
@@ -218,7 +218,7 @@ public isAtfEnabled(status: string): boolean {
  */
 public isGrEnabled(status: string): boolean {
     // Array con los estados válidos donde GR debe estar accesible
-    const allowedStatuses = ['ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C', 'COE-I', 'COE-C', 'CEE-I', 'CEE-C', 'CER-I', 'CER-C', 'PI-I', 'PI-C', 'PAP-I', 'PAP-C', 'AU', 'RF']; 
+    const allowedStatuses = ['ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C', 'COE-I', 'COE-C', 'CEE-I', 'CEE-C', 'CER-I', 'CER-C', 'PI-I', 'PI-C', 'PAP-I', 'PAP-C', 'AU-I', 'AU-C', 'RF']; 
     // Nota: Deberás agregar aquí los estados futuros como 'PROCESO-DT', 'CERRADO-DT', etc.
     return allowedStatuses.includes(status);
 }

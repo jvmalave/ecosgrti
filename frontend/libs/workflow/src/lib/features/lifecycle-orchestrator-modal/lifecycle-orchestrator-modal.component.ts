@@ -6,6 +6,7 @@ import { DashboardRequirement } from '../../data-access/models/lifecycle-orchest
 import { CerRolesComponent } from '../../features/cer-roles/cer-roles.component';
 import { CeeDeliverablesComponent } from '../../features/cee-deliverables/cee-deliverables.component';
 import { PapRolesComponent } from '../../features/pap-roles/pap-roles.component';
+import { AuRolesComponent } from '../../features/au-roles/au-roles.component';
 
 
 
@@ -19,7 +20,8 @@ export type PhaseAction = 'DT' | 'COR' | 'COE' | 'CER' | 'CEE' | 'PI' | 'PAP' | 
     PhaseRolesModalComponent, 
     CerRolesComponent,
     CeeDeliverablesComponent,
-    PapRolesComponent
+    PapRolesComponent,
+    AuRolesComponent
   ],
   templateUrl: './lifecycle-orchestrator-modal.component.html',
   styleUrls: ['./lifecycle-orchestrator-modal.component.scss']
@@ -150,7 +152,21 @@ export class LifecycleOrchestratorModalComponent {
 
     return isValidStatus && hasCertifiedRoles;
   });
-  isAuEnabled = computed(() => false);
+  isAuEnabled = computed(() => {
+    const req = this.req();
+    if (!req) return false;
+
+    // Lógica de Lista Negra: NO se habilita en fases prematuras, incluyendo la Fase: Planificación (PL) y Estimación
+    const invalidStatuses = ['RC', 'PL', 'EST', 'ATF-I', 'ATF-C', 'DT-I', 'DT-C', 'COR-I', 'COR-C', 'PI-I', 'PI-C', 'CER-I', 'CER-C'];
+    const isValidStatus = !invalidStatuses.includes(req.status);
+
+    // HARD-GATE: Verifica si hay roles que hayan superado la fase de Pase a Producción (PAP)
+    const hasProductionRoles = (req.pap_closed_roles_count ?? 0) > 0;
+
+    console.log('Auditoría Hard-Gate AU -> Roles en Producción (PAP):', req.pap_closed_roles_count);
+
+    return isValidStatus && hasProductionRoles;
+  });
 
 
   isCerClosed = computed(() => {
@@ -187,5 +203,25 @@ export class LifecycleOrchestratorModalComponent {
   public onPhaseStatusChanged(data: {req_id: string, phase_actual: string, progreso_global: number}): void {
     // Reenviamos el evento hacia el Dashboard padre, el cual sí posee el Store global
     this.requirementUpdated.emit(data);
+  }
+
+  /**
+   * Método disparado por los modales hijos (ej. AU) 
+   * para forzar la recarga reactiva del Dashboard sin necesidad de F5.
+   */
+  public refreshDashboardData(): void {
+    console.log('🔄 Forzando recarga reactiva del Dashboard desde el Orquestador...');
+    
+    const currentReq = this.req();
+    
+    if (currentReq) {
+      // Reenvia el evento hacia el Dashboard padre
+      this.requirementUpdated.emit({
+        req_id: currentReq.id,
+        phase_actual: currentReq.status,
+        // Usamos el progreso actual, el Dashboard al recargar traerá el nuevo 
+        progreso_global: (currentReq as DashboardRequirement).progress_percentage ?? 0 
+      });
+    }
   }
 }

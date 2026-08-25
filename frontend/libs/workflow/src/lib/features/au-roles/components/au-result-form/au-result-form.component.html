@@ -1,0 +1,258 @@
+<div class="modal-overlay">
+  <div class="modal-dialog-custom modal-xl">
+    <!-- Cabecera -->
+    <div class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center">
+      <h5 class="m-0 fw-bold">
+        <i class="fa-solid fa-clipboard-check me-2"></i> 
+        Dictamen CSAL {{ isViewMode() ? '(Snapshot)' : '' }}
+      </h5>
+      <button
+        type="button"
+        class="btn text-white fs-5 p-0 border-0 shadow-none"
+        (click)="closeModal.emit()"
+        [disabled]="isSubmitting()"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Cuerpo del Formulario -->
+    <div class="modal-body bg-light-gray p-4">
+      <form [formGroup]="resultForm" (ngSubmit)="submitForm()">
+        
+        <!-- Encabezado de Requerimiento y Ticket -->
+        <div class="mb-4 d-flex justify-content-between align-items-center border-bottom pb-3">
+          <span class="badge rounded-pill border border-brand text-brand bg-white px-3 py-2 fw-bold shadow-sm">
+            REQUERIMIENTO: {{ requirementId() || 'N/A' }}
+          </span>
+          <span class="badge bg-purple-light text-brand  px-3 py-2 border border-brand shadow-sm" style="font-size: 12px;">
+            <i class="fa-solid fa-ticket me-1"></i> TICKET CSAL: {{ ticketNumber() }}
+          </span>
+        </div>
+
+        <!-- Campos de Formulario Amplios (Mejor UX) -->
+        <!-- <div class="row mb-4">
+          <div class="col-md-6">
+            <label  for="date" class="form-label text-muted text-uppercase fw-bold small mb-2">
+              Fecha de Recepción <span class="text-danger">*</span>
+            </label>
+            <input
+              type="date"
+              id="date"
+              class="form-control"
+              formControlName="reception_date"
+            />
+          </div>
+          <div class="col-md-6">
+            <label for="document" class="form-label text-muted text-uppercase fw-bold small mb-2">
+              Documento Base (PDF) <span class="text-danger">*</span>
+            </label>
+            <input
+              type="file"
+              id="document"
+              class="form-control"
+              accept="application/pdf"
+              (change)="onFileSelected($event)"
+            />
+          </div>
+        </div> -->
+
+        @if (isViewMode()) {
+          <!-- Banner Informativo Snapshot -->
+          <div class="alert alert-info d-flex align-items-center rounded-3 mb-4"> 
+              <i class="fa-solid fa-circle-info fs-4 me-3 text-info"></i>
+              <div>
+                Esta orden ya fue cerrada. El acta PDF se encuentra almacenada en el servidor.
+              </div>
+          </div>
+          
+          <div class="row text-start mb-4 px-3">
+            <div class="col-6">
+              <!-- <small class="text-muted text-uppercase fw-bold d-block mb-1">Documento Base</small> -->
+              <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-sm" (click)="openPdf('ticket')">
+                <i class="fa-solid fa-file-pdf text-danger me-1"></i> Ver Solicitud
+              </button>
+            </div>
+        </div>
+        } @else {
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <label for="date" class="form-label text-muted text-uppercase fw-bold small mb-2">Fecha de Recepción <span class="text-danger">*</span></label>
+              <input type="date" id="date" class="form-control" formControlName="reception_date" />
+            </div>
+            <div class="col-md-6">
+              <label for="document" class="form-label text-muted text-uppercase fw-bold small mb-2">Documento Base (PDF) <span class="text-danger">*</span></label>
+              <input type="file" id="document" class="form-control" accept="application/pdf" (change)="onFileSelected($event)" />
+            </div>
+          </div>
+        }
+
+        <div class="d-flex justify-content-between align-items-end mb-3">
+          <h6 class="fw-bold m-0 text-brand">
+            <i class="fa-solid fa-list-check me-2"></i> Evaluación Individual
+          </h6>
+          <span class="badge bg-secondary rounded-pill">Total: {{ roles().length }} Rol(es)</span>
+        </div>
+
+        <!-- TABLA DE EVALUACIÓN GRANULAR -->
+        <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th class="text-muted text-uppercase small fw-bold w-25 ps-4">
+                  Rol Técnico
+                </th>
+                <th class="text-muted text-uppercase small fw-bold text-center w-25">
+                  Veredicto
+                </th>
+                <th class="text-muted text-uppercase small fw-bold w-50">
+                  Justificación y Trazabilidad
+                </th>
+              </tr>
+            </thead>
+            <tbody formArrayName="evaluations">
+              @for (roleCtrl of evaluations.controls; track $index; let i = $index) {
+                <tr [formGroupName]="i">
+                  <!-- ROL TÉCNICO -->
+                  <td class="ps-4 fw-medium text-dark">
+                    <div class="mb-1">
+                      <i class="fa-solid fa-server me-2 text-muted"></i>
+                      {{ roleCtrl.get('role_name')?.value }}
+                    </div>
+                    
+                    <!-- Botón Sutil para la Planilla Individual -->
+                    @if (roles()[i].planilla_path) {
+                      <button 
+                        type="button" 
+                        class="btn btn-link text-decoration-none p-0 text-muted" 
+                        style="font-size: 0.75rem;" 
+                        (click)="openPlanillaPdf(i)">
+                        <i class="fa-solid fa-file-pdf text-danger me-1"></i> Ver planilla
+                      </button>
+                    } @else {
+                      <span class="text-muted fst-italic" style="font-size: 0.75rem;">
+                        Sin planilla adjunta
+                      </span>
+                    }
+                  </td>
+
+                  <!-- BOTONERA EXCLUYENTE (3 ESTADOS) -->
+                  <td class="text-center align-middle">
+                    <div class="btn-group btn-group-sm shadow-sm" role="group">
+                      <!-- Botón Total -->
+                      <button
+                        type="button"
+                        class="btn px-2"
+                        style="font-size: 0.8rem;"
+                        [disabled]="isViewMode()"
+                        [class.btn-success]="roleCtrl.get('verdict')?.value === 'TOTAL'"
+                        [class.btn-outline-secondary]="roleCtrl.get('verdict')?.value !== 'TOTAL'"
+                        (click)="setVerdict(i, 'TOTAL')"
+                      >
+                        Total
+                      </button>
+                      <!-- Botón Parcial -->
+                      <button
+                        type="button"
+                        class="btn px-2"
+                        style="font-size: 0.8rem;"
+                        [disabled]="isViewMode()"
+                        [class.btn-warning]="roleCtrl.get('verdict')?.value === 'PARCIAL'"
+                        [class.btn-outline-secondary]="roleCtrl.get('verdict')?.value !== 'PARCIAL'"
+                        (click)="setVerdict(i, 'PARCIAL')"
+                      >
+                        Parcial
+                      </button>
+                      <!-- Botón Sin Asignar -->
+                      <button
+                        type="button"
+                        class="btn px-2"
+                        style="font-size: 0.8rem;"
+                        [disabled]="isViewMode()"
+                        [class.btn-danger]="roleCtrl.get('verdict')?.value === 'NO_ASIGNADO'"
+                        [class.btn-outline-secondary]="roleCtrl.get('verdict')?.value !== 'NO_ASIGNADO'"
+                        (click)="setVerdict(i, 'NO_ASIGNADO')"
+                      >
+                        Sin Asignar
+                      </button>
+                    </div>
+                  </td>
+
+                  <!-- JUSTIFICACIÓN Y TRAZABILIDAD -->
+                  <td class="pe-4 py-3">
+                    <!-- Historial de Rechazos (Trazabilidad) -->
+                    @if (roles()[i].rejection_history?.length) {
+                      <div class="timeline-history mb-2">
+                        <span class="text-danger small fw-bold d-block mb-2">
+                          <i class="fa-solid fa-clock-rotate-left me-1"></i>
+                          Historial de Rechazos
+                        </span>
+                        @for (history of roles()[i].rejection_history; track $index) {
+                          <div class="timeline-item small text-muted bg-light p-2 rounded border">
+                            <strong class="text-dark">
+                              <i class="fa-solid fa-ticket me-1"></i>
+                              {{ history.ticket_number || 'TKT Anterior' }}
+                            </strong>
+                            <span class="float-end">
+                              {{ history.rejected_at | date: 'dd/MM/yyyy HH:mm' }}
+                            </span>
+                            <div class="mt-1">{{ history.reason }}</div>
+                          </div>
+                        }
+                      </div>
+                    }
+                    <!-- Input de Justificación (Aparece si NO es TOTAL) -->
+                    @if (roleCtrl.get('verdict')?.value !== 'TOTAL') {
+                      <textarea
+                        class="form-control form-control-sm border-danger bg-danger-subtle"
+                        rows="2"
+                        formControlName="rejection_reason"
+                        placeholder="Indique el motivo del dictamen (Mínimo 10 caracteres)..."
+                      ></textarea>
+
+                      @if (
+                        roleCtrl.get('rejection_reason')?.touched &&
+                        roleCtrl.get('rejection_reason')?.hasError('minlength')
+                      ) {
+                        <div class="text-danger small mt-1 fw-bold">
+                          La justificación es obligatoria (min. 10 caracteres).
+                        </div>
+                      }
+                    } @else {
+                      @if (!roles()[i].rejection_history?.length) {
+                        <span class="text-muted small fst-italic">Sin observaciones previas.</span>
+                      }
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Botonera Footer -->
+        <div class="d-flex justify-content-end mt-4 gap-2">
+          @if (isViewMode()) {
+            <button type="button" class="btn btn-outline-secondary rounded-pill fw-medium px-4" (click)="closeModal.emit()">
+              Cerrar
+            </button>
+            <button type="button" class="btn btn-brand rounded-pill fw-bold px-4" (click)="openPdf('result')">
+              <i class="fa-solid fa-file-pdf me-1"></i> Ver Dictamen PDF
+            </button>
+          } @else {
+            <button type="button" class="btn btn-outline-secondary rounded-pill fw-medium px-4" (click)="closeModal.emit()" [disabled]="isSubmitting()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-brand rounded-pill fw-bold px-4" [disabled]="isSubmitting()">
+              @if (isSubmitting()) {
+                <span class="spinner-border spinner-border-sm me-2"></span> Procesando...
+              } @else {
+                <i class="fa-solid fa-save me-1"></i> Registrar Dictamen
+              }
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

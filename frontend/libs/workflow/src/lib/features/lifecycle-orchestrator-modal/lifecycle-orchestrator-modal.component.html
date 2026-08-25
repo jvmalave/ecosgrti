@@ -135,7 +135,11 @@
 
                 <!-- ASIGNACIÓN DE USUARIOS -->
                 @if (showAu()) {
-                  <button class="phase-btn" [disabled]="!isAuEnabled()">
+                  <button 
+                    class="phase-btn" 
+                    [disabled]="!isAuEnabled()"
+                    (click)="navigateTo(PHASES.AU)"
+                    >
                     <div class="icon-wrapper">
                       <i class="fa-solid fa-user-plus"></i>
                     </div>
@@ -211,7 +215,8 @@
   @if (
     activePhaseConfig()?.phaseCode !== 'CER' &&
     activePhaseConfig()?.phaseCode !== 'CEE' &&
-    activePhaseConfig()?.phaseCode !== 'PAP'
+    activePhaseConfig()?.phaseCode !== 'PAP' &&
+    activePhaseConfig()?.phaseCode !== 'AU'
   ) {
     <lib-phase-roles-modal
       [requirementId]="req().id"
@@ -321,6 +326,38 @@
             [isCerPhaseClosed]="isCerClosed()"
             (phaseClosed)="onPhaseStatusChanged($event)"
           ></lib-pap-roles>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- COMPONENTE AU (Asignación de Usuarios) -->
+  @if (activePhaseConfig()?.phaseCode === 'AU') {
+    <div class="modal-overlay">
+      <div class="modal-dialog-custom">
+        <!-- CABECERA CORPORATIVA AU -->
+        <div class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center">
+          <h5 class="m-0 fw-bold">
+            <i class="fa-solid fa-users-gear me-2"></i> Asignación a Usuarios (CSAL)
+          </h5>
+          <button
+            type="button"
+            class="btn text-white fs-5 p-0 border-0 shadow-none"
+            (click)="closeActivePhase()"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- CUERPO DEL MODAL (Fondo blanco y scroll) -->
+        <!-- Usamos p-0 si el componente au-roles ya tiene sus propios paddings, o déjalo sin p-0 si los necesita -->
+        <div class="modal-body-scroll bg-white">
+          <lib-au-roles
+            [requirementId]="req().id"
+            [rrti]="req().rrti"
+            (phaseClosed)="onPhaseStatusChanged($event)"
+            (requireDashboardRefresh)="refreshDashboardData()"
+          ></lib-au-roles>
         </div>
       </div>
     </div>

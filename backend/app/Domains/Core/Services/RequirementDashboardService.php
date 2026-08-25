@@ -77,6 +77,13 @@ class RequirementDashboardService
                 INNER JOIN workflow.requirements_roles rr ON cerr.requirement_role_id = rr.id
                 WHERE rr.requirement_id = r.id AND cerr.status = 'CERTIFIED'
             ) as cer_closed_roles_count")
+                // Conteo de Roles de Pase a Producción (PAP) Desplegados
+            ->selectRaw("(
+                SELECT COUNT(papr.id)
+                FROM workflow.pap_roles papr
+                INNER JOIN workflow.requirements_roles rr ON papr.requirement_role_id = rr.id
+                WHERE rr.requirement_id = r.id AND papr.status = 'IN_PRODUCTION'
+            ) as pap_closed_roles_count")
             
              // historical_frozen_string
             ->selectRaw("(

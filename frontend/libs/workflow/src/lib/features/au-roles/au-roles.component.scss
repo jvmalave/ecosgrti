@@ -1,5 +1,5 @@
 /* ========================================================
-    IDENTIDAD VISUAL CANTV (ECOSGRTI) - PAP
+    IDENTIDAD VISUAL CANTV (ECOSGRTI) - FASE AU (ROLES)
    ======================================================== */
 
 // Degradado corporativo
@@ -133,4 +133,14 @@
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+// Estilos específicos para las listas del Modal de Auditoría
+.list-group-item {
+  border: none;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  background-color: transparent;
+  &:last-child {
+    border-bottom: none;
+  }
 }

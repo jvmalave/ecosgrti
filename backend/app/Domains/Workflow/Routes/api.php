@@ -1,45 +1,30 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
+use App\Domains\Workflow\Http\Controllers\ATFAgreementController;
+use App\Domains\Workflow\Http\Controllers\ATFClosureController;
+use App\Domains\Workflow\Http\Controllers\AuRoleController;
+use App\Domains\Workflow\Http\Controllers\AuTicketController;
+use App\Domains\Workflow\Http\Controllers\CeeDeliverableController;
+use App\Domains\Workflow\Http\Controllers\CerRoleController;
+use App\Domains\Workflow\Http\Controllers\CoeActivityController;
+use App\Domains\Workflow\Http\Controllers\CoeDeliverableController;
+use App\Domains\Workflow\Http\Controllers\CorRegisterController;
+use App\Domains\Workflow\Http\Controllers\CorRoleController;
+use App\Domains\Workflow\Http\Controllers\DeliverableController;
+use App\Domains\Workflow\Http\Controllers\DtRegisterController;
+use App\Domains\Workflow\Http\Controllers\DtRoleController;
+use App\Domains\Workflow\Http\Controllers\PapOrderController;
+use App\Domains\Workflow\Http\Controllers\PapRoleController;
+use App\Domains\Workflow\Http\Controllers\PiApprovalController;
+use App\Domains\Workflow\Http\Controllers\PiRegisterController;
+use App\Domains\Workflow\Http\Controllers\PiRoleController;
+use App\Domains\Workflow\Http\Controllers\PiTestUserController;
 use App\Domains\Workflow\Http\Controllers\ProgressDashboardController;
 use App\Domains\Workflow\Http\Controllers\RequirementRoleController;
-use App\Domains\Workflow\Http\Controllers\DeliverableController;
-use App\Domains\Workflow\Http\Controllers\ATFClosureController;
-
-// Controladores ATF
-use App\Domains\Workflow\Http\Controllers\ATFAgreementController;
 use App\Domains\Workflow\Http\Controllers\UpdateManagementTypeController;
-
-// Controladores Construcción Operativa (COE)
-use App\Domains\Workflow\Http\Controllers\CoeDeliverableController;
-use App\Domains\Workflow\Http\Controllers\CoeActivityController;
-
-// Controladores Diseño Técnico (DT)
-use App\Domains\Workflow\Http\Controllers\DtRoleController;
-use App\Domains\Workflow\Http\Controllers\DtRegisterController;
-
-// Controladores Construcción-Roles (COR)
-use App\Domains\Workflow\Http\Controllers\CorRoleController;
-use App\Domains\Workflow\Http\Controllers\CorRegisterController;
-
-// Controladores Pruebas Integrales (PI)
-use App\Domains\Workflow\Http\Controllers\PiRegisterController;
-use App\Domains\Workflow\Http\Controllers\PiTestUserController;
-use App\Domains\Workflow\Http\Controllers\PiApprovalController;
-use App\Domains\Workflow\Http\Controllers\PiRoleController;
-
-// Controladores Certificación (CER)
-
-use App\Domains\Workflow\Http\Controllers\CerRoleController;
-
-// Controladores Certificación (CEE)
-use App\Domains\Workflow\Http\Controllers\CeeDeliverableController;
+use Illuminate\Support\Facades\Route;
 
 
-// Controladores Pase a Producción (PAP)
-use App\Domains\Workflow\Http\Controllers\PapRoleController;
-use App\Domains\Workflow\Http\Controllers\PapOrderController;
 
 
 
@@ -263,7 +248,7 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
     // FASE CEE (Certificación de Entregables) - US34
     // ==========================================
       
-      Route::prefix('cee')->group(function () {
+    Route::prefix('cee')->group(function () {
         Route::get('/requirements/{requirementId}/deliverables-init', [CeeDeliverableController::class, 'index']);
 
         Route::patch('/requirements/{requirementId}/close', [CeeDeliverableController::class, 'closePhase']);
@@ -279,13 +264,13 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
         Route::get('/tickets/{ticketId}/request-file', [CeeDeliverableController::class, 'downloadRequestFile']);
 
         Route::get('/tickets/{ticketId}/result-file', [CeeDeliverableController::class, 'downloadResultFile']);
-      });
+    });
       
       // ==========================================
       // FASE PAP (Pase a Producción) - US35
       // ==========================================
 
-      Route::prefix('pap')->group(function () {
+    Route::prefix('pap')->group(function () {
     // Inicializar roles (Promoción desde CER)
         Route::get('/requirements/{requirementId}/roles-init', [PapRoleController::class, 'initRoles']);
 
@@ -298,6 +283,27 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
         Route::get('/orders/{orderId}/download-result', [PapOrderController::class, 'downloadResultFile']);
 
         Route::patch('/requirements/{requirementId}/close-phase', [PapRoleController::class, 'closePhase']);
+
+    });
+
+    // ==========================================
+    // FASE AU (Asigncion a Usuarios) - US36
+    // ==========================================
+
+    Route::prefix('au')->group(function () {
+    
+        Route::post('/requirements/{requirementId}/tickets', [AuTicketController::class, 'store']);
+
+        Route::get('/requirements/{requirementId}/roles-init', [AuRoleController::class, 'initRoles']);
+        
+        Route::post('/tickets/{ticketId}/results', [AuTicketController::class, 'registerResult']);
+
+        Route::get('/tickets/download-document', [AuTicketController::class, 'downloadDocument']);
+
+        Route::post('/requirements/{id}/finalize-au', [AuRoleController::class, 'finalizeAu']);
+        
+    
+    // ⏳ (Aquí iremos agregando las rutas de actualización, inicialización de roles y resultados)
 });
 
 
