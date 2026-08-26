@@ -2,9 +2,9 @@ import { Component, OnInit, inject, signal, DestroyRef, computed } from '@angula
 import { CommonModule, UpperCasePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { ReactiveFormsModule, FormControl } from '@angular/forms'; // <-- 1. Importamos Formularios Reactivos
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators'; // <-- 2. Importamos Operadores RxJS
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop'; // <-- 3. Para prevenir Memory Leaks
+import { ReactiveFormsModule, FormControl } from '@angular/forms'; 
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators'; 
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop'; 
 
 // Imports de tus servicios e interfaces
 import { AuthService } from '@ecosgrti/security/data-access';
@@ -25,7 +25,7 @@ import { OrgStructureComponent, ProgressMatrixConfigComponent, MilestoneConfigCo
 import { EstimationFormComponent } from '../estimation-form/estimation-form.component';
 import { RequirementCreateComponent } from '../requirement-create/requirement-create.component';
 import { ReqStatusPipe } from '../../pipes/req-status-pipe';
-
+import { RequirementClosureModalComponent } from '../requirement-closure-modal/requirement-closure-modal.component';
 
 
 @Component({
@@ -34,7 +34,7 @@ import { ReqStatusPipe } from '../../pipes/req-status-pipe';
   // 4. Inyectamos ReactiveFormsModule aquí para poder usar [formControl] en el HTML
   imports: [
     CommonModule, 
-    UpperCasePipe, 
+    UpperCasePipe,    
     ReactiveFormsModule, 
     RequirementModalComponent, 
     AtfAgreementsModalComponent, 
@@ -47,7 +47,8 @@ import { ReqStatusPipe } from '../../pipes/req-status-pipe';
     ProgressMatrixConfigComponent,
     MilestoneConfigComponent,
     LifecycleOrchestratorModalComponent,
-    ReqStatusPipe
+    ReqStatusPipe,
+    RequirementClosureModalComponent
   ], 
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -222,6 +223,69 @@ public isGrEnabled(status: string): boolean {
     // Nota: Deberás agregar aquí los estados futuros como 'PROCESO-DT', 'CERRADO-DT', etc.
     return allowedStatuses.includes(status);
 }
+
+
+/**
+   * RN-FR-01 (US37): Hard Gate de Cierre Histórico
+   * Evalúa mediante el arreglo de fases congeladas (frozen_phases) 
+   * si las líneas paralelas han culminado exitosamente.
+   */
+  public isCloseEnabled(req: RequirementDashboard): boolean {
+      // Si ya está en histórico (RF), visor habilitado
+      if (req.status === 'RF') return true;
+
+      const tipologia = (req.management_type || req.tipo_gestion || '').toUpperCase();
+      const frozen = req.frozen_phases || [];
+      
+      // Evalua la madurez absoluta basada en el sellado inmutable (frozen_phases)
+      if (tipologia === 'ROLES') {
+          return frozen.includes('AU');
+      
+      } else if (tipologia === 'ENTREGABLES') {
+          return frozen.includes('CEE');
+      
+      } else if (tipologia === 'MIXTO') {
+          // AMBAS líneas deben estar selladas
+          return frozen.includes('AU') && frozen.includes('CEE');
+      }
+
+      return false; 
+  }
+
+
+  // ==========================================
+  // SIGNALS Y MÉTODOS PARA EL MODAL DE CIERRE (US37)
+  // ==========================================
+  public selectedReqForClosure = signal<RequirementDashboard | null>(null);
+
+  /**
+   * Abre el modal de previsualización forense del Acta de Cierre.
+   */
+  public openClosureModal(req: RequirementDashboard): void {
+      this.selectedReqForClosure.set(req);
+  }
+
+  /**
+   * Cierra el modal abortando la operación (FS-01).
+   */
+  public closeClosureModal(): void {
+      this.selectedReqForClosure.set(null);
+  }
+
+  /**
+   * Transmutación Reactiva (Se dispara tras la confirmación atómica)
+   */
+  public onRequirementClosed(closedReqId: string): void {
+      this.closeClosureModal();
+      
+      // Si esta en la pestaña "PROCESO", saca el requerimiento del arreglo de inmediato
+      if (this.context() === 'PROCESO') {
+          this.requirements.update(reqs => reqs.filter(r => r.id !== closedReqId));
+      } else {
+          // Si esta en "HISTORICO", solo recarga para actualizar el estatus.
+          this.loadRequirements();
+      }
+  }
 
   // ==========================================
   // 3. CICLO DE VIDA

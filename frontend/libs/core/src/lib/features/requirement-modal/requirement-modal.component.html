@@ -64,8 +64,21 @@
       <div
         class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom"
       >
-        <div>
+        <!-- <div>
           @if (!isEditing()) {
+            <button
+              class="btn btn-outline-danger rounded-pill fw-bold px-4 shadow-sm"
+              (click)="iniciarBorradoLogico()"
+            >
+              <i class="bi-solid bi-trash me-2"></i>
+              Eliminar Requerimiento
+            </button>
+          }
+        </div> -->
+
+        <div>
+          <!-- Agregg la validación && req.status !== 'RF' -->
+          @if (!isEditing() && currentRequirement()?.status !== 'RF') {
             <button
               class="btn btn-outline-danger rounded-pill fw-bold px-4 shadow-sm"
               (click)="iniciarBorradoLogico()"

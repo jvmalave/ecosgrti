@@ -11,7 +11,7 @@
         Requerimiento: {{ rrti() }}
       </span>
       <button
-        class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm"
+        class="btn btn-sm btn-outline-brand rounded-pill fw-bold px-3 shadow-sm d-flex align-items-center"
         (click)="openRolesStatusModal()"
       >
         <i class="fa-solid fa-users-viewfinder me-1"></i> Estatus de Roles
@@ -285,168 +285,12 @@
 <!-- MODAL DE ESTATUS GLOBAL (VISIÓN DE AUDITORÍA) -->
 <!-- ========================================== -->
 @if (showRolesStatusModal()) {
-  <div
-    class="modal fade show d-block"
-    tabindex="-1"
-    style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px)"
-  >
-    <div
-      class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
-    >
-      <div
-        class="modal-content shadow-lg border-0"
-        style="border-radius: 10px; border-left: 4px solid #d500f9 !important"
-      >
-        <!-- CABECERA SUTIL CON RRTI -->
-        <div
-          class="modal-header bg-white border-bottom-0 pb-3 pt-4 px-4"
-          style="border-top: 4px solid #d500f9 !important"
-        >
-          <div class="d-flex align-items-center">
-            <h5
-              class="modal-title fw-bold text-dark mb-0 d-flex align-items-center"
-            >
-              <i class="fa-solid fa-users-viewfinder text-brand me-3 fs-4"></i>
-              Estatus Global de Roles
-            </h5>
-            <!-- Badge Corporativo con el N° de Requerimiento -->
-            <div
-              class="badge badge-brand rounded-pill ms-3 px-3 py-2 border-brand text-uppercase shadow-sm"
-            >
-              <i class="fa-solid fa-hashtag me-1 opacity-75"></i> Req:
-              {{ rrti() }}
-            </div>
-          </div>
-          <button
-            type="button"
-            class="btn-close shadow-none"
-            aria-label="Cerrar"
-            (click)="closeAllModals()"
-          ></button>
-        </div>
-
-        <div class="modal-body bg-light pt-3">
-          <div class="row g-4">
-            <!-- 1. Pendientes -->
-            <div class="col-md-4">
-              <div class="card h-100 border-0 shadow-sm rounded-3">
-                <div
-                  class="card-header bg-warning bg-opacity-25 border-warning border-bottom text-dark fw-bold d-flex justify-content-between align-items-center py-3"
-                >
-                  <span
-                    ><i class="fa-solid fa-user-clock me-2"></i> Pendientes por
-                    Asignar</span
-                  >
-                  <span class="badge bg-dark rounded-pill">{{
-                    rolesPorAsignarTotal().length
-                  }}</span>
-                </div>
-                <ul class="list-group list-group-flush small">
-                  @for (role of rolesPorAsignarTotal(); track role.id) {
-                    <li class="list-group-item text-truncate py-2">
-                      <i
-                        class="fa-solid fa-circle fs-6 text-warning me-2"
-                        style="font-size: 0.5rem"
-                      ></i>
-                      {{ role.requirement_role?.role_name || role.role_name }}
-                    </li>
-                  } @empty {
-                    <li
-                      class="list-group-item text-muted text-center fst-italic py-4"
-                    >
-                      <i
-                        class="fa-solid fa-check-double mb-2 d-block fs-4 text-opacity-50"
-                      ></i>
-                      No hay roles pendientes
-                    </li>
-                  }
-                </ul>
-              </div>
-            </div>
-
-            <!-- 2. En Proceso -->
-            <div class="col-md-4">
-              <div class="card h-100 border-0 shadow-sm rounded-3">
-                <div
-                  class="card-header bg-info bg-opacity-25 border-info border-bottom text-dark fw-bold d-flex justify-content-between align-items-center py-3"
-                >
-                  <span
-                    ><i class="fa-solid fa-gears me-2"></i> En Trámite
-                    CSAL</span
-                  >
-                  <span class="badge bg-dark rounded-pill">{{
-                    rolesEnProcesoTotal().length
-                  }}</span>
-                </div>
-                <ul class="list-group list-group-flush small">
-                  @for (role of rolesEnProcesoTotal(); track role.id) {
-                    <li class="list-group-item text-truncate py-2">
-                      <i
-                        class="fa-solid fa-circle-notch fa-spin text-info me-2"
-                      ></i>
-                      {{ role.requirement_role?.role_name || role.role_name }}
-                    </li>
-                  } @empty {
-                    <li
-                      class="list-group-item text-muted text-center fst-italic py-4"
-                    >
-                      <i
-                        class="fa-regular fa-folder-open mb-2 d-block fs-4 text-opacity-50"
-                      ></i>
-                      Sin tickets en curso
-                    </li>
-                  }
-                </ul>
-              </div>
-            </div>
-
-            <!-- 3. Asignados -->
-            <div class="col-md-4">
-              <div class="card h-100 border-0 shadow-sm rounded-3">
-                <div
-                  class="card-header bg-success bg-opacity-25 border-success border-bottom text-dark fw-bold d-flex justify-content-between align-items-center py-3"
-                >
-                  <span
-                    ><i class="fa-solid fa-shield-halved me-2"></i> Roles
-                    Asignados</span
-                  >
-                  <span class="badge bg-success rounded-pill">{{
-                    rolesAsignadosTotal().length
-                  }}</span>
-                </div>
-                <ul class="list-group list-group-flush small">
-                  @for (role of rolesAsignadosTotal(); track role.id) {
-                    <li class="list-group-item text-truncate py-2">
-                      <i class="fa-solid fa-check text-success me-2"></i>
-                      {{ role.requirement_role?.role_name || role.role_name }}
-                    </li>
-                  } @empty {
-                    <li
-                      class="list-group-item text-muted text-center fst-italic py-4"
-                    >
-                      <i
-                        class="fa-solid fa-lock mb-2 d-block fs-4 text-opacity-50"
-                      ></i>
-                      Aún no hay accesos otorgados
-                    </li>
-                  }
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer border-top-0 bg-light">
-          <button
-            type="button"
-            class="btn btn-secondary rounded-pill px-4 fw-medium shadow-sm"
-            (click)="closeAllModals()"
-          >
-            Cerrar Vista
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <lib-global-status-modal
+    [modalTitle]="'Estatus Global de Roles'"
+    [requirementId]="rrti()" 
+    [columns]="statusColumnsData()"
+    (closeModal)="showRolesStatusModal.set(false)">
+  </lib-global-status-modal>
 }
 
 <!-- ========================================== -->

@@ -8,11 +8,19 @@ import { NotificationService } from '../../data-access/services/notification.ser
 import { TicketGroup, AuRoleWithRelation, AuRole } from '../../data-access/models/au-workflow.model';
 import { AuTicketFormComponent } from './components/au-ticket-form/au-ticket-form.component';
 import { AuResultFormComponent } from './components/au-result-form/au-result-form.component';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { GlobalStatusModalComponent, StatusColumn } from '@ecosgrti/shared'
 
 @Component({
   selector: 'lib-au-roles',
   standalone: true,
-  imports: [CommonModule, FormsModule, AuTicketFormComponent, AuResultFormComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    AuTicketFormComponent, 
+    AuResultFormComponent, 
+    GlobalStatusModalComponent
+  ],
   templateUrl: './au-roles.component.html',
   styleUrls: ['./au-roles.component.scss']
 })
@@ -39,7 +47,7 @@ export class AuRolesComponent implements OnInit {
   // Estado Central (Signals)
   public isLoading = signal<boolean>(true);
   public isSubmitting = signal<boolean>(false);
-  public isPhaseClosed = signal<boolean>(false);
+  public isPhaseClosed = input<boolean>(false);
   
   public rolesDataset = signal<AuRole[]>([]);
   public searchTerm = signal<string>('');
@@ -103,6 +111,54 @@ export class AuRolesComponent implements OnInit {
   public rolesPorAsignarTotal = computed(() => this.rolesDataset().filter(r => r.status === 'PENDING_AU'));
   public rolesEnProcesoTotal  = computed(() => this.rolesDataset().filter(r => r.status === 'IN_PROGRESS'));
   public rolesAsignadosTotal  = computed(() => this.rolesDataset().filter(r => r.status === 'ASSIGNED'));
+
+  
+ // ==========================================
+  // CONFIGURACIÓN: MODAL UNIVERSAL DE ESTATUS
+  // ==========================================
+  public statusColumnsData = computed<StatusColumn[]>(() => {
+    return [
+      {
+        title: 'Pendientes por Asignar',
+        icon: 'fa-solid fa-user-clock',
+        bgClass: 'bg-warning bg-opacity-25', 
+        textClass: 'text-dark',
+        items: this.rolesPorAsignarTotal().map(r => ({ 
+          id: r.id, 
+          name: r.requirement_role?.role_name || r.role_name || 'Rol sin nombre' 
+        })),
+        emptyMessage: 'No hay roles pendientes',
+        emptyIcon: 'fa-solid fa-check-double text-warning', 
+        itemIcon: 'fa-solid fa-circle text-warning fs-6'     
+      },
+      {
+        title: 'En Trámite CSAL',
+        icon: 'fa-solid fa-gears',
+        bgClass: 'bg-info bg-opacity-25',
+        textClass: 'text-dark',
+        items: this.rolesEnProcesoTotal().map(r => ({ 
+          id: r.id, 
+          name: r.requirement_role?.role_name || r.role_name || 'Rol sin nombre' 
+        })),
+        emptyMessage: 'Sin tickets en curso',
+        emptyIcon: 'fa-regular fa-folder-open text-info',    
+        itemIcon: 'fa-solid fa-circle-notch fa-spin text-info' 
+      },
+      {
+        title: 'Asignados',
+        icon: 'fa-solid fa-shield-halved',
+        bgClass: 'bg-success bg-opacity-25',
+        textClass: 'text-dark',
+        items: this.rolesAsignadosTotal().map(r => ({ 
+          id: r.id, 
+          name: r.requirement_role?.role_name || r.role_name || 'Rol sin nombre' 
+        })),
+        emptyMessage: 'Aún no hay accesos otorgados',
+        emptyIcon: 'fa-solid fa-lock text-success',          
+        itemIcon: 'fa-solid fa-check text-success'           
+      }
+    ];
+  });
 
   // Hard Gate Client-Side
   public canClosePhase = computed(() => {
@@ -238,7 +294,7 @@ export class AuRolesComponent implements OnInit {
         );
         
         // Sello de estado visual (Reconfigura la vista histórica)
-        this.isPhaseClosed.set(true); 
+        //this.isPhaseClosed.set(true); 
         
         // Emitimos el output hacia el orquestador principal
         this.phaseClosed.emit({

@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import Swal from 'sweetalert2';
-import { INotificationService } from '@ecosgrti/shared/interfaces';
+// import { INotificationService } from '@ecosgrti/shared/interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
-export class NotificationService implements INotificationService {
+export class NotificationService  {
 
   toastSuccess(message: string): void {
     Swal.fire({

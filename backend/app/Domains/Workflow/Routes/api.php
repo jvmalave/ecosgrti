@@ -186,7 +186,7 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
         Route::delete('/activities/{activity_id}/deliverables/{deliverable_id}', [CoeActivityController::class, 'destroy']);
     });
 
-  });
+  
   /*
   |--------------------------------------------------------------------------
   | GESTIÓN FASE PRUEBAS INTEGRALES (PI))
@@ -302,10 +302,8 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
 
         Route::post('/requirements/{id}/finalize-au', [AuRoleController::class, 'finalizeAu']);
         
-    
-    // ⏳ (Aquí iremos agregando las rutas de actualización, inicialización de roles y resultados)
-});
-
+    });
+  });
 
 
   /*
@@ -314,11 +312,11 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
   |--------------------------------------------------------------------------
   */
     // Mostrar Dashboard de Progreso
-  Route::get('/requirements/{requirementId}/progress-dashboard', [ProgressDashboardController::class, 'show']);
+    Route::get('/requirements/{requirementId}/progress-dashboard', [ProgressDashboardController::class, 'show']);
 
-  Route::middleware(['role:Admin,Coord,ConsCSPE'])->group(function () {
+    Route::middleware(['role:Admin,Coord,ConsCSPE'])->group(function () {
     // Actualizar Tipo de Gestión
-    Route::patch('/requirements/{requirementId}/management-type', UpdateManagementTypeController::class);  
+      Route::patch('/requirements/{requirementId}/management-type', UpdateManagementTypeController::class);  
 
   }); 
 

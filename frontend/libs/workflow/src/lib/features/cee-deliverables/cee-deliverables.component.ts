@@ -8,6 +8,8 @@ import { NotificationService } from '../../data-access/services/notification.ser
 import { CeeTicketFormComponent } from './components/cee-ticket-form/cee-ticket-form.component';
 import { CeeResultFormComponent } from './components/cee-result-form/cee-result-form.component';
 import { HttpErrorResponse } from '@angular/common/http';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { GlobalStatusModalComponent, StatusColumn } from '@ecosgrti/shared';
 
 
 
@@ -30,7 +32,8 @@ export interface TicketDeliverableGroup {
     CommonModule, 
     FormsModule,
     CeeTicketFormComponent,
-    CeeResultFormComponent
+    CeeResultFormComponent,
+    GlobalStatusModalComponent
   ], 
   templateUrl: './cee-deliverables.component.html',
   styleUrls: ['./cee-deliverables.component.scss'] // O el que estés utilizando
@@ -98,7 +101,7 @@ export class CeeDeliverablesComponent implements OnInit {
   public isPhaseClosed = computed<boolean>(() => {
     const phase = this.reqPhase();
     // Solo muestra el banner si el requerimiento está explícitamente en CEE-C o fases posteriores
-    const closedPhases = ['CEE-C', 'PI-I', 'PI-C', 'PAP-I', 'PAP-C', 'AU', 'RF'];
+    const closedPhases = ['CEE-C', 'PI-I', 'PI-C', 'PAP-I', 'PAP-C','AU-C', 'RF'];
     return closedPhases.includes(phase);
   });
 
@@ -123,6 +126,57 @@ export class CeeDeliverablesComponent implements OnInit {
   public activeTicketId = signal<string>('');
   public activeTicketNumber = signal<string>('');
   public activeDeliverables = signal<CeeDeliverable[]>([]);
+
+
+// ==========================================
+// MODAL UNIVERSAL: ESTATUS DE ENTREGABLES (CEE)
+// ==========================================
+public showCeeStatusModal = signal<boolean>(false);
+
+public statusColumnsData = computed<StatusColumn[]>(() => {
+  return [
+    {
+      title: 'Por Certificar',
+      icon: 'fa-solid fa-file-signature',
+      bgClass: 'bg-warning bg-opacity-25',
+      textClass: 'text-dark',
+      items: this.store.filteredPending().map(d => ({ 
+        id: d.id, 
+        name: d.deliverable?.name || 'Entregable sin nombre' 
+      })),
+      emptyMessage: 'No hay entregables pendientes',
+      emptyIcon: 'fa-solid fa-file-circle-check text-warning', 
+      itemIcon: 'fa-regular fa-file-pdf text-warning fs-6'   
+    },
+    {
+      title: 'En Proceso',
+      icon: 'fa-solid fa-ticket',
+      bgClass: 'bg-info bg-opacity-25',
+      textClass: 'text-dark',
+      items: this.store.deliverables().filter(d => d.status === 'IN_PROGRESS').map(d => ({ 
+        id: d.id, 
+        name: d.deliverable?.name || 'Entregable sin nombre' 
+      })),
+      emptyMessage: 'Sin tickets en curso',
+      emptyIcon: 'fa-regular fa-folder-open text-info',
+      itemIcon: 'fa-solid fa-circle-notch fa-spin text-info' 
+    },
+    {
+      title: 'Certificados',
+      icon: 'fa-solid fa-check-double',
+      bgClass: 'bg-success bg-opacity-25',
+      textClass: 'text-dark',
+      items: this.store.deliverables().filter(d => d.status === 'CERTIFIED').map(d => ({ 
+        id: d.id, 
+        name: d.deliverable?.name || 'Entregable sin nombre' 
+      })),
+      emptyMessage: 'Aún no hay entregables certificados',
+      emptyIcon: 'fa-solid fa-lock text-success',
+      itemIcon: 'fa-solid fa-check text-success'           
+    }
+  ];
+});
+
 
   ngOnInit(): void {
     this.initializeWorkflow();

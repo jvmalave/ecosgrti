@@ -8,6 +8,8 @@ import { CerResultFormComponent } from './component/cer-result-form/cer-result-f
 import { CerRole, TicketGroup } from '../../data-access/models/cer-workflow.model';
 import { NotificationService,} from '../../data-access/services/notification.services';
 import { HttpErrorResponse } from '@angular/common/http';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { GlobalStatusModalComponent, StatusColumn } from '@ecosgrti/shared';
 
 
 @Component({
@@ -17,7 +19,8 @@ import { HttpErrorResponse } from '@angular/common/http';
     CommonModule, 
     FormsModule, 
     CerTicketFormComponent, 
-    CerResultFormComponent
+    CerResultFormComponent,
+    GlobalStatusModalComponent
   ], 
   templateUrl: './cer-roles.component.html',
   styleUrls: ['./cer-roles.component.scss']
@@ -115,6 +118,58 @@ export class CerRolesComponent implements OnInit {
   public activeTicketId = signal<string>('');
   public activeTicketNumber = signal<string>('');
   public activeRoles = signal<CerRole[]>([]);
+
+
+// ==========================================
+// MODAL UNIVERSAL: ESTATUS DE CERTIFICACIÓN (CER)
+// ==========================================
+public showCerStatusModal = signal<boolean>(false);
+
+public statusColumnsData = computed<StatusColumn[]>(() => {
+  return [
+    {
+      title: 'Por Certificar',
+      icon: 'fa-solid fa-hourglass-half',
+      bgClass: 'bg-warning bg-opacity-25',
+      textClass: 'text-dark',
+      items: this.store.filteredPending().map(r => ({ 
+        id: r.id, 
+        name: r.requirement_role?.role_name || 'Rol sin nombre' 
+      })),
+      emptyMessage: 'No hay roles pendientes',
+      emptyIcon: 'fa-solid fa-check-double text-warning', 
+      itemIcon: 'fa-solid fa-circle text-warning fs-6'
+    },
+    {
+      title: 'En Proceso',
+      icon: 'fa-solid fa-ticket',
+      bgClass: 'bg-info bg-opacity-25',
+      textClass: 'text-dark',
+      // Extraemos del store base y filtramos para evadir la barra de búsqueda local
+      items: this.store.roles().filter(r => r.status === 'IN_PROGRESS').map(r => ({ 
+        id: r.id, 
+        name: r.requirement_role?.role_name || 'Rol sin nombre' 
+      })),
+      emptyMessage: 'Sin tickets en curso',
+      emptyIcon: 'fa-regular fa-folder-open text-info',
+      itemIcon: 'fa-solid fa-circle-notch fa-spin text-info'
+    },
+    {
+      title: 'Certificados',
+      icon: 'fa-solid fa-check-double',
+      bgClass: 'bg-success bg-opacity-25',
+      textClass: 'text-dark',
+      items: this.store.roles().filter(r => r.status === 'CERTIFIED').map(r => ({ 
+        id: r.id, 
+        name: r.requirement_role?.role_name || 'Rol sin nombre' 
+      })),
+      emptyMessage: 'Aún no hay roles certificados',
+      emptyIcon: 'fa-solid fa-lock text-success',
+      itemIcon: 'fa-solid fa-check text-success'
+    }
+  ];
+});
+
 
   ngOnInit(): void {
     this.initializeWorkflow();

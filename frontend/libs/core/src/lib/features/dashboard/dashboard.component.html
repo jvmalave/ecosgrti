@@ -282,11 +282,6 @@
                               title="Ver Detalle"
                             >
                               <i class="fa-solid fa-eye"></i>
-                              <!-- <img
-                                src="assets/icons/show-details.png"
-                                alt="Ver Detalles"
-                                class="custom-icon"
-                              /> -->
                             </button>
 
                             <button
@@ -295,11 +290,6 @@
                               title="Gestionar Estimación"
                             >
                               <i class="bi bi-calendar3"></i>
-                              <!-- <img
-                                src="assets/icons/estimation.png"
-                                alt="Estimación"
-                                class="custom-icon"
-                              /> -->
                             </button>
 
                             <button
@@ -310,12 +300,6 @@
                               title="Gestionar Acuerdos"
                             >
                               <i class="fa-solid fa-handshake"></i>
-                              <!-- <img
-                                src="assets/icons/acuerdo.png"
-                                alt="ATF"
-                                class="custom-icon"
-                                [class.opacity-50]="req.is_locked"
-                              /> -->
                             </button>
 
                             <button
@@ -326,19 +310,24 @@
                               [disabled]="!isGrEnabled(req.status)"
                             >
                               <i class="fa-solid fa-gear"></i>
-                              <!-- <img
-                                src="assets/icons/manage-req.png"
-                                alt="Gestionar Requerimiento"
-                                class="custom-icon"
-                              /> -->
                             </button>
-                            <button
+                            <!-- <button
                               class="btn btn-sm btn-outline-brand rounded-pill px-3"
                               title="Cerrar Requerimiento"
                               [class.opacity-50]="!isGrEnabled(req.status)"
                               [disabled]="!isGrEnabled(req.status)"
                             >
                               <i class="fa-solid fa-lock"></i>
+                            </button> -->
+                            <button
+                                class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                                [title]="req.status === 'RF' ? 'Ver Acta de Cierre' : 'Cerrar Requerimiento'"
+                                [class.opacity-50]="!isCloseEnabled(req)"
+                                [disabled]="!isCloseEnabled(req)"
+                                (click)="openClosureModal(req)"
+                            >
+                                <!-- Muta visualmente: Ojo si ya está cerrado (RF), candado si está pendiente -->
+                                <i class="fa-solid" [ngClass]="req.status === 'RF' ? 'fa-eye text-success' : 'fa-lock'"></i>
                             </button>
                           </div>
                         </td>
@@ -478,6 +467,17 @@
             (closeModal)="closeLifecycleOrchestrator()"
             (requirementUpdated)="onRequirementPhaseUpdated($event)"
           ></lib-lifecycle-orchestrator-modal>
+        }
+
+        <!-- ======================================================= -->
+        <!-- MODAL DE CIERRE HISTÓRICO (US37)                        -->
+        <!-- ======================================================= -->
+        @if (selectedReqForClosure()) {
+            <lib-requirement-closure-modal
+                [req]="selectedReqForClosure()!"
+                (closeModal)="closeClosureModal()"
+                (closureSuccess)="onRequirementClosed($event)"
+            ></lib-requirement-closure-modal>
         }
       </section>
     </main>

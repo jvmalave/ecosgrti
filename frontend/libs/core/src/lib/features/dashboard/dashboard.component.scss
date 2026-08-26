@@ -178,3 +178,19 @@ button:disabled {
   }
 }
 
+
+// ========================================================
+// EFECTO DE FONDO (OSCURECIDO Y DIFUMINADO) PARA MODALES
+// ========================================================
+::ng-deep .modal-backdrop.show {
+  // Quitamos la opacidad por defecto de Bootstrap (0.5) para controlarla con RGBA
+  opacity: 1 !important; 
+  
+  // Fondo oscuro al 65% de opacidad
+  background-color: rgba(0, 0, 0, 0.65) !important; 
+  
+  // Efecto Glassmorphism (Difuminado)
+  backdrop-filter: blur(5px) !important; 
+  -webkit-backdrop-filter: blur(5px) !important;
+}
+

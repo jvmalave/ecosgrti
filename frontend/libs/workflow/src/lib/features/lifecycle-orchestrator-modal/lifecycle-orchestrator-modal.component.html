@@ -355,6 +355,7 @@
           <lib-au-roles
             [requirementId]="req().id"
             [rrti]="req().rrti"
+            [isPhaseClosed]="req().frozen_phases.includes('AU')"
             (phaseClosed)="onPhaseStatusChanged($event)"
             (requireDashboardRefresh)="refreshDashboardData()"
           ></lib-au-roles>

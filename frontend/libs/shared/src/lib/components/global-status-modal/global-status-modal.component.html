@@ -1,0 +1,86 @@
+<!-- Backdrop oscuro de fondo con efecto blur anidado -->
+<div class="modal-backdrop fade show" style="background-color: rgba(0, 0, 0, 2.80); backdrop-filter: blur(4px); z-index: 1060;"></div>
+
+<!-- Contenedor del Modal (Z-index superior para garantizar que flote sobre el modal base) -->
+<div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true" style="z-index: 1065;">
+  <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+    <!-- Tarjeta Principal del Modal -->
+    <div class="modal-content rounded-4 shadow-lg border-0" style="overflow: hidden;">
+      
+      <!-- Borde superior luminoso corporativo -->
+      <div style="height: 5px; width: 100%; background: linear-gradient(90deg, #a200ff, #ff007f);"></div>
+
+      <!-- Cabecera -->
+      <div class="modal-header border-bottom-0 pb-0 pt-4 px-4 align-items-center">
+        <h5 class="modal-title fw-bold text-dark d-flex align-items-center mb-0">
+          <!-- El icono corporativo morado -->
+          <i class="fa-solid fa-object-group me-3" style="color: #a200ff;"></i> 
+          {{ modalTitle() }}
+          <!-- Badge del Requerimiento -->
+          <span class="badge rounded-pill ms-3 fs-7 fw-bold" style="background-color: #f3e5f5; color: #a200ff;">
+            # REQ: {{ requirementId() }}
+          </span>
+        </h5>
+        <!-- Botón de la X -->
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeModal.emit()"></button>
+      </div>
+
+      <!-- Cuerpo del Modal (Las 3 Columnas) -->
+      <div class="modal-body p-4">
+        <div class="row g-4">
+          
+          <!-- Iteración dinámica sobre las columnas inyectadas -->
+          @for (col of columns(); track $index) {
+            <div class="col-md-4">
+              <!-- Tarjeta interna de la columna -->
+              <div class="card h-100 border-0 shadow-sm rounded-4 bg-light">
+                
+                <!-- Cabecera de la Columna (Color dinámico inyectado desde el padre) -->
+                <div class="card-header border-0 rounded-top-4 py-3 px-4 d-flex justify-content-between align-items-center {{ col.bgClass }}">
+                  <h6 class="mb-0 fw-bold {{ col.textClass }} d-flex align-items-center">
+                    <i class="{{ col.icon }} me-2"></i> {{ col.title }}
+                  </h6>
+                  <span class="badge bg-dark rounded-pill fs-7">{{ col.items.length }}</span>
+                </div>
+
+                <!-- Lista de Registros o Estado Vacío -->
+                <div class="card-body bg-white rounded-bottom-4 pt-3 px-4">
+                  
+                  @if (col.items.length === 0) {
+                    <!-- Estado Vacío -->
+                    <div class="text-center text-muted fst-italic py-4">
+                      <!-- Icono dinámico gigante -->
+                      <i class="{{ col.emptyIcon }} mb-2 d-block fs-2 text-opacity-50"></i>
+                      <p class="mb-0 text-secondary opacity-75">{{ col.emptyMessage }}</p>
+                    </div>
+                  } @else {
+                    <!-- Lista de Elementos -->
+                    <ul class="list-group list-group-flush">
+                      @for (item of col.items; track item.id) {
+                        <li class="list-group-item border-0 px-0 py-2 d-flex align-items-start">
+                          <!-- Icono dinámico de la lista (ej: check verde o tuerca girando) -->
+                          <i class="{{ col.itemIcon }} mt-1 me-2"></i>
+                          <span class="fw-medium text-secondary">{{ item.name }}</span>
+                        </li>
+                      }
+                    </ul>
+                  }
+
+                </div>
+              </div>
+            </div>
+          }
+
+        </div>
+      </div>
+
+      <!-- Pie del Modal -->
+      <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+        <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm" (click)="closeModal.emit()">
+          Cerrar Vista
+        </button>
+      </div>
+      
+    </div>
+  </div>
+</div>

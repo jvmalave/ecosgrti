@@ -49,7 +49,12 @@ class Requirement extends Model
     'snapshot_society_name',
     'snapshot_system_name',
     'snapshot_unit_name',
-    'progress_percentage'
+    'progress_percentage',
+    'notification_date',
+    'completion_date',
+    'closure_act_path',
+    'notification_support_path',
+    'conformity_declaration'
   ];
 
   protected static function newFactory()
@@ -83,9 +88,9 @@ class Requirement extends Model
       : $this->phaseHistories()->get();
 
     foreach ($histories as $history) {
-      // 🟢 CORRECCIÓN: Usamos phase_status_code
+      // Extrae las fases inmutables a partir del phase_status_code
       if (str_ends_with($history->phase_status_code, '-C')) {
-        // Separamos 'DT-C' y nos quedamos con 'DT'
+        // Separa 'DT-C' y nos quedamos con 'DT'
         $parts = explode('-', $history->phase_status_code);
         if (isset($parts[0])) {
           $frozen[] = $parts[0];

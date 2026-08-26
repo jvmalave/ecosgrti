@@ -38,3 +38,18 @@
   color: #9e9e9e;
   cursor: not-allowed;
 }
+
+// ========================================================
+// EFECTO DE FONDO (OSCURECIDO Y DIFUMINADO)
+// ========================================================
+.modal-backdrop.show {
+  // Quitamos la opacidad por defecto de Bootstrap (0.5) para controlarla con RGBA
+  opacity: 1 !important; 
+  
+  // Fondo negro al 65% de opacidad (puedes subirlo a 0.75 si lo quieres más oscuro)
+  background-color: rgba(0, 0, 0, 0.65) !important; 
+  
+  // El toque mágico del difuminado
+  backdrop-filter: blur(5px) !important; 
+  -webkit-backdrop-filter: blur(5px) !important; // Soporte para navegadores basados en WebKit (Safari)
+}

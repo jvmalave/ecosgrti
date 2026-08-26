@@ -1,27 +1,43 @@
-import { Component, OnInit, inject, input, signal, computed, output } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  input,
+  signal,
+  computed,
+  output,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 //import { HttpErrorResponse } from '@angular/common/http';
 
 import { PapRolesStore } from '../../data-access/store/pap-roles.store';
 import { PapApiService } from '../../data-access/services/pap-api.service';
-import { PapRole, OrderGroup, PapOrderResponse, SuccessfulOrder} from '../../data-access/models/pap-workflow.model';
+import {
+  PapRole,
+  OrderGroup,
+  PapOrderResponse,
+  SuccessfulOrder,
+} from '../../data-access/models/pap-workflow.model';
 import { NotificationService } from '../../data-access/services/notification.services';
 import { PapOrderFormComponent } from './component/pap-order-form/pap-order-form.component';
 import { PapResultFormComponent } from './component/pap-result-form/pap-result-form.component';
 import { HttpErrorResponse } from '@angular/common/http';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { GlobalStatusModalComponent, StatusColumn } from '@ecosgrti/shared';
 
 @Component({
   selector: 'lib-pap-roles',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     FormsModule,
     PapOrderFormComponent,
-    PapResultFormComponent
+    PapResultFormComponent,
+    GlobalStatusModalComponent,
   ],
   templateUrl: './pap-roles.component.html',
-  styleUrls: ['./pap-roles.component.scss']
+  styleUrls: ['./pap-roles.component.scss'],
 })
 export class PapRolesComponent implements OnInit {
   // ==========================================
@@ -37,7 +53,11 @@ export class PapRolesComponent implements OnInit {
   public requirementId = input.required<string>();
   public rrti = input.required<string>();
   public reqPhase = input<string>('PAP-I');
-  public phaseClosed = output<{req_id: string, phase_actual: string, progreso_global: number}>();
+  public phaseClosed = output<{
+    req_id: string;
+    phase_actual: string;
+    progreso_global: number;
+  }>();
 
   // ==========================================
   // ESTADOS LOCALES Y DE INTERFAZ
@@ -47,7 +67,9 @@ export class PapRolesComponent implements OnInit {
 
   // Filtra de los pendientes solo los seleccionados por el usuario mediante los checkboxes
   public selectedRolesData = computed(() => {
-    return this.store.filteredPending().filter(r => this.rolesToProcess().includes(r.id));
+    return this.store
+      .filteredPending()
+      .filter((r) => this.rolesToProcess().includes(r.id));
   });
 
   // ==========================================
@@ -72,7 +94,54 @@ export class PapRolesComponent implements OnInit {
   public activeRoles = signal<PapRole[]>([]);
   public activeRolesInOrder = signal<PapRole[]>([]);
 
-  
+  // ==========================================
+  // MODAL UNIVERSAL: ESTATUS DE PRODUCCIÓN (PAP)
+  // ==========================================
+  public showPapStatusModal = signal<boolean>(false);
+
+  public statusColumnsData = computed<StatusColumn[]>(() => {
+    return [
+      {
+        title: 'Pendientes',
+        icon: 'fa-solid fa-hourglass-half',
+        bgClass: 'bg-warning bg-opacity-25',
+        textClass: 'text-dark',
+        items: this.store.filteredPending().map((r) => ({
+          id: r.id,
+          name: r.requirement_role?.role_name || 'Rol sin nombre',
+        })),
+        emptyMessage: 'No hay roles pendientes',
+        emptyIcon: 'fa-solid fa-check-double text-warning',
+        itemIcon: 'fa-solid fa-circle text-warning fs-6',
+      },
+      {
+        title: 'En Trámite (Transporte)',
+        icon: 'fa-solid fa-truck-fast',
+        bgClass: 'bg-info bg-opacity-25',
+        textClass: 'text-dark',
+        items: this.store.filteredInProgress().map((r) => ({
+          id: r.id,
+          name: r.requirement_role?.role_name || 'Rol sin nombre',
+        })),
+        emptyMessage: 'Sin órdenes en curso',
+        emptyIcon: 'fa-regular fa-folder-open text-info',
+        itemIcon: 'fa-solid fa-circle-notch fa-spin text-info',
+      },
+      {
+        title: 'En Producción',
+        icon: 'fa-solid fa-server',
+        bgClass: 'bg-success bg-opacity-25',
+        textClass: 'text-dark',
+        items: this.store.filteredInProduction().map((r) => ({
+          id: r.id,
+          name: r.requirement_role?.role_name || 'Rol sin nombre',
+        })),
+        emptyMessage: 'Aún no hay roles productivos',
+        emptyIcon: 'fa-solid fa-lock text-success',
+        itemIcon: 'fa-solid fa-check text-success',
+      },
+    ];
+  });
 
   // ==========================================
   // INPUTS DEL ORQUESTADOR
@@ -84,36 +153,15 @@ export class PapRolesComponent implements OnInit {
   // ==========================================
   // HARD GATES Y VALIDACIÓN DE CIERRE
   // ==========================================
-  // public isPhaseClosed = computed<boolean>(() => {
-  //   const closedStatuses = ['PAP-C', 'AU-I', 'AU-C', 'FC', 'RC'];
-  //   return closedStatuses.includes(this.reqPhase() ?? '');
-  // });
-
-  // public canClosePhase = computed<boolean>(() => {
-  //   const allRoles = this.store.roles();
-    
-  //   // Si no hay roles en absoluto, no se puede cerrar la fase.
-  //   if (allRoles.length === 0) return false;
-
-  //   // Evaluamos el estado crudo
-  //   const hasPending = allRoles.some(r => r.status === 'PENDING_PAP');
-  //   const hasInProgress = allRoles.some(r => r.status === 'IN_PROGRESS');
-    
-  //   // Si hay roles pendientes o en progreso y la la fase anterior (CER) no haya sido cerrada, no se puede cerrar la fase
-  //   return !hasPending && 
-  //         !hasInProgress && 
-  //         !this.isPhaseClosed() && 
-  //         this.isCerPhaseClosed(); 
-  // });
-
 
   public isPhaseClosed = computed<boolean>(() => {
     const currentPhase = this.reqPhase() ?? '';
     const allRoles = this.store.roles();
-    
+
     // Verificamos si absolutamente todos los roles de PAP ya terminaron su ciclo
     const hasRoles = allRoles.length > 0;
-    const allProductive = hasRoles && allRoles.every(r => r.status === 'IN_PRODUCTION');
+    const allProductive =
+      hasRoles && allRoles.every((r) => r.status === 'IN_PRODUCTION');
 
     // 1. Cierre explícito (El requerimiento está exactamente cerrado en PAP-C)
     if (currentPhase === 'PAP-C') return true;
@@ -122,28 +170,30 @@ export class PapRolesComponent implements OnInit {
     const vanguardStatuses = ['AU-I', 'AU-C', 'FC', 'RC'];
     const isVanguardAhead = vanguardStatuses.includes(currentPhase);
 
-    // 🟢 EL FIX: Si el proyecto avanzó globalmente, PAP SOLO se bloquea si ya 
-    // no le quedan roles activos. Si le quedan roles, se mantiene desbloqueada 
+    // Si el proyecto avanzó globalmente, PAP SOLO se bloquea si ya
+    // no le quedan roles activos. Si le quedan roles, se mantiene desbloqueada
     // para permitir el paralelismo.
     return isVanguardAhead && allProductive;
   });
 
   public canClosePhase = computed<boolean>(() => {
     const allRoles = this.store.roles();
-    
+
     // Si no hay roles en absoluto, no se puede cerrar la fase.
     if (allRoles.length === 0) return false;
 
     // Evaluamos el estado crudo
-    const hasPending = allRoles.some(r => r.status === 'PENDING_PAP');
-    const hasInProgress = allRoles.some(r => r.status === 'IN_PROGRESS');
-    
+    const hasPending = allRoles.some((r) => r.status === 'PENDING_PAP');
+    const hasInProgress = allRoles.some((r) => r.status === 'IN_PROGRESS');
+
     // La regla original se mantiene intacta, pero ahora isPhaseClosed() no emitirá falsos positivos:
     // Sin pendientes, sin en proceso, la fase no está cerrada aún, y CER sí lo está.
-    return !hasPending && 
-          !hasInProgress && 
-          !this.isPhaseClosed() && 
-          this.isCerPhaseClosed(); 
+    return (
+      !hasPending &&
+      !hasInProgress &&
+      !this.isPhaseClosed() &&
+      this.isCerPhaseClosed()
+    );
   });
 
   ngOnInit(): void {
@@ -156,7 +206,8 @@ export class PapRolesComponent implements OnInit {
   public initializeWorkflow(): void {
     this.papApiService.initRoles(this.requirementId()).subscribe({
       next: (response) => this.store.setRoles(response.roles),
-      error: (error) => console.error('Error inicializando la fase PAP:', error)
+      error: (error) =>
+        console.error('Error inicializando la fase PAP:', error),
     });
   }
 
@@ -166,8 +217,8 @@ export class PapRolesComponent implements OnInit {
 
   public toggleRoleSelection(roleId: string, event: Event): void {
     const isChecked = (event.target as HTMLInputElement).checked;
-    this.rolesToProcess.update(current => 
-      isChecked ? [...current, roleId] : current.filter(id => id !== roleId)
+    this.rolesToProcess.update((current) =>
+      isChecked ? [...current, roleId] : current.filter((id) => id !== roleId),
     );
   }
 
@@ -176,8 +227,8 @@ export class PapRolesComponent implements OnInit {
   // ==========================================
   private groupRolesByOrder(roles: PapRole[]): OrderGroup[] {
     const ordersMap = new Map<string, OrderGroup>();
-    
-    roles.forEach(role => {
+
+    roles.forEach((role) => {
       if (!role.order_id) return;
 
       let group = ordersMap.get(role.order_id);
@@ -185,13 +236,15 @@ export class PapRolesComponent implements OnInit {
       if (!group) {
         group = {
           orderId: role.order_id,
-          orderNumber: role.order?.order_number || `ORD-${role.order_id.split('-')[0].toUpperCase()}`,
+          orderNumber:
+            role.order?.order_number ||
+            `ORD-${role.order_id.split('-')[0].toUpperCase()}`,
           rolesCount: 0,
-          roles: []
+          roles: [],
         };
         ordersMap.set(role.order_id, group);
       }
-      
+
       group.rolesCount++;
       group.roles.push(role);
     });
@@ -211,34 +264,40 @@ export class PapRolesComponent implements OnInit {
   public onOrderSuccessfullyCreated(res: PapOrderResponse): void {
     this.showOrderModal.set(false);
     this.rolesToProcess.set([]);
-    this.initializeWorkflow(); 
+    this.initializeWorkflow();
 
     // 🟢 ¡Magia Reactiva! Avisamos al Orquestador para que actualice el Dashboard
     if (res.phase_actual && res.progress_percentage !== undefined) {
-        this.phaseClosed.emit({
-            req_id: this.requirementId(),
-            phase_actual: res.phase_actual,
-            progreso_global: res.progress_percentage
-        });
+      this.phaseClosed.emit({
+        req_id: this.requirementId(),
+        phase_actual: res.phase_actual,
+        progreso_global: res.progress_percentage,
+      });
     }
   }
 
-  public openResultModal(orderId: string | null, mode: 'create' | 'view' = 'create'): void {
+  public openResultModal(
+    orderId: string | null,
+    mode: 'create' | 'view' = 'create',
+  ): void {
     if (!orderId) return;
 
-    
     const allRoles = this.store.roles();
-    
-    const rolesInOrder = allRoles.filter(r => r.order_id === orderId || r.order?.id === orderId);
-    
+
+    const rolesInOrder = allRoles.filter(
+      (r) => r.order_id === orderId || r.order?.id === orderId,
+    );
+
     if (rolesInOrder.length > 0) {
       this.activeOrderId.set(orderId);
-      const realOrderNumber = rolesInOrder[0].order?.order_number || `ORD-${orderId.split('-')[0].toUpperCase()}`;
-      
-      this.activeOrderNumber.set(realOrderNumber); 
-      
+      const realOrderNumber =
+        rolesInOrder[0].order?.order_number ||
+        `ORD-${orderId.split('-')[0].toUpperCase()}`;
+
+      this.activeOrderNumber.set(realOrderNumber);
+
       this.activeRolesInOrder.set(rolesInOrder);
-      
+
       this.isResultViewMode.set(mode === 'view');
       this.showResultModal.set(true);
     }
@@ -246,7 +305,7 @@ export class PapRolesComponent implements OnInit {
 
   public onResultSuccessfullyRegistered(): void {
     this.showResultModal.set(false);
-    this.initializeWorkflow(); 
+    this.initializeWorkflow();
   }
   /**
    * Abre el modal de dictamen en modo lectura reconstruyendo la historia (Sin 'any')
@@ -255,17 +314,20 @@ export class PapRolesComponent implements OnInit {
     if (!order) return;
 
     // 🟢 Triple filtro infalible usando las propiedades del objeto order
-    const rolesForOrder = this.store.roles().filter(r => 
-      r.order_id === order.id || 
-      r.order?.id === order.id || 
-      r.order?.order_number === order.order_number
-    );
-    
+    const rolesForOrder = this.store
+      .roles()
+      .filter(
+        (r) =>
+          r.order_id === order.id ||
+          r.order?.id === order.id ||
+          r.order?.order_number === order.order_number,
+      );
+
     // Asignamos las señales
     this.activeOrderId.set(order.id);
     this.activeOrderNumber.set(order.order_number);
     this.activeRolesInOrder.set(rolesForOrder);
-    this.isResultViewMode.set(true); 
+    this.isResultViewMode.set(true);
     this.showResultModal.set(true);
   }
 
@@ -280,13 +342,13 @@ export class PapRolesComponent implements OnInit {
     this.activeRolesInOrder.set([]);
   }
 
- // ==========================================
+  // ==========================================
   // CIERRE GLOBAL DE FASE (DELEGANDO SEGURIDAD A LARAVEL)
   // ==========================================
   public async finalizePapPhase(): Promise<void> {
     const isConfirmed = await this.notificationService.confirm(
       '¿Cerrar Fase de Pase a Producción?',
-      'Al confirmar, el requerimiento mutará a CERRADO_HISTÓRICO y la base de datos quedará bloqueada.'
+      'Al confirmar, el requerimiento mutará a CERRADO_HISTÓRICO y la base de datos quedará bloqueada.',
     );
 
     // Patrón Early Return: si cancela el modal, salimos.
@@ -297,39 +359,43 @@ export class PapRolesComponent implements OnInit {
     this.papApiService.closePhase(this.requirementId()).subscribe({
       next: (response) => {
         this.isSubmitting.set(false);
-        this.notificationService.showSuccess('¡Fase Sellada!', 'El despliegue en Pase a Producción ha concluido exitosamente.');
-        
+        this.notificationService.showSuccess(
+          '¡Fase Sellada!',
+          'El despliegue en Pase a Producción ha concluido exitosamente.',
+        );
+
         // Emitimos la respuesta al padre (Orquestador)
         this.phaseClosed.emit({
           req_id: this.requirementId(),
           phase_actual: 'PAP-C', // Ajusta si tu estatus final es RC o CERRADO_HISTORICO
-          progreso_global: response.progress_percentage || 100
+          progreso_global: response.progress_percentage || 100,
         });
-        
+
         // Refrescamos la vista local por si acaso
-        this.initializeWorkflow(); 
+        this.initializeWorkflow();
       },
       error: (err: HttpErrorResponse) => {
         this.isSubmitting.set(false);
         console.error('Error cerrando la fase PAP:', err.message, err.error);
-        
+
         // PROTECCIÓN UX: Manejo dinámico del error enviado por Laravel
         let errorMessage = 'No se pudo cerrar la fase de Pase a Producción.';
-        
+
         if (err.status >= 500) {
-            errorMessage = 'Ocurrió un error interno en el servidor. Por favor, contacte a soporte.';
+          errorMessage =
+            'Ocurrió un error interno en el servidor. Por favor, contacte a soporte.';
         } else if (err.error?.message) {
-            // Capturamos el mensaje del backend
-            errorMessage = err.error.message;
+          // Capturamos el mensaje del backend
+          errorMessage = err.error.message;
         }
-        
+
         // Lanzamos el SweetAlert adecuado según el código HTTP
         if (err.status === 422 || err.status === 403) {
-            this.notificationService.showWarning('Cierre Denegado', errorMessage);
+          this.notificationService.showWarning('Cierre Denegado', errorMessage);
         } else {
-            this.notificationService.showError('Operación Fallida', errorMessage);
+          this.notificationService.showError('Operación Fallida', errorMessage);
         }
-      }
+      },
     });
   }
 }

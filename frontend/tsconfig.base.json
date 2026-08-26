@@ -22,7 +22,9 @@
       "@app/workflow": ["./libs/workflow/src/index.ts"],
       "@ecosgrti/workflow": ["./libs/workflow/src/index.ts"],
       "@ecosgrti/shared/interfaces": ["./libs/shared/interfaces/src/index.ts"],
-      "@ecosgrti/catalogs": ["./libs/catalogs/src/index.ts"]
+      "@ecosgrti/catalogs": ["./libs/catalogs/src/index.ts"],
+      "@ecosgrti/shared": ["./libs/shared/src/index.ts"],
+      
     }
   },
   "exclude": ["node_modules", "tmp"]
