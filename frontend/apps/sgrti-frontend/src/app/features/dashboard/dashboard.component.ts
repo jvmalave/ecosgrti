@@ -8,28 +8,33 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // Imports de tus servicios e interfaces
 import { AuthService } from '@ecosgrti/security/data-access';
-import { RequirementService } from '../../data-access/services/requirement.service'; 
-import { RequirementDashboard, } from '../../data-access/models/requirement.model'; 
-import { RequirementModalComponent } from '../requirement-modal/requirement-modal.component';
-import { ApiResponse } from '../../data-access/models/api-response.model';
+
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import {
+        RequirementService, 
+        RequirementDashboard, 
+        RequirementModalComponent, 
+        ApiResponse, 
+        EstimationFormComponent,
+        RequirementCreateComponent,
+        ReqStatusPipe,
+        RequirementClosureModalComponent,
+      } from '@sgrti/core';
+      
 import { 
-          WorkflowStateService, 
-          AtfAgreementsModalComponent, 
-          AtfAgreementsListModalComponent, 
-          AtfAgreementDetail,
-          LifecycleOrchestratorModalComponent,
-          WorkflowPhaseService    
-        } from '@ecosgrti/workflow';
+        WorkflowStateService, 
+        AtfAgreementsModalComponent, 
+        AtfAgreementsListModalComponent, 
+        AtfAgreementDetail,
+        LifecycleOrchestratorModalComponent,
+        WorkflowPhaseService    
+      } from '@ecosgrti/workflow';
 import { UnifiedPersonModalComponent, UnifiedPersonListModalComponent } from '@ecosgrti/security';
 import { OrgStructureComponent, ProgressMatrixConfigComponent, MilestoneConfigComponent  } from '@ecosgrti/catalogs';
-import { EstimationFormComponent } from '../estimation-form/estimation-form.component';
-import { RequirementCreateComponent } from '../requirement-create/requirement-create.component';
-import { ReqStatusPipe } from '../../pipes/req-status-pipe';
-import { RequirementClosureModalComponent } from '../requirement-closure-modal/requirement-closure-modal.component';
 
 
 @Component({
-  selector: 'lib-dashboard',
+  selector: 'app-dashboard',
   standalone: true,
   // 4. Inyectamos ReactiveFormsModule aquí para poder usar [formControl] en el HTML
   imports: [

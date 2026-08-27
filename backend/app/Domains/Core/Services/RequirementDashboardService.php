@@ -31,7 +31,11 @@ class RequirementDashboardService
             ->select([
                 'r.id', 'r.rrti', 'r.requirement_type', 'r.status',
                 'r.creation_date', 'r.management_type',
-                'r.snapshot_unit_name as unidad_solicitante' // Alias exacto para Angular
+                'r.snapshot_unit_name as unidad_solicitante',
+                'r.notification_date', 
+                'r.completion_date',
+                'r.closure_act_path', 
+                'r.notification_support_path'
             ])
             // Consultor Funcional
             ->selectRaw("CONCAT(p.first_name, ' ', p.last_name) as consultor_funcional")
@@ -99,10 +103,17 @@ class RequirementDashboardService
                 WHERE ph.requirement_id = r.id AND ph.phase_status_code LIKE '%-I'
             ) as historical_active_string");
 
-        if ($status === 'active') {
-            $query->where('r.status', '!=', 'FC'); 
+        // FILTRO (Soporta 'HISTORICO', 'inactive', etc)
+        $statusUpper = strtoupper($status);
+        
+        $historicalStatuses = ['HISTORICO', 'INACTIVE', 'RF', 'FC', 'HISTORICAL', 'FINALIZADO', 'FINALIZED'];
+        
+        if (in_array($statusUpper, $historicalStatuses)) {
+            // Bandeja de Histórico: Solo inmutables
+            $query->where('r.status', '=', 'RF'); 
         } else {
-            $query->where('r.status', '=', 'FC'); 
+            // Bandeja En Proceso: Todo lo que no esté finalizado
+            $query->where('r.status', '!=', 'RF'); 
         }
 
         if (!empty($searchTerm)) {
@@ -122,7 +133,8 @@ class RequirementDashboardService
             $item->frozen_phases = [];
             $item->open_phases = []; 
             
-            if ($item->status === 'RC') {
+            // 🟢 ACTUALIZADO A 'RF' PARA EL MODO INMUTABLE
+            if ($item->status === 'RF') {
                 $item->frozen_phases = ['ATF', 'DT', 'COR', 'COE', 'PI', 'CER', 'CEE', 'PAP', 'AU'];
             } else {
                 $frozen = !empty($item->historical_frozen_string) ? array_unique(explode(',', $item->historical_frozen_string)) : [];
@@ -138,6 +150,7 @@ class RequirementDashboardService
             unset($item->historical_active_string);
             return $item;
         });
+        
         $response = [
             'data' => $results->values()->toArray(),
             'meta' => [

@@ -4,11 +4,12 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg">
       
-      <!-- HEADER -->
+      <!-- HEADER CORPORATIVO (Siempre bg-brand) -->
       <div class="modal-header bg-brand text-white border-0 py-3">
         <h5 class="modal-title fw-bold">
-          <i class="fa-solid fa-file-signature me-2"></i>
-          Cierre Histórico Absoluto
+          <i class="fa-solid me-2" 
+            [ngClass]="{'fa-lock': req.status === 'RF', 'fa-file-signature': req.status !== 'RF'}"></i>
+          {{ req.status === 'RF' ? 'Expediente Sellado: ' + req.rrti : 'Cierre Histórico Absoluto' }}
         </h5>
         <button type="button" class="btn-close btn-close-white" (click)="closeModal.emit()" [disabled]="isLoading()">
           <span class="d-none">Cerrar</span>
@@ -18,99 +19,156 @@
       <!-- BODY -->
       <div class="modal-body p-4 bg-light">
         
-        <!-- Alertas de Error -->
-        @if (errorMessage()) {
-          <div class="alert alert-danger shadow-sm border-start border-4 border-danger rounded-3 p-3 mb-4 d-flex align-items-center">
-            <i class="fa-solid fa-circle-exclamation fs-4 me-3"></i>
-            <div>{{ errorMessage() }}</div>
-          </div>
-        }
-
-        <!-- ETAPA 1: Formulario de Recolección -->
-        @if (!isDraftGenerated()) {
-          <div class="alert alert-warning shadow-sm border-start border-4 border-warning rounded-3 p-3 mb-4">
-            <h6 class="fw-bold mb-1"><i class="fa-solid fa-triangle-exclamation me-2"></i>¡Atención!</h6>
-            <p class="mb-0 small">Está a punto de cerrar definitivamente el requerimiento <strong>{{ req.rrti }}</strong>. Una vez ejecutada esta acción, el sistema pasará a estado de Solo Lectura (Inmutabilidad).</p>
-          </div>
-
-          <form [formGroup]="closureForm">
-            <div class="row g-3 mb-4">
-              <!-- Fecha Notificación -->
-              <div class="col-md-6">
-                <label for="notificationDateInput" class="form-label fw-bold text-secondary small">Fecha Notificación (CSPE) <span class="text-danger">*</span></label>
-                <div class="input-group shadow-sm">
-                  <span class="input-group-text bg-white border-end-0"><i class="fa-regular fa-calendar text-muted"></i></span>
-                  <input type="date" id="notificationDateInput" class="form-control border-start-0 ps-0" formControlName="notification_date" [min]="req.creation_date">
-                </div>
-              </div>
-              
-              <!-- Fecha Fin -->
-              <div class="col-md-6">
-                <label for="completionDateInput" class="form-label fw-bold text-secondary small">Fecha Fin de Atención <span class="text-danger">*</span></label>
-                <div class="input-group shadow-sm">
-                  <span class="input-group-text bg-white border-end-0"><i class="fa-regular fa-calendar-check text-muted"></i></span>
-                  <input type="date" id="completionDateInput" class="form-control border-start-0 ps-0" formControlName="completion_date">
-                </div>
-              </div>
-            </div>
-
-            <!-- Soporte PDF -->
-            <div class="mb-4">
-              <label for="supportInput" class="form-label fw-bold text-secondary small">Soporte de Notificación (PDF) <span class="text-danger">*</span></label>
-              <input type="file" id="supportInput" class="form-control shadow-sm" accept=".pdf" (change)="onFileSelected($event)">
-              <div class="form-text mt-1"><i class="fa-solid fa-circle-info me-1"></i>Máximo 5MB. Formato PDF.</div>
-            </div>
-
-            <!-- Declaración Jurada -->
-            <div class="form-check bg-white p-3 border rounded shadow-sm">
-              <input class="form-check-input ms-1" type="checkbox" id="conformityCheck" formControlName="conformity_declaration">
-              <label class="form-check-label ms-2 mt-1 small" for="conformityCheck">
-                Declaro que los soportes físicos han sido debidamente cargados en el repositorio corporativo y cuentan con las firmas y aprobaciones exigidas por el marco regulatorio institucional.
-              </label>
-            </div>
-          </form>
-        } 
-        
-        <!-- ETAPA 2: Previsualización del Borrador -->
-        @else {
-          <div class="alert alert-info shadow-sm border-start border-4 border-info rounded-3 p-3 mb-4 d-flex align-items-center">
-            <i class="fa-solid fa-magnifying-glass fs-4 me-3"></i>
+        <!-- ========================================== -->
+        <!-- MODO 1: SNAPSHOT INMUTABLE (Estatus RF)    -->
+        <!-- ========================================== -->
+        @if (req.status === 'RF') {
+          <div class="alert shadow-sm mb-4 border-start border-4 border-brand rounded-3 p-3 bg-white d-flex align-items-center">
+            <i class="fa-solid fa-shield-halved fs-4 me-3 text-brand" style="color: var(--bs-primary);"></i>
             <div>
-              <strong>Previsualización Forense:</strong> Verifique los datos del acta generada al vuelo antes de aplicar la firma electrónica definitiva.
+              <h6 class="fw-bold mb-1">Inmutabilidad Garantizada</h6>
+              <p class="mb-0 small text-muted">Este requerimiento ha culminado su ciclo de vida y se encuentra bloqueado por auditoría. Las modificaciones han sido deshabilitadas.</p>
             </div>
           </div>
 
-          <div class="ratio ratio-4x3 border rounded shadow-sm bg-white">
-            @if (draftPdfUrl()) {
-              <iframe [src]="draftPdfUrl()" title="Previsualización Acta de Cierre"></iframe>
+          <div class="row text-center mb-4 bg-white p-3 rounded shadow-sm mx-0">
+            <div class="col-md-6 border-end">
+              <p class="text-muted small fw-bold mb-1 text-uppercase">Fecha Notificación (CSPE)</p>
+              <h5 class="text-dark mb-0">
+                {{ req.notification_date ? (req.notification_date | date:'dd/MM/yyyy') : '---' }}
+              </h5>
+            </div>
+            <div class="col-md-6">
+              <p class="text-muted small fw-bold mb-1 text-uppercase">Fecha Fin de Atención</p>
+              <h5 class="text-dark mb-0">
+                {{ req.completion_date ? (req.completion_date | date:'dd/MM/yyyy') : '---' }}
+              </h5>
+            </div>
+          </div>
+
+          <hr class="mb-4 text-muted">
+
+          <!-- BOTONES DE DESCARGA CON IDENTIDAD CORPORATIVA -->
+          <div class="d-grid gap-3">
+            <button class="btn btn-brand rounded-pill shadow-sm py-2 fw-bold" (click)="downloadAct()">
+              <i class="fa-solid fa-file-pdf me-2"></i> Ver Acta de Cierre Definitiva
+            </button>
+            
+            @if (req.notification_support_path) {
+              <button class="btn btn-outline-secondary bg-white rounded-pill py-2 shadow-sm fw-bold" (click)="downloadSupport()">
+                <i class="fa-solid fa-paperclip me-2"></i> Ver Soporte Físico Cargado
+              </button>
             }
           </div>
+        } 
+        
+        <!-- ========================================== -->
+        <!-- MODO 2: FORMULARIO DE CIERRE (Estatus != RF)-->
+        <!-- ========================================== -->
+        @else {
+          <!-- Alertas de Error -->
+          @if (errorMessage()) {
+            <div class="alert alert-danger shadow-sm border-start border-4 border-danger rounded-3 p-3 mb-4 d-flex align-items-center">
+              <i class="fa-solid fa-circle-exclamation fs-4 me-3"></i>
+              <div>{{ errorMessage() }}</div>
+            </div>
+          }
+
+          <!-- ETAPA 1: Formulario de Recolección -->
+          @if (!isDraftGenerated()) {
+            <div class="alert alert-warning shadow-sm border-start border-4 border-warning rounded-3 p-3 mb-4">
+              <h6 class="fw-bold mb-1"><i class="fa-solid fa-triangle-exclamation me-2"></i>¡Atención!</h6>
+              <p class="mb-0 small">Está a punto de cerrar definitivamente el requerimiento <strong>{{ req.rrti }}</strong>. Una vez ejecutada esta acción, el sistema pasará a estado de Solo Lectura (Inmutabilidad).</p>
+            </div>
+
+            <form [formGroup]="closureForm">
+              <div class="row g-3 mb-4">
+                <!-- Fecha Notificación -->
+                <div class="col-md-6">
+                  <label for="notificationDateInput" class="form-label fw-bold text-secondary small">Fecha Notificación (CSPE) <span class="text-danger">*</span></label>
+                  <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa-regular fa-calendar text-muted"></i></span>
+                    <input type="date" id="notificationDateInput" class="form-control border-start-0 ps-0" formControlName="notification_date" [min]="req.creation_date">
+                  </div>
+                </div>
+                
+                <!-- Fecha Fin -->
+                <div class="col-md-6">
+                  <label for="completionDateInput" class="form-label fw-bold text-secondary small">Fecha Fin de Atención <span class="text-danger">*</span></label>
+                  <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa-regular fa-calendar-check text-muted"></i></span>
+                    <input type="date" id="completionDateInput" class="form-control border-start-0 ps-0" formControlName="completion_date">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Soporte PDF -->
+              <div class="mb-4">
+                <label for="supportInput" class="form-label fw-bold text-secondary small">Soporte de Notificación (PDF) <span class="text-danger">*</span></label>
+                <input type="file" id="supportInput" class="form-control shadow-sm" accept=".pdf" (change)="onFileSelected($event)">
+                <div class="form-text mt-1"><i class="fa-solid fa-circle-info me-1"></i>Máximo 5MB. Formato PDF.</div>
+              </div>
+
+              <!-- Declaración Jurada -->
+              <div class="form-check bg-white p-3 border rounded shadow-sm">
+                <input class="form-check-input ms-1" type="checkbox" id="conformityCheck" formControlName="conformity_declaration">
+                <label class="form-check-label ms-2 mt-1 small" for="conformityCheck">
+                  Declaro que los soportes físicos han sido debidamente cargados en el repositorio corporativo y cuentan con las firmas y aprobaciones exigidas por el marco regulatorio institucional.
+                </label>
+              </div>
+            </form>
+          } 
+          
+          <!-- ETAPA 2: Previsualización del Borrador -->
+          @else {
+            <div class="alert alert-info shadow-sm border-start border-4 border-info rounded-3 p-3 mb-4 d-flex align-items-center">
+              <i class="fa-solid fa-magnifying-glass fs-4 me-3"></i>
+              <div>
+                <strong>Previsualización Forense:</strong> Verifique los datos del acta generada al vuelo antes de aplicar la firma electrónica definitiva.
+              </div>
+            </div>
+
+            <div class="ratio ratio-4x3 border rounded shadow-sm bg-white">
+              @if (draftPdfUrl()) {
+                <iframe [src]="draftPdfUrl()" title="Previsualización Acta de Cierre"></iframe>
+              }
+            </div>
+          }
         }
       </div>
 
       <!-- FOOTER / BOTONERA -->
       <div class="modal-footer bg-white border-top-0 pt-0">
-        @if (!isDraftGenerated()) {
-          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="closeModal.emit()" [disabled]="isLoading()">Cancelar</button>
-          <button type="button" class="btn btn-brand rounded-pill px-4" (click)="generateDraft()" [disabled]="isLoading() || closureForm.invalid || !selectedFile()">
-            @if (isLoading()) {
-              <span class="spinner-border spinner-border-sm me-2"></span> Generando Borrador...
-            } @else {
-              Continuar a Previsualización <i class="fa-solid fa-arrow-right ms-2"></i>
-            }
-          </button>
-        } @else {
-          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="cancelDraft()" [disabled]="isLoading()">
-            <i class="fa-solid fa-arrow-left me-2"></i> Modificar Datos
-          </button>
-          <button type="button" class="btn btn-success rounded-pill px-4" (click)="confirmClosure()" [disabled]="isLoading()">
-            @if (isLoading()) {
-              <span class="spinner-border spinner-border-sm me-2"></span> Aplicando Firma Electrónica...
-            } @else {
-              <i class="fa-solid fa-signature me-2"></i> Firmar y Cerrar Definitivamente
-            }
-          </button>
+        
+        <!-- Botonera para el MODO FORMULARIO -->
+        @if (req.status !== 'RF') {
+          @if (!isDraftGenerated()) {
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="closeModal.emit()" [disabled]="isLoading()">Cancelar</button>
+            <button type="button" class="btn btn-brand rounded-pill px-4" (click)="generateDraft()" [disabled]="isLoading() || closureForm.invalid || !selectedFile()">
+              @if (isLoading()) {
+                <span class="spinner-border spinner-border-sm me-2"></span> Generando Borrador...
+              } @else {
+                Continuar a Previsualización <i class="fa-solid fa-arrow-right ms-2"></i>
+              }
+            </button>
+          } @else {
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="cancelDraft()" [disabled]="isLoading()">
+              <i class="fa-solid fa-arrow-left me-2"></i> Modificar Datos
+            </button>
+            <button type="button" class="btn btn-brand rounded-pill px-4" (click)="confirmClosure()" [disabled]="isLoading()">
+              @if (isLoading()) {
+                <span class="spinner-border spinner-border-sm me-2"></span> Aplicando Firma Electrónica...
+              } @else {
+                <i class="fa-solid fa-signature me-2"></i> Firmar y Cerrar Definitivamente
+              }
+            </button>
+          }
+        } 
+        <!-- Botonera para el MODO SNAPSHOT INMUTABLE -->
+        @else {
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="closeModal.emit()">Cerrar Visor</button>
         }
+
       </div>
 
     </div>

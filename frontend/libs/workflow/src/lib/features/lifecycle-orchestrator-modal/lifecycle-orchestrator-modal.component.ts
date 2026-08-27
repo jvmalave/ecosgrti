@@ -109,7 +109,7 @@ export class LifecycleOrchestratorModalComponent {
     if (!req) return false;
 
     // Bloquea la apertura si el requerimiento está en fases muy tempranas
-    const invalidStatuses = ['RC', 'EST', 'ATF-I', 'DT-I', 'COE-I', 'PI-I'];
+    const invalidStatuses = ['RC', 'EST', 'ATF-I', 'DT-I', 'COE-I',];
     const isValidStatus = !invalidStatuses.includes(req.status);
 
     // Verifica si hay roles que hayan superado la fase de Pruebas Integrales (PI)

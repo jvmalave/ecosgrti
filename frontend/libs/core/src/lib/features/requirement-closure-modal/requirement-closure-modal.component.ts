@@ -145,6 +145,17 @@ export class RequirementClosureModalComponent implements OnInit {
     this.draftPdfUrl.set(null);
   }
 
+
+  public downloadAct(): void {
+    // Aquí llamaremos al endpoint de Laravel que descarga el acta del disco 'private'
+    console.log('Descargando Acta desde:', this.req.closure_act_path);
+  }
+
+  public downloadSupport(): void {
+    // Aquí llamaremos al endpoint de Laravel que descarga el soporte del disco 'private'
+    console.log('Descargando Soporte desde:', this.req.notification_support_path);
+  }
+
   // ==========================================
   // UTILERÍAS
   // ==========================================

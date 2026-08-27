@@ -220,7 +220,7 @@ Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
     // Cierre individual de Rol PI
     Route::patch('/pi/roles/{role_id}/status', [PiRoleController::class, 'changeStatus']);
     // Cierre Global de la Fase PI
-    Route::patch('/requirements/{req_id}/pi/close', [PiRoleController::class, 'closePhase']);
+    Route::patch('/requirements/{req_id}/pi/close-phase', [PiRoleController::class, 'closePhase']);
   
 
     // ==========================================
