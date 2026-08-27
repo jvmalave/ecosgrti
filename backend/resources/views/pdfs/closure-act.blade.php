@@ -3,115 +3,180 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Acta de Cierre - {{ $requirement->rrti ?? 'Borrador' }}</title>
+    <title>Acta de Cierre de Requerimiento</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            font-size: 14px;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 11pt;
             line-height: 1.5;
             color: #333;
-            position: relative;
         }
 
-        .header {
+        .text-center {
             text-align: center;
-            border-bottom: 2px solid #d500f9;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
         }
 
-        .title {
-            font-size: 18px;
-            font-weight: bold;
-            text-transform: uppercase;
+        .text-justify {
+            text-align: justify;
         }
 
-        .section-title {
-            font-size: 16px;
+        .fw-bold {
             font-weight: bold;
-            background-color: #f4f4f4;
-            padding: 5px;
+        }
+
+        .mb-2 {
+            margin-bottom: 10px;
+        }
+
+        .mt-4 {
             margin-top: 20px;
         }
 
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        .data-table th,
-        .data-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-
-        .data-table th {
-            background-color: #f9f9f9;
-            width: 30%;
-        }
-
-        /* Marca de agua para el borrador */
+        /* Marca de Agua para la Fase 1 (Borrador) */
         .watermark {
-            position: absolute;
-            top: 30%;
+            position: fixed;
+            top: 35%;
             left: 10%;
-            font-size: 80px;
-            color: rgba(255, 0, 0, 0.1);
+            font-size: 65px;
+            color: rgba(255, 0, 0, 0.15);
             transform: rotate(-45deg);
             z-index: -1;
             white-space: nowrap;
+        }
+
+        .section-title {
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 1px solid #000;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .firma-box {
+            margin-top: 50px;
+            text-align: center;
+            width: 300px;
+        }
+
+        .firma-line {
+            border-top: 1px solid #000;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 
 <body>
 
+    <!-- Renderizado condicional de la marca de agua -->
     @if ($is_draft)
-        <div class="watermark">BORRADOR SIN VALIDEZ</div>
+        <div class="watermark">BORRADOR - SIN VALIDEZ</div>
     @endif
 
-    <div class="header">
-        <div class="title">Acta de Cierre de Requerimiento TI</div>
-        <div>Generada el: {{ $generated_at }}</div>
-    </div>
+    <h2 class="text-center">ACTA DE CIERRE DE REQUERIMIENTO</h2>
+    <p class="text-center mb-2">
+        <strong>Fecha de emisión:</strong> {{ $generated_at }}<br>
+        <strong>Código / Número de Requerimiento:</strong> {{ $requirement->rrti }}
+    </p>
 
-    <div class="section-title">1. Datos del Requerimiento</div>
-    <table class="data-table">
-        <tr>
-            <th>RRTI</th>
-            <td>{{ $requirement->rrti ?? 'N/A' }}</td>
-        </tr>
-        <tr>
-            <th>Nombre del Proyecto</th>
-            <td>{{ $requirement->name ?? 'N/A' }}</td>
-        </tr>
-        <tr>
-            <th>Fecha de Inicio</th>
-            <td>{{ $requirement->creation_date ? \Carbon\Carbon::parse($requirement->creation_date)->format('d/m/Y') : 'N/A' }}
-            </td>
-        </tr>
-    </table>
+    <div class="section-title">1. DATOS GENERALES</div>
+    <ul>
+        <li><strong>Consultor Funcional:</strong>
+            {{ $requirement->functionalConsultant->person->first_name ?? '' }}
+            {{ $requirement->functionalConsultant->person->last_name ?? '' }}
+        </li>
+        <li><strong>Unidad Solicitante:</strong> {{ $requirement->snapshot_unit_name ?? 'N/A' }}</li>
+        <li><strong>Consultores CSPE:</strong>
+            @forelse($requirement->cspeConsultants as $consultant)
+                {{ $consultant->person->first_name }} {{ $consultant->person->last_name }}@if (!$loop->last)
+                    ,
+                @endif
+                @empty
+                    No asignado
+                @endforelse
+            </li>
+            <li><strong>Fecha de inicio del requerimiento:</strong>
+                {{ \Carbon\Carbon::parse($requirement->creation_date)->format('d/m/Y') }}</li>
+            <li><strong>Fecha de finalización:</strong> {{ \Carbon\Carbon::parse($completion_date)->format('d/m/Y') }}</li>
+        </ul>
 
-    <div class="section-title">2. Tiempos de Cierre</div>
-    <table class="data-table">
-        <tr>
-            <th>Fecha de Notificación (CSPE)</th>
-            <td>{{ \Carbon\Carbon::parse($notification_date)->format('d/m/Y') }}</td>
-        </tr>
-        <tr>
-            <th>Fecha Fin de Atención</th>
-            <td>{{ \Carbon\Carbon::parse($completion_date)->format('d/m/Y') }}</td>
-        </tr>
-    </table>
+        <div class="section-title">2. TIPOLOGÍA</div>
+        <ul>
+            <li><strong>Tipo de Requerimiento:</strong> {{ $requirement->requirement_type ?? 'N/A' }}</li>
+            <li><strong>Tipo de Gestión:</strong> {{ $requirement->management_type ?? 'N/A' }}</li>
+        </ul>
 
-    <div style="margin-top: 50px; text-align: center;">
-        <p>___________________________________________________</p>
-        <p><strong>Firma Electrónica Autorizada</strong></p>
-        <p>Coordinador CSPE</p>
-    </div>
+        <div class="section-title">3. DESCRIPCIÓN DEL REQUERIMIENTO</div>
+        <p class="text-justify">{{ $requirement->description ?? 'Sin descripción detallada.' }}</p>
 
-</body>
+        <div class="section-title">4. ACUERDOS ALCANZADOS (ATF)</div>
+        <p>Se listan acuerdos acordados con la unidad solicitante (Consultor Funcional):</p>
+        <ul>
+            @forelse($requirement->agreements as $agreement)
+                <li>Acuerdo {{ $loop->iteration }}: {{ $agreement->description ?? '' }}</li>
+            @empty
+                <li>No se registraron acuerdos específicos.</li>
+            @endforelse
+        </ul>
 
-</html>
+        <div class="section-title">5. COMPONENTES</div>
+
+        <!-- Lógica para mostrar Roles solo si es 'Roles' o 'Mixto' -->
+        @if (in_array($requirement->management_type, ['Roles', 'Mixto']))
+            <p class="fw-bold mb-0">Roles Intervenidos</p>
+            <ul>
+                @forelse($requirement->roles as $rol)
+                    <li>Rol {{ $loop->iteration }}: {{ $rol->role_name }}.</li>
+                @empty
+                    <li>No se registraron roles.</li>
+                @endforelse
+            </ul>
+        @endif
+
+        <!-- Lógica para mostrar Entregables solo si es 'Entregables' o 'Mixto' -->
+        @if (in_array($requirement->management_type, ['Entregables', 'Mixto']))
+            <p class="fw-bold mb-0">Entregables</p>
+            <ul>
+                @forelse($requirement->deliverables as $deliverable)
+                    <li>Entregable {{ $loop->iteration }}: {{ $deliverable->name }}.</li>
+                @empty
+                    <li>No se registraron entregables.</li>
+                @endforelse
+            </ul>
+        @endif
+
+        <div class="section-title">6. GESTIÓN DEL REQUERIMIENTO</div>
+        <p class="text-justify">
+
+            <!-- Párrafo exclusivo para el flujo de Roles -->
+            @if (in_array($requirement->management_type, ['Roles', 'Mixto']))
+                Para cada rol intervenido, se completaron satisfactoriamente las etapas del ciclo de vida: <strong>Diseño
+                    Técnico, Construcción, Pruebas Integrales, Certificación, Pase a Producción y Asignación al Usuario
+                    final.</strong><br><br>
+            @endif
+
+            <!-- Párrafo exclusivo para el flujo de Entregables -->
+            @if (in_array($requirement->management_type, ['Entregables', 'Mixto']))
+                Para cada Entregable creado, se completaron satisfactoriamente las etapas del ciclo de vida:
+                <strong>Construcción y Certificación.</strong>
+            @endif
+        </p>
+
+        <div class="section-title">7. ACEPTACIÓN Y CIERRE</div>
+        <p class="text-justify">
+            Por medio de la presente acta, la Coordinación Seguridad Portales y Escritorios (CSPE) declara que ha
+            <strong>CULMINADO Y ENTREGADO</strong> el requerimiento {{ $requirement->rrti }} a entera satisfacción de la
+            Unidad Solicitante {{ $requirement->snapshot_unit_name ?? '' }}, dándose por <strong>CERRADO</strong>
+            formalmente el caso en el Sistema de Gestión de Requerimientos TI.
+        </p>
+
+        <!-- FIRMAS -->
+        <div class="firma-box">
+            <div class="firma-line"></div>
+            <strong>Coordinación Seguridad Portales y Escritorios (CSPE)</strong><br>
+            Nombre: {{ auth()->user()->name ?? 'Coordinador CSPE' }}<br>
+            Cargo: Coordinador
+        </div>
+
+    </body>
+
+    </html>

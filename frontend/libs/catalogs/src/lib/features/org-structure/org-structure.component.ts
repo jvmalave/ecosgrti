@@ -90,12 +90,20 @@ export class OrgStructureComponent implements OnInit {
         },
         error: (err) => {
           this.isLoading.set(false);
-          console.log(err);
-          this.notificationService.showError('Error de API', 'No se pudo cargar el árbol organizacional.');
+          console.error('Error al cargar árbol organizacional:', err);
+
+          // 🟢 Evaluamos si el backend nos rechazó por permisos (403)
+          if (err.status === 403) {
+            // Extraemos el mensaje real de Laravel o usamos uno por defecto
+            const forbiddenMessage = err.error?.message || 'No tiene permisos para ver esta estructura.';
+            this.notificationService.showError('Acceso Denegado', forbiddenMessage);
+          } else {
+            // Para otros errores (500, 404, etc.) mantenemos el mensaje genérico
+            this.notificationService.showError('Error de API', 'No se pudo cargar el árbol organizacional.');
+          }
         }
       });
   }
-
   closeMainModal(): void {
     this.modalClosed.emit();
   }

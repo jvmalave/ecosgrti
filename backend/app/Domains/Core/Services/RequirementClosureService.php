@@ -17,10 +17,10 @@ class RequirementClosureService
     {
         // 1. Cargar el grafo organizacional exacto
         $requirement->load([
-            'functionalConsultant.unidad',
-            'functionalConsultant.sistema',
-            'functionalConsultant.sociedad',
-            'functionalConsultant.person'
+            'functionalConsultant.person',
+            'cspeConsultants.person',
+            'roles',          // Relación hacia workflow.requirements_roles
+            'deliverables'    // Relación hacia workflow.deliverables
         ]);
 
         // 2. Compilar el Acta Borrador
@@ -47,13 +47,12 @@ class RequirementClosureService
     {
         DB::transaction(function () use ($requirement, $data, $file) {
             
-            // 1. Cargar el grafo organizacional
             $requirement->load([
-                'functionalConsultant.unidad',
-                'functionalConsultant.sistema',
-                'functionalConsultant.sociedad',
-                'functionalConsultant.person'
-            ]);
+            'functionalConsultant.person',
+            'cspeConsultants.person',
+            'roles',          // Relación hacia workflow.requirements_roles
+            'deliverables'    // Relación hacia workflow.deliverables
+        ]);
 
             // 2. Compilar el Acta Definitiva
             $pdfData = [

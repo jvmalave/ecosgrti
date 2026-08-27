@@ -160,14 +160,17 @@
           <legend>Credenciales de Acceso</legend>
           <div class="grid-2-cols">
             
-            <!-- USUARIO (NAME) -->
+            <!-- USUARIO (NAME) - 🟢 AHORA ES SOLO LECTURA -->
             <div class="form-group">
               <label for="username_input">Nombre del Usuario *</label>
               <input
                 id="username_input"
                 type="text"
                 formControlName="name"
-                class="form-control"
+                class="form-control bg-light text-muted"
+                readonly
+                style="cursor: not-allowed; user-select: none;"
+                placeholder="Generado automáticamente"
                 autocomplete="new-password"
                 [class.is-invalid]="personForm.get('name')?.invalid && personForm.get('name')?.touched"
               />

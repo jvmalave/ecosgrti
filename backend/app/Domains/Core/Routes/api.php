@@ -79,7 +79,6 @@ Route::prefix('core')->middleware('auth:api')->group(function () {
       // Endpoint para generar el Acta de Cierre (Etapa 2 del Cierre)
       Route::post('/requirements/{requirement}/finalize-closure', [RequirementClosureController::class, 'finalizeClosure']);
 
-      
     
       });
 

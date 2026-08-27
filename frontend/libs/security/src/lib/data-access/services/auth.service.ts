@@ -34,17 +34,18 @@ export class AuthService {
     // Al iniciar el servicio, se carga el token guardado en el Signal con el localStorage.
   }
 
-  public login(credentials: { email: string; password: string }): Observable<UserSession> {
+ public login(credentials: { username: string; password: string }): Observable<UserSession> {
       return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
-        map((response: AuthResponse) => { // Map para transformar el flujo
+        map((response: AuthResponse) => { // Usamos 'any' temporalmente para evitar que la interfaz de TS se queje
           
           // Construye el objeto con la estructura que el Frontend espera
           const mappedSession: UserSession = {
             id: response.user.id || '1',
-            username: response.user.name, 
+            username: response.user.username || response.user.name, 
+            fullName: response.user.fullName || response.user.username || 'Usuario', 
             email: response.user.email,
-            roles: response.user.roles || ['ADMIN'],
-            token: response.access_token //  Se asigna 'access_token' a 'token'
+            roles: response.user.roles || [],
+            token: response.access_token 
           };
 
           // Guarda los datos mapeados en el Signal de memoria
@@ -55,7 +56,7 @@ export class AuthService {
             localStorage.setItem('ecosgrti_session', JSON.stringify(mappedSession));
           }
 
-          // Retorna el objeto transformado para que coincida con Observable<UserSession>
+          // Retorna el objeto transformado
           return mappedSession;
         })
       );

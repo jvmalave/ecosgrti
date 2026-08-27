@@ -29,7 +29,7 @@ Route::prefix('catalogs')->middleware('auth:api')->group(function () {
     | API Routes - Mantenimiento de Estructura Jerárquica (Sociedades, Sistemas, Unidades Solicitantes)
     |--------------------------------------------------------------------------------------------------
     */
-    Route::middleware(['role:admin'])->prefix('org-structure')->group(function () {
+    Route::middleware(['role:admin,Coord'])->prefix('org-structure')->group(function () {
         
         // OBTENER ESTRUCTURA JERÁRQUICA (REDIS)
         Route::get('/tree', [OrgStructureController::class, 'tree']);
@@ -54,7 +54,7 @@ Route::prefix('catalogs')->middleware('auth:api')->group(function () {
     |--------------------------------------------------------------------------------------------------
     */
     
-    Route::middleware(['role:admin'])->prefix('progress-matrices')->group(function () {
+    Route::middleware(['role:admin,Coord'])->prefix('progress-matrices')->group(function () {
         
         // OBTENER TODAS LAS MATRICES DE PROGRESO
         Route::get('/active', [ProgressMatrixController::class, 'getActiveMatrix'])->name('matrix.active');
@@ -69,7 +69,7 @@ Route::prefix('catalogs')->middleware('auth:api')->group(function () {
     |--------------------------------------------------------------------------------------------------
     */
 
-    Route::middleware(['role:admin'])->prefix('milestones')->group(function () {
+    Route::middleware(['role:admin,Coord'])->prefix('milestones')->group(function () {
         // LISTADO DE HITOS TÉCNICOS 
         Route::get('/', [MilestoneController::class, 'index']);
 

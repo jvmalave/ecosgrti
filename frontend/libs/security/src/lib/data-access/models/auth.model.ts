@@ -1,6 +1,7 @@
 export interface UserSession {
   id: string;
   username: string;
+  fullName: string;
   email: string;
   roles: string[];
   token: string; 
@@ -13,6 +14,8 @@ export interface AuthResponse {
   user: {
     name: string;
     email: string;
+    username?: string;
+    fullName?: string; 
     id?: string;
     roles?: string[];
   };

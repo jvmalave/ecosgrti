@@ -73,7 +73,7 @@ class StoreUnifiedPersonRequest extends FormRequest
             ],
             'roles.*' => [ 
                 'string',
-                Rule::in(['Admin', 'Coord', 'Consultant', 'Manager', 'Viewer'])
+                Rule::in(['Admin', 'admin', 'Coord', 'ConsCSPE', 'Gerente', 'Viewer'])
             ]
         ];
     }

@@ -1,4 +1,3 @@
-
 import { Component, OnInit, inject, signal, effect, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -52,6 +51,7 @@ export class UnifiedPersonModalComponent implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.listenToToggles();
+    this.listenToEmailChanges(); 
     this.loadRequestingUnits();
 
     // Verificamos si recibimos un ID para entrar en modo edición
@@ -83,9 +83,23 @@ export class UnifiedPersonModalComponent implements OnInit {
       is_cspe: [false],
       has_system_access: [false],
       requesting_unit_id: [null],
-      name: [''],
+      name: [''], 
       password: [''],
       roles: [[]]
+    });
+  }
+
+  // 🟢 NUEVO MÉTODO: Lógica para generar el Username automáticamente
+  private listenToEmailChanges(): void {
+    this.personForm.get('email')?.valueChanges.subscribe((correo: string) => {
+      if (correo) {
+        // Extraemos todo lo que está antes del '@'
+        const usernameGenerado = correo.split('@')[0];
+        // Seteamos el valor sin emitir eventos extra para no hacer bucles
+        this.personForm.get('name')?.setValue(usernameGenerado, { emitEvent: false });
+      } else {
+        this.personForm.get('name')?.setValue('', { emitEvent: false });
+      }
     });
   }
 

@@ -27,78 +27,81 @@
           </li>
 
           <!-- OPCIÓN CONFIGURACIÓN CON SUBMENÚ DESPLEGABLE -->
-          <li class="nav-item">
-            <a
-              class="nav-link rounded-3 px-3 py-2 text-white"
-              (click)="toggleConfigMenu()"
-              (keydown.enter)="toggleConfigMenu()"
-              tabindex="0"
-              style="cursor: pointer"
-            >
-              <div
-                class="d-flex w-100 justify-content-between align-items-center"
+          @if (isAdmin || isCoord ) {
+            <li class="nav-item">
+              <a
+                class="nav-link rounded-3 px-3 py-2 text-white"
+                (click)="toggleConfigMenu()"
+                (keydown.enter)="toggleConfigMenu()"
+                tabindex="0"
+                style="cursor: pointer"
               >
-                <span><i class="fas fa-cog me-2"></i> Configuración</span>
-                <i
-                  class="fas fa-chevron-down transition-transform"
-                  [class.rotate-180]="isConfigMenuOpen()"
-                ></i>
-              </div>
-            </a>
+                <div
+                  class="d-flex w-100 justify-content-between align-items-center"
+                >
+                  <span><i class="fas fa-cog me-2"></i> Configuración</span>
+                  <i
+                    class="fas fa-chevron-down transition-transform"
+                    [class.rotate-180]="isConfigMenuOpen()"
+                  ></i>
+                </div>
+              </a>
 
-            <!-- Submenú MDM (Se renderiza si isConfigMenuOpen es true) -->
-            @if (isConfigMenuOpen()) {
-              <ul
-                class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition"
-              >
-                <li class="nav-item">
-                  <a
-                    class="nav-link rounded-3 px-3 py-2 small text-white"
-                    (click)="openUnifiedPersonListModal()"
-                    (keydown.enter)="openUnifiedPersonListModal()"
-                    tabindex="0"
-                    style="cursor: pointer"
-                  >
-                    <i class="fas fa-id-card me-2"></i> Directorio de Fichas
-                  </a>
-                </li>
-                <li class="nav-item">
-                  <a
-                    class="nav-link rounded-3 px-3 py-2 small text-white"
-                    (click)="openOrgStructureModal()"
-                    (keydown.enter)="openOrgStructureModal()"
-                    tabindex="0"
-                    style="cursor: pointer"
-                  >
-                    <i class="fas fa-sitemap me-2"></i> Estructura
-                    Organizacional
-                  </a>
-                </li>
-                <li class="nav-item">
-                  <a
-                    class="nav-link rounded-3 px-3 py-2 small text-white"
-                    (click)="openProgressMatrixModal()"
-                    (keydown.enter)="openProgressMatrixModal()"
-                    tabindex="0"
-                    style="cursor: pointer"
-                  >
-                    <i class="fas fa-sliders-h me-2"></i> Matrices de Progreso
-                  </a>
-                </li>
-                <li class="nav-item">
-                  <a
-                    class="nav-link rounded-3 px-3 py-2 small text-white"
-                    (click)="openMilestoneConfigModal()"
-                    (keydown.enter)="openMilestoneConfigModal()"
-                    tabindex="0"
-                    style="cursor: pointer"
-                  >
-                    <i class="fas fa-list-check me-2"></i> Hitos Técnicos (MDM)
-                  </a>
-                </li>
-              </ul>
-            }
-          </li>
+              <!-- Submenú MDM (Se renderiza si isConfigMenuOpen es true) -->
+              @if (isConfigMenuOpen()) {
+                <ul
+                  class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition"
+                >
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 small text-white"
+                      (click)="openUnifiedPersonListModal()"
+                      (keydown.enter)="openUnifiedPersonListModal()"
+                      tabindex="0"
+                      style="cursor: pointer"
+                    >
+                      <i class="fas fa-id-card me-2"></i> Directorio de Fichas
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 small text-white"
+                      (click)="openOrgStructureModal()"
+                      (keydown.enter)="openOrgStructureModal()"
+                      tabindex="0"
+                      style="cursor: pointer"
+                    >
+                      <i class="fas fa-sitemap me-2"></i> Estructura
+                      Organizacional
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 small text-white"
+                      (click)="openProgressMatrixModal()"
+                      (keydown.enter)="openProgressMatrixModal()"
+                      tabindex="0"
+                      style="cursor: pointer"
+                    >
+                      <i class="fas fa-sliders-h me-2"></i> Matrices de Progreso
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 small text-white"
+                      (click)="openMilestoneConfigModal()"
+                      (keydown.enter)="openMilestoneConfigModal()"
+                      tabindex="0"
+                      style="cursor: pointer"
+                    >
+                      <i class="fas fa-list-check me-2"></i> Hitos Técnicos
+                      (MDM)
+                    </a>
+                  </li>
+                </ul>
+              }
+            </li>
+          }
         </ul>
       </nav>
 
@@ -119,12 +122,14 @@
           <div class="d-flex align-items-center gap-3">
             <div class="text-end d-none d-sm-block">
               <p class="mb-0 fw-bold text-dark">{{ user()?.username }}</p>
-              <p class="mb-0 text-muted small">{{ user()?.email }}</p>
+              <p class="mb-0 text-muted small text-uppercase">
+                {{ getRoleDisplayName(user()?.roles?.[0]) }}
+              </p>
             </div>
             <div
               class="brand-avatar text-white fw-bold d-flex align-items-center justify-content-center rounded-circle"
             >
-              {{ user()?.username?.substring(0, 1) | uppercase }}
+              {{ user()?.username?.substring(0, 2) | uppercase }}
             </div>
           </div>
         }
@@ -138,14 +143,17 @@
             >
               <div class="card-body p-4">
                 <h2 class="h4 fw-bold text-dark">
-                  ¡Bienvenido de nuevo, {{ user()?.username }}!
+                  ¡Bienvenido de nuevo, {{ user()?.fullName }}!
                 </h2>
-                <p class="text-muted mt-2 mb-0">
+                <!-- <p class="text-muted mt-2 mb-0">
                   Has ingresado al sistema con el rol:
-                  <span class="badge badge-brand rounded-pill ms-2 px-3 py-2">
-                    {{ user()?.roles?.[0] }}
+                  
+                  <span
+                    class="badge badge-brand rounded-pill ms-2 px-3 py-2 text-uppercase"
+                  >
+                    {{ getRoleDisplayName(user()?.roles?.[0]) }}
                   </span>
-                </p>
+                </p> -->
               </div>
             </div>
           </div>
@@ -207,6 +215,7 @@
           </div>
 
           <!-- Botón para crear nuevo requerimiento -->
+          @if ( isCoord ) {
           <button
             type="button"
             class="btn btn-outline-brand rounded-pill px-4 shadow-sm"
@@ -214,6 +223,7 @@
           >
             <i class="bi bi-plus-circle me-2"></i>Nuevo Requerimiento
           </button>
+          }
 
           <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
             <div class="table-responsive">
@@ -312,14 +322,23 @@
                               <i class="fa-solid fa-gear"></i>
                             </button>
                             <button
-                                class="btn btn-sm btn-outline-brand rounded-pill px-3"
-                                [title]="req.status === 'RF' ? 'Ver Acta de Cierre' : 'Cerrar Requerimiento'"
-                                [class.opacity-50]="!isCloseEnabled(req)"
-                                [disabled]="!isCloseEnabled(req)"
-                                (click)="openClosureModal(req)"
+                              class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                              [title]="
+                                req.status === 'RF'
+                                  ? 'Ver Acta de Cierre'
+                                  : 'Cerrar Requerimiento'
+                              "
+                              [class.opacity-50]="!isCloseEnabled(req)"
+                              [disabled]="!isCloseEnabled(req)"
+                              (click)="openClosureModal(req)"
                             >
-                                <!-- Muta visualmente: Ojo si ya está cerrado (RF), candado si está pendiente -->
-                                <i class="fa-solid" [ngClass]="req.status === 'RF' ? 'fa-eye' : 'fa-lock'"></i>
+                              <!-- Muta visualmente: Ojo si ya está cerrado (RF), candado si está pendiente -->
+                              <i
+                                class="fa-solid"
+                                [ngClass]="
+                                  req.status === 'RF' ? 'fa-eye' : 'fa-lock'
+                                "
+                              ></i>
                             </button>
                           </div>
                         </td>
@@ -465,11 +484,11 @@
         <!-- MODAL DE CIERRE HISTÓRICO (US37)                        -->
         <!-- ======================================================= -->
         @if (selectedReqForClosure()) {
-            <lib-requirement-closure-modal
-                [req]="selectedReqForClosure()!"
-                (closeModal)="closeClosureModal()"
-                (closureSuccess)="onRequirementClosed($event)"
-            ></lib-requirement-closure-modal>
+          <lib-requirement-closure-modal
+            [req]="selectedReqForClosure()!"
+            (closeModal)="closeClosureModal()"
+            (closureSuccess)="onRequirementClosed($event)"
+          ></lib-requirement-closure-modal>
         }
       </section>
     </main>

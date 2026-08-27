@@ -597,7 +597,7 @@ public isGrEnabled(status: string): boolean {
     this.selectedReqForOrchestrator.set(null);
   }
 
-public onRequirementPhaseUpdated(event: {req_id: string, phase_actual: string, progreso_global: number}): void {
+  public onRequirementPhaseUpdated(event: {req_id: string, phase_actual: string, progreso_global: number}): void {
     
     // 1. Mutamos la lista principal del Dashboard
     this.requirements.update(reqs => 
@@ -625,4 +625,38 @@ public onRequirementPhaseUpdated(event: {req_id: string, phase_actual: string, p
     console.log('✅ Requerimiento mutado reactivamente a fase:', event.phase_actual);
   }
 
+  public getRoleDisplayName(rawRole?: string): string { 
+    if (!rawRole) return 'Sin Rol Asignado';
+
+    const roleMap: Record<string, string> = {
+      'admin': 'Administrador',
+      'Admin': 'Administrador',
+      'Coord': 'Coordinador',
+      'ConsCSPE': 'Consultor CSPE',
+      'Gerente': 'Gerente',
+      'Viewer': 'Visualizador'
+    };
+
+    return roleMap[rawRole] || rawRole;
+  } 
+
+  /**
+   * Verifica si el usuario activo tiene el rol de Administrador.
+   */
+  public get isAdmin(): boolean {
+    const roles = this.user()?.roles || [];
+    // Verificamos ambas variantes por si acaso quedó alguna en mayúscula en la BD
+    return roles.includes('admin') || roles.includes('Admin');
+  }
+
+  public get isCoord(): boolean {
+    const roles = this.user()?.roles || [];
+    // Verificamos ambas variantes por si acaso quedó alguna en mayúscula en la BD
+    return roles.includes('Coord') || roles.includes('coord');
+  }
+
+
+
 }
+
+
