@@ -150,4 +150,32 @@ class Requirement extends Model
   {
     return $this->belongsTo(ProgressMatrix::class, 'progress_matrix_id');
   }
+
+  /**
+     * Relación 1 a N: Un requerimiento tiene muchos acuerdos ATF.
+     */
+    public function atfAgreements()
+    {
+        // Viendo tu barra lateral, el modelo AtfAgreement está en el dominio Workflow
+        return $this->hasMany(\App\Domains\Workflow\Models\AtfAgreement::class, 'requirement_id');
+    }
+
+    /**
+     * Relación 1 a N: Un requerimiento tiene muchos roles.
+     */
+    public function roles()
+    {
+        // Ajusta la ruta del modelo según cómo lo hayas nombrado en tu proyecto
+        // Ej: CorRole::class, RequirementRole::class, etc.
+        return $this->hasMany(\App\Domains\Workflow\Models\CorRole::class, 'requirement_id');
+    }
+
+    /**
+     * Relación 1 a N: Un requerimiento tiene muchos entregables.
+     */
+    public function deliverables()
+    {
+        // Ajusta la ruta del modelo de tu entregable
+        return $this->hasMany(\App\Domains\Workflow\Models\Deliverable::class, 'requirement_id');
+    }
 }

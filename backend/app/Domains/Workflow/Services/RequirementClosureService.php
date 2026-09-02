@@ -52,10 +52,15 @@ class RequirementClosureService
             Storage::disk('local')->put($actFileName, $pdf->output());
 
             // Mutación Transaccional del Estatus
+           // Mutación Transaccional del Estatus con todos los campos requeridos
             $requirement->update([
-                'phase_actual'    => 'CIERRE',
-                'status'          => 'RF',
-                'progreso_global' => 100.00
+                'phase_actual'          => 'CIERRE',
+                'status'                => 'RF',
+                'progress_percentage'       => 100.00,
+                'notification_date'     => $validated['notification_date'],
+                'completion_date'       => $validated['completion_date'],
+                'closure_act_path'      => $actFileName,
+                'notification_support_path' => $notificationFile
             ]);
 
             // Auditoría Trazabilidad 
@@ -82,9 +87,44 @@ class RequirementClosureService
             Cache::increment(CacheKeyDictionary::globalDashboardVersion());
 
             return [
-                'status'          => 'RF',
-                'progreso_global' => 100.00
+                'status'              => 'RF',
+                'progress_percentage' => 100.00,
+                'notification_date'   => $validated['notification_date'],
+                'completion_date'     => $validated['completion_date'],
+                'closure_act_path'    => $actFileName
             ];
         });
+    }
+
+    /**
+     * Genera un borrador del acta de cierre en formato Base64 para previsualización.
+     */
+    public function generateDraftBase64(string $requirementId, array $requestData = []): string
+    {
+        $requirement = Requirement::with([
+            'functionalConsultant.person', 
+            'cspeConsultants.person',      
+            'atfAgreements',
+            'roles',                       
+            'deliverables'                 
+        ])->findOrFail($requirementId);
+
+        $data = [
+            'requirement' => $requirement,
+            'notification_date' => $requestData['notification_date'] ?? null,
+            'is_draft' => true,
+            'generated_at' => now()->format('Y-m-d H:i:s'),
+            'completion_date' => now()->format('Y-m-d'),
+            
+            // 🟢 BLINDAJE TOTAL: Forzamos a que si la relación es null, se convierta en colección vacía
+            'atfAgreements' => collect($requirement->atfAgreements),
+            'roles' => collect($requirement->roles),
+            'deliverables' => collect($requirement->deliverables),
+            'cspeConsultants' => collect($requirement->cspeConsultants),
+        ];
+
+        $pdf = Pdf::loadView('pdfs.closure-act', $data);
+
+        return base64_encode($pdf->output());
     }
 }

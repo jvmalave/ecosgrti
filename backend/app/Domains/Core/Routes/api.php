@@ -11,7 +11,13 @@ use App\Domains\Core\Http\Controllers\RequirementClosureController;
 |--------------------------------------------------------------------------
 */
 
+
+
 Route::prefix('core')->middleware('auth:api')->group(function () {
+
+
+    Route::get('/requirements/download-doc', [RequirementController::class, 'downloadDocument']);
+    
 
 /*
 |--------------------------------------------------------------------------
@@ -69,6 +75,9 @@ Route::prefix('core')->middleware('auth:api')->group(function () {
   });
 
 
+  
+
+
   // ==========================================
     // FASE CIERRE  (Finalizacion Ciclo de Vida del Requerimiento)-US37
     // ==========================================
@@ -84,3 +93,5 @@ Route::prefix('core')->middleware('auth:api')->group(function () {
 
 
 });
+
+

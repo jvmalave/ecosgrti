@@ -86,8 +86,8 @@
         </li>
         <li><strong>Unidad Solicitante:</strong> {{ $requirement->snapshot_unit_name ?? 'N/A' }}</li>
         <li><strong>Consultores CSPE:</strong>
-            @forelse($requirement->cspeConsultants as $consultant)
-                {{ $consultant->person->first_name }} {{ $consultant->person->last_name }}@if (!$loop->last)
+            @forelse(collect($requirement->cspeConsultants ?? []) as $consultant)
+                {{ $consultant->person->first_name ?? '' }} {{ $consultant->person->last_name ?? '' }}@if (!$loop->last)
                     ,
                 @endif
                 @empty
@@ -111,7 +111,7 @@
         <div class="section-title">4. ACUERDOS ALCANZADOS (ATF)</div>
         <p>Se listan acuerdos acordados con la unidad solicitante (Consultor Funcional):</p>
         <ul>
-            @forelse($requirement->agreements as $agreement)
+            @forelse(collect($requirement->atfAgreements ?? []) as $agreement)
                 <li>Acuerdo {{ $loop->iteration }}: {{ $agreement->description ?? '' }}</li>
             @empty
                 <li>No se registraron acuerdos específicos.</li>
@@ -124,8 +124,8 @@
         @if (in_array($requirement->management_type, ['Roles', 'Mixto']))
             <p class="fw-bold mb-0">Roles Intervenidos</p>
             <ul>
-                @forelse($requirement->roles as $rol)
-                    <li>Rol {{ $loop->iteration }}: {{ $rol->role_name }}.</li>
+                @forelse(collect($requirement->roles ?? []) as $rol)
+                    <li>Rol {{ $loop->iteration }}: {{ $rol->role_name ?? 'N/A' }}.</li>
                 @empty
                     <li>No se registraron roles.</li>
                 @endforelse
@@ -136,8 +136,8 @@
         @if (in_array($requirement->management_type, ['Entregables', 'Mixto']))
             <p class="fw-bold mb-0">Entregables</p>
             <ul>
-                @forelse($requirement->deliverables as $deliverable)
-                    <li>Entregable {{ $loop->iteration }}: {{ $deliverable->name }}.</li>
+                @forelse(collect($requirement->deliverables ?? []) as $deliverable)
+                    <li>Entregable {{ $loop->iteration }}: {{ $deliverable->name ?? 'N/A' }}.</li>
                 @empty
                     <li>No se registraron entregables.</li>
                 @endforelse

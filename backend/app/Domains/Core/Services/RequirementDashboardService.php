@@ -95,6 +95,14 @@ class RequirementDashboardService
                 FROM workflow.requirement_phase_history ph 
                 WHERE ph.requirement_id = r.id AND ph.phase_status_code LIKE '%-C'
             ) as historical_frozen_string")
+
+              ->selectRaw("(
+                SELECT json_agg(json_build_object('person_id', cspe.person_id))
+                FROM core.cspe_consultant_requirement ccr
+                INNER JOIN security.cspe_consultants cspe ON ccr.cspe_consultant_id = cspe.id
+                WHERE ccr.requirement_id = r.id
+            ) as cspe_consultants")
+            
             ->groupBy('r.id', 'fc.id', 'p.id')
             // historical_active_string
             ->selectRaw("(
@@ -102,6 +110,8 @@ class RequirementDashboardService
                 FROM workflow.requirement_phase_history ph 
                 WHERE ph.requirement_id = r.id AND ph.phase_status_code LIKE '%-I'
             ) as historical_active_string");
+
+            
 
         // FILTRO (Soporta 'HISTORICO', 'inactive', etc)
         $statusUpper = strtoupper($status);
@@ -120,7 +130,7 @@ class RequirementDashboardService
             $query->where('r.rrti', 'ILIKE', '%' . $searchTerm . '%');
         }
 
-        $results = $query->orderBy('r.created_at', 'desc')
+        $results = $query->orderBy('r.creation_date', 'desc')
             ->offset($offset)
             ->limit($limit + 1)
             ->get();

@@ -21,7 +21,7 @@ class RequirementClosureController extends Controller
     {
         // Delega la generación del Base64 al servicio de dominio
         $base64Pdf = $this->closureService->generateDraftBase64(
-            $requirement, 
+            $requirement->id, 
             $request->validated()
         );
 
@@ -35,18 +35,18 @@ class RequirementClosureController extends Controller
     
 public function finalizeClosure(GenerateClosureActRequest $request, Requirement $requirement): JsonResponse
     {
-        // El controlador solo delega la responsabilidad al servicio
-        $this->closureService->finalize(
-            $requirement, 
-            $request->validated(), 
+        // El servicio ejecuta la transacción y nos devuelve el resultado con las fechas y la ruta
+        $result = $this->closureService->finalize(
+            $requirement,
+            $request->validated(),
             $request->file('notification_file')
         );
 
-        // Y retorna la respuesta
         return response()->json([
-            'status'          => 'success',
-            'progreso_global' => 100,
-            'message'         => 'Cierre Histórico Absoluto ejecutado con éxito. El requerimiento es ahora inmutable.'
+            'status'              => 'success',
+            'progress_percentage' => $result['progress_percentage'],
+            'message'             => 'Cierre Histórico Absoluto ejecutado con éxito. El requerimiento es ahora inmutable.',
+            'data'                => $result 
         ], 200);
     }
 } 

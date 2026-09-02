@@ -70,12 +70,12 @@ class SpecialOperationService
             $credential->increment('failed_attempts');
             
             // Si llega a 3 errores, se bloquea la cuenta para operaciones críticas
-            if ($credential->failed_attempts >= 3) {
+            if ($credential->failed_attempts >= 5) {
                 $credential->update(['is_locked' => true]);
-                throw new Exception("PIN bloqueado. Has superado el máximo de 3 intentos fallidos.", 423);
+                throw new Exception("PIN bloqueado. Has superado el máximo de 5 intentos fallidos.", 423);
             }
 
-            $intentosRestantes = 3 - $credential->failed_attempts;
+            $intentosRestantes = 5 - $credential->failed_attempts;
             throw new Exception("La Clave de Operaciones Especiales es incorrecta. Intentos restantes: {$intentosRestantes}", 401);
         }
 
