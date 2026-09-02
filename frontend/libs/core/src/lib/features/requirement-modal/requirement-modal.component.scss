@@ -2,6 +2,19 @@
   IDENTIDAD VISUAL CANTV (ECOSGRTI)
    ======================================================== */
 
+$color-magenta: #e91e63;
+$color-purple: #9c27b0;
+$gradient-end: #ff00ff;
+$gradient-start: #1c1ce2;
+$sidebar-bg: #1e293b; // Un tono oscuro azulado muy elegante para el sidebar
+$text-muted: #64748b;
+$text-white: #ffffff;
+$color-success: #22c55e;
+$color-danger: #ef4444;
+$color-info: #3b82f6;
+
+
+
 .brand-gradient {
   background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%) !important;
   border-bottom: 3px solid #ea80fc !important;
@@ -49,11 +62,25 @@
 }
 
 /* Estilos complementarios para los Badges del Organigrama */
-.badge-soft-brand {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
+.badge-soft-society {
+  background-color: $gradient-start;
+  color: $text-white;
   border: 1px solid #e1bee7;
 }
+
+.badge-soft-system {
+  background-color: $color-info;
+  color: $text-white;
+  border: 1px solid #e1bee7;
+}
+
+.badge-soft-unit {
+  background-color: $text-muted;
+  color: $text-white;
+  border: 1px solid #e1bee7;
+}
+
+
 
 
 // ========================================================

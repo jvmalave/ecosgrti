@@ -64,34 +64,66 @@ export class RequirementMapModalComponent {
   // LÓGICA DE ESTADOS (SOPORTE PARA PARALELISMO)
   // =========================================================================
 
+  // private calculateNodeStates(route: {code: string, name: string}[], req: RequirementDetail): MapNode[] {
+  //   const frozenPhases = req.frozen_phases || [];
+  //   const openPhases = req.open_phases || []; 
+
+  //   return route.map(phase => {
+  //     // CASO ESPECIAL: Planificación (PL
+  //     if (phase.code === 'PL') {
+  //       const isCompleted = req.status !== 'RC' || frozenPhases.length > 0;
+  //       const isActive = req.status === 'RC';
+
+  //       if (isCompleted) {
+  //         return { ...phase, state: 'COMPLETED', icon: 'fa-solid fa-circle-check text-success' };
+  //       }
+  //       if (isActive) {
+  //         return { ...phase, state: 'ACTIVE', icon: 'fa-solid fa-circle-dot text-primary fa-fade' };
+  //       }
+  //       return { ...phase, state: 'PENDING', icon: 'fa-regular fa-circle text-muted' };
+  //     }
+  //     // 🟢 CASO GENERAL: Fases de Vanguardia Paralela
+  //     // Si está en el arreglo de congeladas, está COMPLETA (Verde)
+  //     if (frozenPhases.includes(phase.code)) {
+  //       return { ...phase, state: 'COMPLETED', icon: 'fa-solid fa-circle-check text-success' };
+  //     }
+  //     // Si está en el arreglo de abiertas, está ACTIVA (Azul/Pulse). 
+  //     if (openPhases.includes(phase.code)) {
+  //       return { ...phase, state: 'ACTIVE', icon: 'fa-solid fa-circle-dot text-primary fa-fade' }; 
+  //     }
+  //     // Lo que no cumpla lo anterior es FUTURO (Gris)
+  //     return { ...phase, state: 'PENDING', icon: 'fa-regular fa-circle text-muted' };
+  //   });
+  // }
+
   private calculateNodeStates(route: {code: string, name: string}[], req: RequirementDetail): MapNode[] {
     const frozenPhases = req.frozen_phases || [];
     const openPhases = req.open_phases || []; 
+    const isRequirementCreated = req.status === 'RC';
 
     return route.map(phase => {
-      // CASO ESPECIAL: Planificación (PL
-      if (phase.code === 'PL') {
-        const isCompleted = req.status !== 'RC' || frozenPhases.length > 0;
-        const isActive = req.status === 'RC';
-
-        if (isCompleted) {
-          return { ...phase, state: 'COMPLETED', icon: 'fa-solid fa-circle-check text-success' };
-        }
-        if (isActive) {
+      // 🟢 CASO ESPECIAL: Si está recién creado (RC), solo Planificación está Activa y el resto Pendiente
+      if (isRequirementCreated) {
+        if (phase.code === 'PL') {
           return { ...phase, state: 'ACTIVE', icon: 'fa-solid fa-circle-dot text-primary fa-fade' };
         }
         return { ...phase, state: 'PENDING', icon: 'fa-regular fa-circle text-muted' };
       }
+
+      // CASO ESPECIAL: Planificación (PL) para otros estatus avanzados
+      if (phase.code === 'PL') {
+        return { ...phase, state: 'COMPLETED', icon: 'fa-solid fa-circle-check text-success' };
+      }
+
       // 🟢 CASO GENERAL: Fases de Vanguardia Paralela
-      // Si está en el arreglo de congeladas, está COMPLETA (Verde)
       if (frozenPhases.includes(phase.code)) {
         return { ...phase, state: 'COMPLETED', icon: 'fa-solid fa-circle-check text-success' };
       }
-      // Si está en el arreglo de abiertas, está ACTIVA (Azul/Pulse). 
+      
       if (openPhases.includes(phase.code)) {
         return { ...phase, state: 'ACTIVE', icon: 'fa-solid fa-circle-dot text-primary fa-fade' }; 
       }
-      // Lo que no cumpla lo anterior es FUTURO (Gris)
+
       return { ...phase, state: 'PENDING', icon: 'fa-regular fa-circle text-muted' };
     });
   }

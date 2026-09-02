@@ -3,18 +3,17 @@
     <!-- Cabecera: Título, Botón del Mapa y Porcentaje Global -->
     <div class="d-flex justify-content-between align-items-center mb-2">
       
-      <!-- Agrupamos el título y el nuevo botón -->
       <div class="d-flex align-items-center gap-3">
-        <h6 class="mb-0 text-muted fw-bold">Avance Global del Requerimiento</h6>
+        <h5 class="mb-0 text-muted fw-bold">Avance Global del Requerimiento</h5>
       </div>
 
-      <span class="fw-bold fs-5 transition-colors" [ngClass]="textClass()">
+      <span class="fw-bold fs-4 transition-colors" [ngClass]="textClass()">
         {{ globalProgress() }}%
       </span>
     </div>
 
     <!-- Contenedor de la barra de progreso -->
-    <div class="progress" style="height: 0.8rem">
+    <div class="progress" style="height: 1.5rem">
       <div
         class="progress-bar progress-bar-striped progress-bar-animated transition-width"
         role="progressbar"
@@ -31,20 +30,20 @@
       <!-- Indicador de la Matriz de Progreso Anclada (MDM) -->
       <div>
         @if (requirement()?.progress_matrix) {
-          <span class="badge bg-info text-dark shadow-sm border border-light rounded-pill px-3">
+          <span class="badge fs-6 bg-warning text-dark shadow-sm border border-light rounded-pill px-3 fw-medium">
             <i class="bi bi-diagram-3-fill me-1"></i>
             Matriz Activa: {{ requirement()?.progress_matrix?.management_type | titlecase }}-V{{ requirement()?.progress_matrix?.version_number }}
           </span>
         } @else {
-          <span class="badge bg-warning text-dark shadow-sm border border-light rounded-pill px-3" title="Calculado con archivo de configuración base">
+          <span class="badge fs-6 bg-warning text-dark shadow-sm border border-light rounded-pill px-3" title="Calculado con archivo de configuración base">
             <i class="bi bi-clock-history me-1"></i>
             Matriz Legacy: {{ requirement()?.management_type | titlecase }}
           </span>
         }
       </div>
 
-        <button class="btn btn-outline-brand rounded-pill d-flex align-items-center" 
-                style="padding: 0.15rem 0.6rem; font-size: 0.70rem; border-width: 1px;"
+        <button class="btn btn-info rounded-pill d-flex align-items-center px-3 shadow-sm fw-medium" 
+                style="padding: 0.15rem 0.6rem; font-size: 1rem; border-width: 1px;"
                 title="Ver Mapa del Ciclo de Vida" 
                 (click)="openMap()">
           <i class="fa-solid fa-map-location-dot me-1"></i> Ver Mapa de Fases
@@ -52,7 +51,10 @@
 
       <!-- Estado global actual -->
       <small class="text-muted fw-semibold">
-        <span class="text-uppercase badge bg-light text-dark border rounded-pill px-3">
+        <span class="text-uppercase badge bg-light text-dark border border-dark rounded-pill px-3" 
+          style="padding: 0.7rem 0.6rem; font-size: 0.8rem; border-width: 1px;"
+        >
+          
           {{ currentStatusName }}
         </span>
       </small>
@@ -60,7 +62,7 @@
   </div>
 </div>
 
-<!-- 🟢 RENDERIZADO CONDICIONAL DEL MODAL DEL MAPA -->
+<!-- RENDERIZADO CONDICIONAL DEL MODAL DEL MAPA -->
 @if (showMapModal() && requirement()) {
   <lib-requirement-map-modal 
     [requirement]="$any(requirement())" 

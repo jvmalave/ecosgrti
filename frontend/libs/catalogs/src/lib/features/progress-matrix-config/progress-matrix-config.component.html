@@ -38,7 +38,7 @@
             >
             <select
               id="managementType"
-              class="form-select form-select-lg border-brand"
+              class="form-select form-select-lg border-brand shadow-none"
               formControlName="management_type"
             >
               <option value="ENTREGABLES">Entregables</option>
@@ -173,7 +173,7 @@
 
         <button
           type="button"
-          class="btn-sm btn-outline-brand rounded-pill px-5"
+          class="btn btn-sm btn-success rounded-pill px-5"
           (click)="publishNewVersion()"
           [disabled]="matrixForm.invalid || currentTotalSum() !== 100"
         >

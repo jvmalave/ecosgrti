@@ -3,14 +3,16 @@ $color-magenta: #e91e63;
 $color-purple: #9c27b0;
 $gradient-end: #ff00ff;
 $gradient-start: #1c1ce2;
-$sidebar-bg: #1e293b; // Un tono oscuro azulado muy elegante para el sidebar
+$sidebar-bg: #1c1ce2; // Un tono oscuro azulado muy elegante para el sidebar
 $text-muted: #64748b;
 $text-white: #ffffff;
+$color-success: #22c55e;
+$color-danger: #ef4444;
 
 // --- Sidebar (Menú Lateral) ---
 .sidebar-brand {
   // Aplicamos el degradado lineal de arriba hacia abajo (o inclinado)
-  background: linear-gradient(180deg, $gradient-start 0%, $gradient-end 100%) !important;
+  background: $sidebar-bg !important;
   box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
 
@@ -30,6 +32,7 @@ $text-white: #ffffff;
   .nav-link {
     color: rgba(255, 255, 255, 0.85) !important;
     font-weight: 500;
+    font-size: 1.2rem;
     transition: all 0.3s ease;
     margin: 0.2rem 0;
     display: flex;
@@ -53,13 +56,25 @@ $text-white: #ffffff;
   }
 }
 
+.border-brand {
+  border-color: $gradient-end !important;
+}
+
 .bg-brand { 
   background: #d500f9 !important; color: white; 
 } 
+
+// .bg-brand { 
+//   background: $gradient-start !important; color: white; 
+// } 
+
+
+
 .btn-outline-brand { 
   border-color: #d500f9; color: #d500f9; 
   transition: all 0.3s ease; 
 } 
+
 .btn-outline-brand:hover { 
   background: #d500f9; color: white; 
   box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4); 
@@ -90,14 +105,14 @@ $text-white: #ffffff;
 .brand-avatar {
   width: 42px;
   height: 42px;
-  background: linear-gradient(135deg, $gradient-start, $gradient-end);
+  background: linear-gradient(135deg, $gradient-start, $gradient-start);
   border: 2px solid white;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 // --- Tarjetas e Indicadores ---
 .card-brand-accent {
-  border-left-color: $color-magenta !important;
+  border-left-color: $color-success !important;
 }
 
 .badge-brand {
@@ -120,6 +135,19 @@ $text-white: #ffffff;
     color: $color-purple;
     transform: scale(1.02);
   }
+}
+
+// =====================================
+//    BOTÓN DESHABILITADO NO AUTORIZADO
+// =====================================
+
+button:disabled.btn-unauthorized {
+  background-color: #e9ecef !important; /* Gris claro de fondo */
+  border-color: #dee2e6 !important;     /* Borde sutil */
+  color: #adb5bd !important;            /* Icono en gris atenuado */
+  cursor: not-allowed !important;       /* Cursor de prohibido */
+  opacity: 0.7;                         /* Transparencia para efecto inactivo */
+  box-shadow: none !important;          /* Sin sombras para que se vea plano */
 }
 
 /* ========================================================

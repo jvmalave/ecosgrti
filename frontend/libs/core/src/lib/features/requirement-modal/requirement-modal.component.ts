@@ -364,6 +364,16 @@ public enableEditing(): void {
       this.newFiles[type] = file;
     }
   }
+
+  public onViewDocument(path: string): void {
+  this.requirementService.downloadPrivateDocument(path);
+}
+
+  public openPrivateDoc(path: string | null | undefined): void {
+    if (!path) return;
+    this.requirementService.downloadPrivateDocument(path);
+  }
+
 // Escuchamos los cambios en el selector (consultor funcional)en tiempo real
   private listenToConsultantChanges(): void {
     // Escuchamos los cambios en el selector reactivo del formulario
@@ -406,14 +416,14 @@ public enableEditing(): void {
       showCancelButton: true,
       confirmButtonText: 'Validar PIN',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#dc3545',
+      confirmButtonColor: '#0d6efd',
     });
 
     if (!pin) return; // Si el usuario cancela
 
     this.isLoading.set(true);
 
-    // 🟢 POST /deletion-ticket (Usamos TU método exacto)
+    // POST /deletion-ticket (Usamos TU método exacto)
     this.requirementService.requestDeletionTicket(pin).subscribe({
       next: (response: DeletionTicketResponse) => {
         this.isLoading.set(false);
@@ -437,7 +447,7 @@ public enableEditing(): void {
               confirmButtonColor: '#0d6efd'
             }).then((result) => {
               if (result.isConfirmed) {
-                this.abrirModalDeConfiguracionPin(); // 🟢 Llamaremos al flujo de configuración
+                this.abrirModalDeConfiguracionPin(); //  flujo de configuración
               }
             });
             break;
@@ -574,7 +584,7 @@ public enableEditing(): void {
     if (motivo) {
       this.isLoading.set(true);
 
-      // 🟢 DELETE /requirements/{id} (Usamos TU método pasándole el ticket y el motivo)
+      // DELETE /requirements/{id} (Usamos TU método pasándole el ticket y el motivo)
       this.requirementService.softDeleteRequirement(id, ticketValido, motivo).subscribe({
         next: (res) => {
           this.isLoading.set(false);
@@ -589,7 +599,7 @@ public enableEditing(): void {
             icon: 'success',
             customClass: { popup: 'rounded-4' }
           }).then(() => {
-            // 🟢 Inyecta private router: Router en tu constructor si no lo tienes
+            // Inyecta private router: Router en tu constructor si no lo tienes
             this.router.navigate(['/dashboard']); 
           });
         },

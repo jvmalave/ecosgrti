@@ -28,14 +28,14 @@
         
         <!-- Indicador de Requerimiento -->
         <div class="d-flex align-items-center mb-4">
-          <span class="text-muted fw-bold me-2 small">Requerimiento:</span>
+          <span class="text-muted fw-bold me-2 fs-6">Requerimiento:</span>
           <span
-            class="badge rounded-pill px-3 py-2 me-2"
-            style="background-color: #f3e8f5; color: #8e1482; border: 1px solid #8e1482;"
+            class="badge badge-req rounded-pill px-3 py-2 me-2 fs-6 fw-semibold"
           >
             {{ requirementNumber() }}
           </span>
         </div>
+        <hr>
 
         <!-- Barra de Búsqueda y Botones de Acción -->
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -54,11 +54,11 @@
           </div>
 
           <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-outline-secondary rounded-pill px-4 shadow-sm fw-medium d-flex align-items-center" (click)=handleClose()>
+            <button class="btn btn-outline-secondary rounded-pill px-4 shadow-sm fw-medium d-flex align-items-center fw-semibold" (click)=handleClose() aria-label="Volver">
               <i class="bi bi-arrow-left me-2"></i> Volver
             </button>
             @if (!isPhaseClosed()) {
-              <button class="btn btn-sm btn-brand rounded-pill px-4 shadow-sm fw-medium d-flex align-items-center" (click)="openCreateModal()">
+              <button class="btn btn-success rounded-pill px-4 shadow-sm fw-medium d-flex align-items-center fw-semibold" (click)="openCreateModal()">
                 <i class="bi bi-plus-circle me-2"></i> Agregar Entregable
               </button>
             }
@@ -90,22 +90,22 @@
                   @else if (filteredDeliverables().length > 0) {
                     @for (deliverable of filteredDeliverables(); track deliverable.id) {
                       <tr>
-                        <td class="px-4 py-3 fw-medium text-dark">{{ deliverable.name }}</td>
-                        <td class="px-4 py-3 text-secondary" [title]="deliverable.description">
+                        <td class="px-4 py-3 fw-semibold text-dark">{{ deliverable.name }}</td>
+                        <td class="px-4 py-3 text-dark" [title]="deliverable.description">
                           {{ deliverable.description.length > 50 ? (deliverable.description | slice:0:50) + '...' : deliverable.description }}
                         </td>
                         <td class="px-4 py-3 text-end text-nowrap">
                           <button 
-                            class="btn btn-sm btn-outline-brand rounded-pill px-3 me-2" 
+                            class="btn btn-outline-info rounded-pill px-3 me-2" 
                             (click)="openViewModal(deliverable)"
                             title="Ver / Actualizar Detalle"
                           >
-                            <i class="bi bi-eye"></i>
+                            <i class="fa-solid fa-eye"></i>
                           </button>
 
                           @if (!isPhaseClosed()) {
                             <button class="btn btn-sm btn-outline-danger rounded-pill px-3" 
-                              title="Eliminar Rol" 
+                              title="Eliminar Entregable" 
                               (click)="onDelete(deliverable)">
                               <i class="bi bi-trash"></i>
                             </button>

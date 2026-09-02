@@ -1,74 +1,108 @@
-<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+<div
+  class="modal fade show d-block"
+  tabindex="-1"
+  style="background-color: rgba(0, 0, 0, 0.5)"
+>
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg rounded-4">
-      
-      <div class="modal-header brand-gradient text-white rounded-top-4 border-0">
+      <div
+        class="modal-header brand-gradient text-white rounded-top-4 border-0"
+      >
         <h5 class="modal-title fw-bold">
           <i class="bi bi-gear-fill me-2"></i> Actualizar Tipo de Gestión
         </h5>
-        <button type="button" class="btn-close btn-close-white" 
-                aria-label="Cerrar"
-                (click)="closeModal.emit()" 
-                [disabled]="isSubmitting()"></button>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          aria-label="Cerrar"
+          (click)="closeModal.emit()"
+          [disabled]="isSubmitting()"
+        ></button>
       </div>
 
       <div class="modal-body p-4 bg-light">
-        <p class="text-muted mb-4 small">
-          Selecciona el tipo de gestión que se acordo con unidad funcional para la ejecución de este requerimiento.
+        <p class="mb-4">
+          Selecciona el tipo de gestión que se acordo con la unidad funcional
+          para la gestión de este requerimiento.
         </p>
 
         <div class="d-flex flex-column gap-3">
           @for (option of managementOptions; track option.id) {
-            <div class="card cursor-pointer transition-all" 
-                role="button"
-                tabindex="0"
-                [class.border-brand]="selectedType() === option.id"
-                [class.bg-white]="selectedType() !== option.id"
-                [style.background-color]="selectedType() === option.id ? '#f0f5ff' : ''"
-                (click)="selectType(option.id)"
-                (keydown.enter)="selectType(option.id)">
-              
-                <div class="me-3 fs-3" [class.text-brand]="selectedType() === option.id" [class.text-muted]="selectedType() !== option.id">
-                  <i class="bi {{ option.icon }}"></i>
-                </div>
-                
-                <div class="flex-grow-1">
-                  <h6 class="mb-0 fw-bold" [class.text-dark]="selectedType() === option.id">
-                    {{ option.label }}
-                  </h6>
-                </div>
+            <div
+              class="card cursor-pointer transition-all d-flex flex-row align-items-center p-3 shadow-sm"
+              role="button"
+              tabindex="0"
+              [class.border-primary]="selectedType() === option.id"
+              [class.bg-white]="selectedType() !== option.id"
+              [style.background-color]="
+                selectedType() === option.id ? '#f0f5ff' : ''
+              "
+              [style.border-color]="
+                selectedType() === option.id ? '#0d6efd' : '#dee2e6'
+              "
+              (click)="selectType(option.id)"
+              (keydown.enter)="selectType(option.id)"
+            >
+              <div
+                class="me-3 fs-4 d-flex align-items-center"
+                [class.text-primary]="selectedType() === option.id"
+                [class.text-muted]="selectedType() !== option.id"
+              >
+                <i class="bi {{ option.icon }}"></i>
+              </div>
 
-                <div class="form-check m-0">
-                  <input class="form-check-input fs-5" type="radio" 
-                        [name]="'managementType'" 
-                        [value]="option.id"
-                        [checked]="selectedType() === option.id"
-                        (change)="selectType(option.id)">
-                </div>
+              <div class="flex-grow-1">
+                <h6
+                  class="mb-0 fw-bold"
+                  [class.text-dark]="selectedType() === option.id"
+                  [class.text-secondary]="selectedType() !== option.id"
+                >
+                  {{ option.label }}
+                </h6>
+              </div>
+
+              <div class="form-check m-0 d-flex align-items-center">
+                <input
+                  class="form-check-input fs-5 m-0 mt-0 border border-1"
+                  type="radio"
+                  [name]="'managementType'"
+                  [value]="option.id"
+                  [checked]="selectedType() === option.id"
+                  (change)="selectType(option.id)"
+                  style="cursor: pointer"
+                />
+              </div>
             </div>
           }
         </div>
-      </div>
+        <div class="modal-footer bg-white border-top-0 rounded-bottom-4 mt-4">
+          <button
+            type="button"
+            class="btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+            (click)="closeModal.emit()"
+            [disabled]="isSubmitting()"
+          >
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+          </button>
 
-      <div class="modal-footer bg-white border-top-0 rounded-bottom-4">
-        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-4" 
-                (click)="closeModal.emit()" 
-                [disabled]="isSubmitting()">
-          <i class="bi bi-x-circle me-1"></i> Cancelar
-        </button>
-        
-        <button type="button" class="btn btn-sm btn-brand rounded-pill px-4 shadow-sm" 
-                (click)="onSubmit()" 
-                [disabled]="isSubmitting()">
-          @if (isSubmitting()) {
-            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-            Procesando...
-          } @else {
-            <i class="bi bi-check2-circle me-1"></i> Confirmar Cambio
-          }
-        </button>
+          <button
+            type="button"
+            class="btn btn-warning rounded-pill px-4 shadow-sm fw-semibold"
+            (click)="onSubmit()"
+            [disabled]="isSubmitting()"
+          >
+            @if (isSubmitting()) {
+              <span
+                class="spinner-border spinner-border-sm me-2"
+                aria-hidden="true"
+              ></span>
+              Procesando...
+            } @else {
+              <i class="bi bi-check2-circle me-1"></i> Confirmar Cambio
+            }
+          </button>
+        </div>
       </div>
-
     </div>
   </div>
 </div>

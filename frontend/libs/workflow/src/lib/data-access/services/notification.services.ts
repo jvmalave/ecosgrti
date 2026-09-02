@@ -27,7 +27,7 @@ export class NotificationService  {
       confirmButtonText: 'OK',
       buttonsStyling: false, 
       customClass: {
-        confirmButton: 'btn btn-brand rounded-pill px-5 py-2 fw-bold shadow-sm',
+        confirmButton: 'btn btn-secondary rounded-pill px-5 py-2 fw-bold shadow-sm',
         popup: 'rounded-4 border-top border-4 border-brand',
         title: 'fs-4 text-dark fw-bold'
       }
@@ -45,7 +45,7 @@ export class NotificationService  {
       confirmButtonText: 'Entendido',
       buttonsStyling: false, 
       customClass: {
-        confirmButton: 'btn btn-brand rounded-pill px-5 py-2 fw-bold shadow-sm',
+        confirmButton: 'btn btn-secondary rounded-pill px-5 py-2 fw-bold shadow-sm',
         popup: 'rounded-4 border-top border-4 border-brand',
         title: 'fs-4 text-dark fw-bold'
       }
@@ -61,7 +61,7 @@ export class NotificationService  {
       confirmButtonText: 'Entendido',
       buttonsStyling: false, 
       customClass: {
-        confirmButton: 'btn btn-brand rounded-pill px-5 py-2 fw-bold shadow-sm', 
+        confirmButton: 'btn btn-secondary rounded-pill px-5 py-2 fw-bold shadow-sm', 
         popup: 'rounded-4 border-top border-4 border-brand',
         title: 'fs-4 text-dark fw-bold'
       }
@@ -95,7 +95,7 @@ export class NotificationService  {
       buttonsStyling: false, 
       customClass: {
         // Inyectamos tus clases de Bootstrap y la clase corporativa morada
-        confirmButton: 'btn btn-brand rounded-pill px-4 mx-2 fw-bold shadow-sm', 
+        confirmButton: 'btn btn-success rounded-pill px-4 mx-2 fw-bold shadow-sm', 
         cancelButton: 'btn btn-outline-secondary rounded-pill px-4 mx-2 fw-medium',
         popup: 'rounded-4 border-top border-4 border-brand',
         title: 'fs-4 text-dark fw-bold'
@@ -116,7 +116,7 @@ export class NotificationService  {
         'aria-label': placeholder
       },
       showCancelButton: true,
-      confirmButtonColor: '#8e1482',
+      confirmButtonColor: '#198754',
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Cerrar y Bloquear',
       cancelButtonText: 'Cancelar',

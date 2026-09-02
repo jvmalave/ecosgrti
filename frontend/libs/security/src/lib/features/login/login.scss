@@ -6,6 +6,12 @@ $gradient-start: #3636e8;   // Púrpura profundo
 $footer-purple: #7b1fa2;
 $text-white: #ffffff;
 $text-muted: #6c757d;
+$sidebar-bg: #1c1ce2; // Un tono oscuro azulado muy elegante para el sidebar
+$text-muted: #64748b;
+$text-white: #ffffff;
+$color-success: #22c55e;
+$color-danger: #ef4444;
+
 
 // --- Mixins y utilidades (para sombras e inputs) ---
 @mixin subtle-shadow {
@@ -20,7 +26,7 @@ body {
 
 // --- Componente de Cabecera (Header) ---
 .login-header {
-  background: linear-gradient(90deg, $gradient-start 0%, $gradient-end 100%);
+  background: $sidebar-bg !important;
   color: $text-white;
   padding: 2rem 1.5rem;
   
@@ -116,6 +122,6 @@ body {
 
 // --- Componente de Pie de Página (Footer) ---
 .login-footer {
-  background-color: $footer-purple;
+  background-color: $sidebar-bg !important;
   height: 50px; // O el grosor que desees
 }

@@ -1,17 +1,22 @@
 <div class="fade-in p-4">
   <!-- Cabecera: Requerimiento, Buscador y Botón de Cierre -->
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+  <div
+    class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3"
+  >
     <!-- Lado Izquierdo: Badge -->
     <div class="d-flex align-items-center gap-3">
-   <span class="badge badge-brand rounded-pill fw-bold px-3 py-2 text-uppercase">
-     Requerimiento: {{ rrti() }}
-   </span>
-   <button 
-     class="btn btn-sm btn-outline-brand rounded-pill fw-bold px-3 shadow-sm d-flex align-items-center" 
-     (click)="showCerStatusModal.set(true)">
-     <i class="fa-solid fa-layer-group me-2"></i> Estatus Global
-   </button>
- </div>
+      <span
+        class="badge badge-brand rounded-pill fw-bold px-3 py-2 text-uppercase"
+      >
+        Requerimiento: {{ rrti() }}
+      </span>
+      <button
+        class="btn btn-sm btn-outline-brand rounded-pill fw-bold px-3 shadow-sm d-flex align-items-center"
+        (click)="showCerStatusModal.set(true)"
+      >
+        <i class="fa-solid fa-layer-group me-2"></i> Estatus Global
+      </button>
+    </div>
 
     <!-- Lado Derecho: Buscador Compacto -->
     <div class="input-group shadow-sm" style="max-width: 350px">
@@ -51,11 +56,19 @@
   }
 
   @if (isPhaseClosed()) {
-    <div class="d-flex align-items-center mb-4 p-3 rounded-3 shadow-sm" style="background-color: #e8f5e9; border: 1px solid #c8e6c9;">
-      <i class="fa-solid fa-lock fs-3 me-3" style="color: #2e7d32;"></i>
+    <div
+      class="d-flex align-items-center mb-4 p-3 rounded-3 shadow-sm"
+      style="background-color: #e8f5e9; border: 1px solid #c8e6c9"
+    >
+      <i class="fa-solid fa-lock fs-3 me-3" style="color: #2e7d32"></i>
       <div>
-        <h6 class="fw-bold mb-1" style="color: #1b5e20;">Fase de Certificación - Roles Cerrada</h6>
-        <span class="small" style="color: #2e7d32;">Esta fase ha concluido. Todos los elementos y sus bitácoras se encuentran en estado inmutable.</span>
+        <h6 class="fw-bold mb-1" style="color: #1b5e20">
+          Fase de Certificación - Roles Cerrada
+        </h6>
+        <span class="small" style="color: #2e7d32"
+          >Esta fase ha concluido. Todos los elementos y sus bitácoras se
+          encuentran en estado inmutable.</span
+        >
       </div>
     </div>
   }
@@ -95,7 +108,11 @@
               <td class="text-center align-middle">
                 <span
                   class="badge rounded-pill fw-bold px-3 py-1"
-                  style="background-color: #fff3e0; color: #e65100; border: 1px solid #ffe0b2;"
+                  style="
+                    background-color: #fff3e0;
+                    color: #e65100;
+                    border: 1px solid #ffe0b2;
+                  "
                 >
                   PENDIENTE
                 </span>
@@ -142,12 +159,16 @@
                 {{ ticket.ticketNumber }}
               </td>
               <td class="text-center align-middle">
-                <span class="badge bg-light text-dark border px-3 py-1 fw-medium">
+                <span
+                  class="badge bg-light text-dark border px-3 py-1 fw-medium"
+                >
                   {{ ticket.rolesCount }} Rol(es)
                 </span>
               </td>
               <td class="text-center align-middle">
-                <span class="badge rounded-pill badge-in-progress fw-bold px-3 py-1">
+                <span
+                  class="badge rounded-pill badge-in-progress fw-bold px-3 py-1"
+                >
                   EN PROCESO
                 </span>
               </td>
@@ -190,7 +211,9 @@
                 {{ ticket.ticketNumber }}
               </td>
               <td class="text-center align-middle">
-                <span class="badge bg-light text-dark border px-3 py-1 fw-medium">
+                <span
+                  class="badge bg-light text-dark border px-3 py-1 fw-medium"
+                >
                   {{ ticket.rolesCount }} Rol(es)
                 </span>
               </td>
@@ -216,22 +239,25 @@
 
   <!-- FOOTER DE ACCIÓN GLOBAL (Oculto si la fase está cerrada) -->
   @if (!isPhaseClosed()) {
-    <div class="d-flex flex-wrap justify-content-between align-items-center mt-5 pt-3 border-top gap-3">
+    <div
+      class="d-flex flex-wrap justify-content-between align-items-center mt-5 pt-3 border-top gap-3"
+    >
       <div class="text-muted small fw-medium">
-        <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase, todos los roles deben estar certificados.
+        <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase, todos
+        los roles deben estar certificados.
       </div>
-      
-      <button 
+
+      <button
         class="btn btn-brand rounded-pill px-4 fw-bold shadow-sm text-nowrap"
         [disabled]="!canClosePhase() || isSubmitting()"
         (click)="finalizeCerPhase()"
       >
-        <i class="fa-solid fa-flag-checkered me-2"></i> Cerrar Fase Certificación - Roles
+        <i class="fa-solid fa-flag-checkered me-2"></i> Cerrar Fase
+        Certificación - Roles
       </button>
     </div>
   }
 </div>
-
 
 <!-- Modales Standalone -->
 @if (showTicketModal()) {
@@ -250,7 +276,7 @@
     [ticketId]="activeTicketId()"
     [ticketNumber]="activeTicketNumber()"
     [rolesInTicket]="activeRoles()"
-    [viewMode]="isResultViewMode()" 
+    [viewMode]="isResultViewMode()"
     [rrti]="rrti()"
     (closeForm)="showResultModal.set(false)"
     (resultRegistered)="onResultSuccessfullyRegistered()"
@@ -266,6 +292,7 @@
     [modalTitle]="'Estatus de Roles en Certificación'"
     [requirementId]="rrti()"
     [columns]="statusColumnsData()"
-    (closeModal)="showCerStatusModal.set(false)">
+    (closeModal)="showCerStatusModal.set(false)"
+  >
   </lib-global-status-modal>
 }

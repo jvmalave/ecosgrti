@@ -52,7 +52,7 @@ export class CeeDeliverablesComponent implements OnInit {
   public requirementId = input.required<string>();
   public rrti = input.required<string>();
   public reqPhase = input<string>('CEE-I');
-  
+  public frozenPhases = input<string[]>([]);
   public phaseClosed = output<{req_id: string, phase_actual: string, progreso_global: number}>();
 
   // ==========================================
@@ -99,10 +99,9 @@ export class CeeDeliverablesComponent implements OnInit {
   // ==========================================
   
   public isPhaseClosed = computed<boolean>(() => {
-    const phase = this.reqPhase();
-    // Solo muestra el banner si el requerimiento está explícitamente en CEE-C o fases posteriores
-    const closedPhases = ['CEE-C', 'PI-I', 'PI-C', 'PAP-I', 'PAP-C','AU-C', 'RF'];
-    return closedPhases.includes(phase);
+    // Leemos estrictamente de la base de datos
+    const frozen = this.frozenPhases() || [];
+    return frozen.includes('CEE');
   });
 
   public canClosePhase = computed<boolean>(() => {
@@ -111,11 +110,16 @@ export class CeeDeliverablesComponent implements OnInit {
     // Si no hay entregables, bloqueamos el cierre
     if (allDeliverables.length === 0) return false;
 
-    // Evaluamos el estado absoluto ignorando el buscador
-    const hasPending = allDeliverables.some(d => d.status === 'PENDING_CERTIFICATION');
-    const hasInProgress = allDeliverables.some(d => d.status === 'IN_PROGRESS');
-    
-    return !hasPending && !hasInProgress && !this.isPhaseClosed();
+    // RN 1: Todos los entregables deben estar finalizados
+    // (Aceptamos 'CERTIFIED' y 'CLOSED' para evitar bloqueos por nomenclatura)
+    const allCompleted = allDeliverables.every(d => ['CERTIFIED', 'CLOSED'].includes(d.status));
+
+    // RN 2: La fase anterior (Construcción de Entregables - COE) debe estar cerrada
+    const frozen = this.frozenPhases() || [];
+    const isCoeClosed = frozen.includes('COE');
+
+    // Se habilita solo si todo está completado, COE está cerrada y CEE aún no lo está
+    return allCompleted && isCoeClosed && !this.isPhaseClosed();
   });
 
   // ==========================================

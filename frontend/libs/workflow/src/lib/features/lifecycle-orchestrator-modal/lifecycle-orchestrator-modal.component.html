@@ -256,6 +256,7 @@
             [requirementId]="req().id"
             [rrti]="req().rrti"
             [reqPhase]="req().status"
+            [frozenPhases]="req().frozen_phases"
             (phaseClosed)="onPhaseStatusChanged($event)"
           ></lib-cer-roles>
         </div>
@@ -290,6 +291,7 @@
             [requirementId]="req().id"
             [rrti]="req().rrti"
             [reqPhase]="req().status"
+            [frozenPhases]="req().frozen_phases"
             (phaseClosed)="onPhaseStatusChanged($event)"
           ></lib-cee-deliverables>
         </div>
@@ -325,6 +327,7 @@
             [reqPhase]="req().status"
             [isCerPhaseClosed]="isCerClosed()"
             (phaseClosed)="onPhaseStatusChanged($event)"
+            [frozenPhases]="req().frozen_phases"
           ></lib-pap-roles>
         </div>
       </div>

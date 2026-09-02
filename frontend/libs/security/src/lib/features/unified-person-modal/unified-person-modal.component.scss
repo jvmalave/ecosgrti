@@ -2,7 +2,8 @@
 $color-magenta: #e91e63;
 $color-purple: #9c27b0;
 $gradient-end: #d500f9; 
-$gradient-start: #9c27b0;
+//$gradient-start: #9c27b0;
+$gradient-start: #1c1ce2;
 $text-dark: #2d3748;
 
 .modal-overlay {
@@ -83,13 +84,13 @@ $text-dark: #2d3748;
     padding: 0 0.75rem;
     font-weight: 700;
     font-size: 0.95rem;
-    color: $gradient-start; // Tono corporativo para los títulos de sección
+    color: $gradient-end; // Tono corporativo para los títulos de sección
   }
 }
 
 .highlight-section {
-  background-color: rgba($color-purple, 0.03); // Fondo púrpura muy sutil
-  border-color: rgba($color-purple, 0.15);
+  background-color: rgba($gradient-start, 0.03); // Fondo púrpura muy sutil
+  border-color: rgba($gradient-start, 0.15);
 }
 
 .grid-2-cols {
@@ -157,7 +158,7 @@ $text-dark: #2d3748;
     display: none;
 
     &:checked + .toggle-slider {
-      background-color: $gradient-end; // Magenta/Púrpura al estar activo
+      background-color: $gradient-start; // Magenta/Púrpura al estar activo
       &::before {
         transform: translateX(18px);
       }

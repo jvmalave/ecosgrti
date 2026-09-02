@@ -7,7 +7,7 @@
   aria-labelledby="atfListModalLabel"
   aria-hidden="false"
 >
-  <div class="modal-dialog modal-lg modal-dialog-centered">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
       <div class="modal-header brand-gradient text-white px-4 py-3 border-0">
         <h5
@@ -31,38 +31,35 @@
         
         <!--  Banner de inmutabilida  -->
         @if (isAtfClosed()) {
-          <div class="alert d-flex align-items-center border-0 shadow-sm rounded-3 mb-4 p-3" style="background-color: #f3e8f5; border-left: 5px solid #8e1482 !important;">
-            <i class="bi bi-shield-lock-fill fs-3 me-3" style="color: #8e1482;"></i>
+          <div class="alert  alert-success d-flex align-items-center border-1 shadow-sm rounded-3 mb-4 p-3" role="alert">
+            <i class="bi bi-shield-lock-fill fs-3 me-3"></i>
             <div>
-              <h6 class="mb-1 fw-bold" style="color: #8e1482;">Fase Análisis Técnico Funcional Completada</h6>
-              <p class="mb-0 small text-muted">Todos los componentes y acuerdos se encuentran en modo de solo lectura, garantizando su inmutabilidad.</p>
+              <h6 class="mb-1 fw-bold">Fase Análisis Técnico Funcional Completada</h6>
+              <p class="mb-0 text-muted">Todos los componentes y acuerdos se encuentran en modo de solo lectura, garantizando su inmutabilidad.</p>
             </div>
           </div>
         }
-
+        <!-- Idenficador de Requerimiento y Tipo de Gestión -->
         <div class="d-flex justify-content-between align-items-center mb-4">
           <div class="d-flex align-items-center">
-            <span class="text-muted fw-bold me-2 small">Requerimiento:</span>
+            <span class="text-muted fw-bold me-2 fs-6">Requerimiento:</span>
             <span
-              class="badge rounded-pill px-3 py-2"
-              style="background-color: #f3e8f5; color: #8e1482; border: 1px solid #8e1482;"
+              class="badge badge-brand rounded-pill px-3 py-2 fs-6 fw-semibold"
             >
               {{ requirementCode() }}
             </span>
           </div>
 
           <div class="d-flex align-items-center">
-            <span class="text-muted fw-bold me-2 small">Tipo de Gestión:</span>
+            <span class="text-muted fw-bold me-2 fs-6">Tipo de Gestión:</span>
             <span
-              class="badge rounded-pill px-3 py-2 me-2"
-              style="background-color: #f3e8f5; color: #8e1482; border: 1px solid #8e1482;"
+              class="badge badge-type rounded-pill px-3 py-2 fs-6 fw-semibold me-2"
             >
               {{ currentManagementType() | titlecase }}
             </span>
-            <!-- Ocultamos el botón de editar tipo de gestión si la fase está cerrada -->
             @if (!isAtfClosed()) {
               <button
-                class="btn btn-sm btn-outline-brand rounded-circle d-flex align-items-center justify-content-center"
+                class="btn btn-sm btn-warning rounded-circle d-flex align-items-center justify-content-center"
                 style="width: 32px; height: 32px"
                 (click)="isUpdateTypeModalOpen.set(true)"
                 title="Actualizar Tipo de Gestión"
@@ -72,7 +69,7 @@
             }
           </div>
         </div>
-
+        <!-- tabla de acuerdos -->
         <div class="card border-0 shadow-sm rounded-3">
           <div class="card-body p-0">
             <div class="table-responsive">
@@ -88,29 +85,28 @@
                   @for (item of agreements(); track item.id) {
                     <tr>
                       <td class="px-4 py-3 text-nowrap">
-                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill px-3 py-2">
+                        <span class="badge bg-secondary bg-opacity-10 text-dark border border-secondary-subtle rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.90rem;">
                           <i class="bi bi-calendar-event me-1"></i>
                           {{ item.agreement_date | date: 'dd/MM/yyyy' }}
                         </span>
                       </td>
 
-                      <td class="px-4 py-3 text-secondary" [title]="item.description">
+                      <td class="px-4 py-3 text-dark" [title]="item.description">
                         {{
-                          item.description.length > 20
-                            ? (item.description | slice: 0 : 20) + '...'
+                          item.description.length > 100
+                            ? (item.description | slice: 0 : 100) + '...'
                             : item.description
                         }}
                       </td>
 
                       <td class="px-4 py-3 text-end text-nowrap">
                         <button
-                          class="btn btn-sm btn-outline-brand rounded-pill px-3 me-2"
+                          class="btn btn-sm btn-outline-info rounded-pill px-3 me-2"
                           (click)="viewAgreement(item)"
-                          title="Ver Detalle del Acuerdo"
+                          title="Ver Detalles del Acuerdo"
                         >
-                          <i class="bi bi-eye"></i>
+                          <i class="fa-solid fa-eye"></i>
                         </button>
-                        <!-- Ocultamos la eliminación si la fase está cerrada -->
                         @if (!isAtfClosed()) {
                           <button
                             class="btn btn-sm btn-outline-danger rounded-pill px-3"
@@ -144,37 +140,63 @@
         <!-- 🚀 BLOQUE DE CONTROLES: Basado en la inmutabilidad de la fase -->
         <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
           <div class="d-flex gap-2">
+            @if(isAtfClosed()) {
             <button
               type="button"
-              class="btn btn-sm btn-outline-brand rounded-pill px-3 d-flex align-items-center"
+              class="btn btn-outline-info rounded-pill px-3 d-flex align-items-center fw-semibold"
               [disabled]="!canManageRoles()"
               (click)="openRolesManagement()"
-              [title]="!hasAgreements() ? 'Requiere al menos un acuerdo para habilitarse' : (isAtfClosed() ? 'Ver Roles (Solo Lectura)' : 'Gestionar Roles')"
+              [title]="'Ver Roles (Solo Lectura)'"
             >
-              <i class="bi" [ngClass]="isAtfClosed() ? 'bi-eye' : 'bi-person-badge'" class="me-2"></i> 
-              {{ isAtfClosed() ? 'Ver Roles' : 'Gestión de Roles' }}
+              <i class="fa-solid fa-eye me-2"></i>
+              Ver Roles 
             </button>
-
+            }@else {
+              <button
+              type="button"
+              class="btn btn-outline-success rounded-pill px-3 d-flex align-items-center fw-semibold"
+              [disabled]="!canManageRoles()"
+              (click)="openRolesManagement()"
+              [title]="!hasAgreements() ? 'Requiere al menos un acuerdo para habilitarse' : 'Gestionar Roles'"
+            >
+              <i class="bi bi-person-badge me-2"></i> 
+              Gestionar Roles
+            </button>
+            }
+            
+            @if(isAtfClosed()) {
             <button
               type="button"
-              class="btn btn-sm btn-outline-brand rounded-pill px-3 d-flex align-items-center"
+              class="btn btn-outline-info rounded-pill px-3 d-flex align-items-center fw-semibold"
               [disabled]="!canManageDeliverables()"
               (click)="openDeliverablesManagement()"
-              [title]="!hasAgreements() ? 'Requiere al menos un acuerdo para habilitarse' : (isAtfClosed() ? 'Ver Entregables (Solo Lectura)' : 'Gestionar Entregables')"
+              [title]="'Ver Entregables (Solo Lectura)'"
             >
-              <i class="bi" [ngClass]="isAtfClosed() ? 'bi-eye' : 'bi-files'" class="me-2"></i> 
-              {{ isAtfClosed() ? 'Ver Entregables' : 'Gestión de Entregables' }}
+              <i class="fa-solid fa-eye me-2"></i>
+              Ver Entregables 
             </button>
+            }@else {
+              <button
+              type="button"
+              class="btn btn-outline-success rounded-pill px-3 d-flex align-items-center fw-semibold"
+              [disabled]="!canManageDeliverables()"
+              (click)="openDeliverablesManagement()"
+              [title]="!hasAgreements() ? 'Requiere al menos un acuerdo para habilitarse' : 'Gestionar Entregables'"
+            >
+              <i class="bi bi-files me-2"></i> 
+              Gestionar Entregables
+            </button> 
+            }
           </div>
 
-          <!-- 🚀 El botón "Agregar Acuerdo" vuelve a la vida -->
+          <!-- 🚀 El botón "Agregar Acuerdo"  -->
           @if (!isAtfClosed()) {
             <div>
               <button
-                class="btn btn-sm btn-brand rounded-pill px-3 shadow-sm d-flex align-items-center"
+                class="btn btn-md btn-outline-success rounded-pill px-3 shadow-sm fw-semibold d-flex align-items-center"
                 (click)="openCreateModal.emit()"
               >
-                <i class="bi bi-plus-circle me-1"></i> Agregar Acuerdo
+                <i class="bi bi-plus-circle me-2"></i> Agregar Acuerdo
               </button>
             </div>
           }
@@ -206,7 +228,7 @@
             <button
               type="button"
               class="btn rounded-pill px-4 shadow-sm fw-bold d-flex align-items-center"
-              [ngClass]="isReadyToClose() ? 'btn-brand' : 'btn-secondary opacity-50'"
+              [ngClass]="isReadyToClose() ? 'btn-primary' : 'btn-primary opacity-50'"
               [disabled]="!isReadyToClose()"
               (click)="confirmClosure()"
             >

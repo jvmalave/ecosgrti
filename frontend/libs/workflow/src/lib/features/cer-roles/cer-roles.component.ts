@@ -45,6 +45,8 @@ export class CerRolesComponent implements OnInit {
   // Emite el payload de respuesta de Laravel para actualizar el Dashboard instantáneamente
   public phaseClosed = output<{req_id: string, phase_actual: string, progreso_global: number}>();
 
+  public frozenPhases = input<string[]>([]);
+
   // ==========================================
   // SIGNALS Y COMPUTED PARA EL MODAL DE TICKETS
   // ==========================================
@@ -87,26 +89,37 @@ export class CerRolesComponent implements OnInit {
     return groups;
   });
 
-  // ==========================================
-  // HARD GATE: QUÓRUM DE CIERRE GLOBAL
-  // ==========================================
-  // Detecta si la fase ya está cerrada (Cualquier fase distinta a CER-I implica que ya avanzó)
-  public isPhaseClosed = computed<boolean>(() => {
-    return this.reqPhase() !== 'CER-I';
-  });
   
+  // Detecta si la fase ya está cerrada (Inmutabilidad)
+  // =========================================================
+  // HARD GATE: QUÓRUM DE CIERRE GLOBAL (FASES PARALELAS)
+  // =========================================================
+  
+  // Detecta si la fase ya está cerrada leyendo la historia inmutable del backend
+  public isPhaseClosed = computed<boolean>(() => {
+    // Asegúrate de usar la señal o variable donde recibas el arreglo de fases congeladas
+    // Ej: ['ATF', 'DT', 'COR', 'PI']
+    const frozen = this.frozenPhases() || []; 
+    
+    // La fase está cerrada ÚNICAMENTE si existe en el historial inmutable
+    return frozen.includes('CER'); 
+  });
+
   public canClosePhase = computed<boolean>(() => {
     const allRoles = this.store.roles();
     
-    // Si no hay roles en absoluto, no se puede cerrar la fase.
+    // Si no hay roles, es imposible cerrar
     if (allRoles.length === 0) return false;
 
-    // Evaluamos el estado crudo (sin filtros de búsqueda)
-    const hasPending = allRoles.some(r => r.status === 'PENDING_CERTIFICATION');
-    const hasInProgress = allRoles.some(r => r.status === 'IN_PROGRESS');
-    
-    // Solo permitir cerrar si no hay pendientes ni en proceso, y si la fase no está cerrada ya
-    return !hasPending && !hasInProgress && !this.isPhaseClosed();
+    // RN 1: Absolutamente todos los roles de esta fase deben estar CERTIFICADOS
+    const allCertified = allRoles.every(r => r.status === 'CERTIFIED');
+
+    // RN 2: La fase anterior (PI) DEBE estar cerrada de forma real.
+    const frozen = this.frozenPhases() || [];
+    const isPiClosed = frozen.includes('PI');
+
+    // Se habilita el botón solo si todo está certificado, PI está en el historial (cerrada), y CER aún no se ha cerrado.
+    return allCertified && isPiClosed && !this.isPhaseClosed();
   });
 
 

@@ -6,7 +6,7 @@
       @if (isEditing()) {
         <i class="fa-solid fa-pen-to-square me-2 fs-5"></i>
       }
-      {{ isEditing() ? 'Editando Requerimiento' : 'Detalle de Requerimiento' }}
+      {{ isEditing() ? 'Editando Requerimiento' : 'Detalles de Requerimiento' }}
     </h4>
     <button
       type="button"
@@ -19,9 +19,9 @@
   <div class="modal-body p-4 bg-light">
     <!-- Bloque Izquierdo: Código del Requerimiento -->
     <div class="d-flex align-items-center">
-      <span class="text-muted fw-bold me-2 small">Requerimiento:</span>
+      <span class="text-muted fw-bold me-2 fs-6">Requerimiento:</span>
       <span
-        class="badge rounded-pill px-3 py-2"
+        class="badge rounded-pill px-3 py-2 fs-6"
         style="
           background-color: #f3e8f5;
           color: #8e1482;
@@ -48,9 +48,9 @@
       }
 
       <div class="mb-4 bg-light p-3 rounded border">
-        <h6 class="text-muted mb-3">
+        <h5 class="text-muted mb-3">
           <i class="fa-solid fa-chart-line me-2"></i> Avance del Requerimiento
-        </h6>
+        </h5>
 
         <lib-progress-dashboard
           [globalProgress]="currentRequirement()?.progress_percentage ?? 0"
@@ -92,7 +92,7 @@
         <div class="d-flex gap-2">
           @if (!isEditing()) {
             <button
-              class="btn btn-brand rounded-pill px-4"
+              class="btn btn-warning rounded-pill px-4"
               (click)="enableEditing()"
               [disabled]="
                 currentRequirement()?.is_locked ||
@@ -101,6 +101,7 @@
             >
               <i class="bi bi-pencil-square me-2"></i>Actualizar Requerimiento
             </button>
+            
           } @else {
             <button
               class="btn btn-outline-secondary rounded-pill px-4"
@@ -110,7 +111,7 @@
               Cancelar
             </button>
             <button
-              class="btn btn-brand rounded-pill px-4"
+              class="btn btn-success rounded-pill px-4"
               (click)="saveChanges()"
             >
               <i class="fa-regular fa-circle-check fa-lg me-2"></i>Confirmar
@@ -122,8 +123,9 @@
 
       <form [formGroup]="editForm">
         <div class="row g-4 mb-4">
+          <!-- Identificador del requerimiento -->
           <div class="col-md-3">
-            <span class="d-block small fw-bold mb-2">Número RRTI</span>
+            <span class="d-block fw-semibold mb-2 text-muted">Número RRTI</span>
             @if (isEditing()) {
               <input
                 type="text"
@@ -132,14 +134,15 @@
               />
             } @else {
               <div
-                class="p-2 border rounded bg-light text-muted input-locked fw-semibold"
+                class="p-2 border rounded bg-light text-muted input-locked fs-6 fw-semibold"
               >
                 {{ editForm.get('rrti')?.value }}
               </div>
             }
           </div>
+          <!--  Fecha creacion del requerimiento -->
           <div class="col-md-3">
-            <span class="d-block small fw-bold mb-2">Fecha de Creación</span>
+            <span class="d-block fw-semibold mb-2 text-muted">Fecha de Creación</span>
             @if (isEditing()) {
               <input
                 type="date"
@@ -148,14 +151,15 @@
               />
             } @else {
               <div
-                class="p-2 border rounded bg-light text-muted input-locked fw-semibold"
+                class="p-2 border rounded bg-light text-muted input-locked fs-6 fw-semibold"
               >
                 {{ editForm.get('creation_date')?.value | date: 'dd/MM/yyyy' }}
               </div>
             }
           </div>
+          <!-- Tipo Requerimiento -->
           <div class="col-md-3">
-            <span class="d-block small fw-bold mb-2">Tipo Requerimiento</span>
+            <span class="d-block fw-semibold mb-2 text-muted">Tipo Requerimiento</span>
             @if (isEditing()) {
               <select
                 class="form-select border-brand"
@@ -167,13 +171,14 @@
                 }
               </select>
             } @else {
-              <div class="p-2 border rounded bg-light text-muted fw-semibold">
-                {{ editForm.get('requirement_type')?.value | titlecase }}
+              <div class="p-2 border rounded bg-light text-muted fs-6 fw-semibold">
+                {{ editForm.get('requirement_type')?.value | uppercase }}
               </div>
             }
           </div>
+          <!-- Tipo Gestión -->
           <div class="col-md-3">
-            <span class="d-block small fw-bold mb-2">Tipo Gestión</span>
+            <span class="d-block fw-bold mb-2">Tipo Gestión</span>
             @if (isEditing()) {
               <select
                 class="form-select border-brand"
@@ -185,15 +190,16 @@
                 }
               </select>
             } @else {
-              <div class="p-2 border rounded bg-light text-muted fw-semibold">
-                {{ editForm.get('management_type')?.value }}
+              <div class="p-2 border rounded bg-light text-muted fs-6 fw-semibold">
+                {{ editForm.get('management_type')?.value | uppercase }}
               </div>
             }
           </div>
         </div>
+        <!-- Descripcion -->
         <div class="row mb-4">
           <div class="col-12">
-            <span class="d-block small fw-bold mb-2"
+            <span class="d-block fw-semibold mb-2 text-muted"
               >Descripción del Requerimiento</span
             >
             @if (isEditing()) {
@@ -204,7 +210,7 @@
               ></textarea>
             } @else {
               <div
-                class="p-3 border rounded bg-light text-muted"
+                class="p-3 border rounded bg-light text-muted fs-6"
                 style="min-height: 80px"
               >
                 {{ editForm.get('description')?.value }}
@@ -212,10 +218,9 @@
             }
           </div>
         </div>
-
         <div class="row g-4 mb-4 border-top pt-3">
           <div class="col-12 mb-2">
-            <span class="d-block small text-muted fw-bold mb-2"
+            <span class="d-block small text-muted fw-bold mb-2 fs-6"
               ><i class="fa-solid fa-sitemap me-2 text-brand"></i>Jerarquía
               Organizacional Histórica</span
             >
@@ -223,26 +228,25 @@
               class="d-flex flex-wrap gap-2 align-items-center p-3 rounded border"
               style="background-color: #fcf8ff"
             >
-              <span class="badge badge-soft-brand fs-6">{{
+              <span class="badge badge-soft-society fs-6">{{
                 organizationalData()?.society_name
               }}</span>
               <i
                 class="fa-solid fa-chevron-right text-brand opacity-50 mx-1"
               ></i>
-              <span class="badge badge-soft-brand fs-6">{{
+              <span class="badge badge-soft-system fs-6">{{
                 organizationalData()?.system_name
               }}</span>
               <i
                 class="fa-solid fa-chevron-right text-brand opacity-50 mx-1"
               ></i>
-              <span class="badge brand-gradient fs-6 text-white">{{
+              <span class="badge badge-soft-unit fs-6 text-white">{{
                 organizationalData()?.requesting_unit_name
               }}</span>
             </div>
           </div>
-
           <div class="col-md-6">
-            <span class="d-block small text-muted fw-bold mb-2"
+            <span class="d-block small text-muted fw-bold mb-2 fs-6"
               >Consultor Funcional</span
             >
             @if (isEditing()) {
@@ -263,9 +267,8 @@
               </div>
             }
           </div>
-
           <div class="col-md-6">
-            <span class="d-block small text-muted fw-bold mb-2"
+            <span class="d-block small text-muted fw-bold mb-2 fs-6"
               >Consultores CSPE Asignados</span
             >
             <div
@@ -285,7 +288,7 @@
                         (change)="onCspeChange(cspe.cspe_id, $event)"
                       />
                       <label
-                        class="form-check-label small"
+                        class="form-check-label fs-6 fw-semibold text-dark"
                         [for]="'cspe_' + cspe.cspe_id"
                       >
                         {{ cspe.full_name }}
@@ -304,10 +307,9 @@
               Adjuntos
             </h6>
           </div>
-
           <div class="col-md-6">
-            <span class="d-block small text-muted fw-bold mb-2"
-              >Solicitud TI (PDF)</span
+            <span class="d-block small text-muted fs-6 fw-bold mb-2"
+              >Notificación RRTI (PDF)</span
             >
             @if (isEditing()) {
               <input
@@ -319,13 +321,13 @@
             }
             <div class="mt-1">
               @if (attachedDocs().itReq) {
-                <a
-                  [href]="getDocumentUrl(attachedDocs().itReq)"
-                  target="_blank"
-                  class="btn btn-outline-brand btn-sm rounded-pill px-3"
+                <button
+                  type="button"
+                  (click)="openPrivateDoc(attachedDocs().itReq)"
+                  class="btn btn-info btn-sm rounded-pill px-4 fs-6 fw-medium"
                 >
-                  <i class="fa-solid fa-file-pdf me-2"></i> Ver Solicitud Actual
-                </a>
+                  <i class="fa-solid fa-file-pdf me-2"></i> Ver Notificación RRTI
+                </button>
               } @else {
                 <span class="text-muted small"
                   >No se adjuntó archivo previo.</span
@@ -333,29 +335,28 @@
               }
             </div>
           </div>
-
           <div class="col-md-6">
-            <span class="d-block small text-muted fw-bold mb-2"
-              >Planilla de Necesidades (Excel/PDF)</span
+            <span class="d-block small text-muted fw-bold fs-6 mb-2"
+              >Planilla de Necesidades (PDF)</span
             >
             @if (isEditing()) {
               <input
                 type="file"
-                class="form-control form-control-sm border-brand mb-2"
+                class="form-control form-control-sm border-brand mb-2 fw-medium"
                 accept=".pdf,.xls,.xlsx"
                 (change)="onFileChange($event, 'needsSpread')"
               />
             }
             <div class="mt-1">
               @if (attachedDocs().needsSpread) {
-                <a
-                  [href]="getDocumentUrl(attachedDocs().needsSpread)"
-                  target="_blank"
-                  class="btn btn-outline-brand btn-sm rounded-pill px-3"
+                <button
+                  type="button"
+                  (click)="openPrivateDoc(attachedDocs().needsSpread)"
+                  class="btn btn-info btn-sm rounded-pill px-3 fs-6 fw-medium"
                 >
-                  <i class="fa-solid fa-file-excel me-2"></i> Ver Planilla
-                  Actual
-                </a>
+                <i class="fa-solid fa-file-pdf me-2"> </i>
+                  Ver Planilla de Necesidades
+                </button>
               } @else {
                 <span class="text-muted small"
                   >No se adjuntó archivo previo.</span

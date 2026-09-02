@@ -142,16 +142,15 @@
                           <i class="fa-solid fa-users me-1"></i> Usuario
                         </button>
 
-                        <!-- Botón Aprobación | Ver Acta (Bloqueado si no hay bitácora o si ya está aprobado) -->
                         @if (!item.is_approved) {
-                          <!-- Botón original: Registrar Aprobación (Bloqueado si no hay bitácora) -->
+                          <!-- Botón: Registrar Aprobación (Bloqueado si no hay usuarios de prueba) -->
                           <button
                             class="btn btn-sm btn-outline-success me-2 rounded-pill px-3"
-                            [disabled]="(item.registers_count ?? 0) === 0"
+                            [disabled]="(item.test_users_count ?? 0) === 0"
                             (click)="openFunctionalApproval(item)"
                             [title]="
-                              (item.registers_count ?? 0) === 0
-                                ? 'Debe registrar primero un avance en la bitácora'
+                              (item.test_users_count ?? 0) === 0
+                                ? 'Debe registrar primero al menos un usuario de pruebas'
                                 : 'Registrar Aprobación'
                             "
                           >

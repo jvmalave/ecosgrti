@@ -1,67 +1,128 @@
 <!-- deliverable-form-modal.component.html -->
-<div class="modal-backdrop fade show" style="z-index: 1090 !important;"></div>
+<div class="modal-backdrop fade show" style="z-index: 1090 !important"></div>
 
-<div class="modal fade show d-block" tabindex="-1" style="z-index: 1100 !important;" aria-labelledby="modalDeliverableTitle">
+<div
+  class="modal fade show d-block"
+  tabindex="-1"
+  style="z-index: 1100 !important"
+  aria-labelledby="modalDeliverableTitle"
+>
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content shadow-lg border-0 rounded-4">
-      
-      <div class="modal-header brand-gradient text-white rounded-top-4 border-0 pt-3 pb-3 px-4">
-        <h5 class="modal-title fw-bold fs-5 d-flex align-items-center mb-0" id="modalDeliverableTitle">
+      <div
+        class="modal-header brand-gradient text-white rounded-top-4 border-0 pt-3 pb-3 px-4"
+      >
+        <h5
+          class="modal-title fw-bold fs-5 d-flex align-items-center mb-0"
+          id="modalDeliverableTitle"
+        >
           @if (isViewMode()) {
-            <i class="bi bi-eye me-2"></i> Detalle del Entregable
+            <i class="bi bi-eye me-2"></i> Detalles del Entregable
           } @else if (isEditMode()) {
             <i class="bi bi-pencil-square me-2"></i> Actualizar Entregable
           } @else {
             <i class="bi bi-plus-circle me-2"></i> Registrar Nuevo Entregable
           }
         </h5>
-        <button type="button" class="btn-close btn-close-white" 
-                (click)="closeModal.emit()" 
-                [disabled]="isSubmitting()">
-        </button>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          (click)="closeModal.emit()"
+          [disabled]="isSubmitting()"
+          aria-label="Cerrar modal"
+        ></button>
       </div>
 
       <div class="modal-body p-4 bg-light">
         <form [formGroup]="deliverableForm" (ngSubmit)="onSubmit()">
-          
           <div class="mb-3">
-            <label for="nameInput" class="form-label fw-bold text-muted small">Nombre del Entregable <span class="text-danger">*</span></label>
-            <input type="text" 
-                  id="nameInput"
-                  class="form-control shadow-sm" 
-                  formControlName="name" 
-                  placeholder="Ej: Documento de Arquitectura"
-                  [class.is-invalid]="deliverableForm.get('name')?.invalid && deliverableForm.get('name')?.touched">
-            @if (deliverableForm.get('name')?.hasError('required') && deliverableForm.get('name')?.touched) {
+            <label for="nameInput" class="form-label fw-semibold text-dark"
+              >Nombre del Entregable <span class="text-danger">*</span></label
+            >
+            <input
+              type="text"
+              id="nameInput"
+              class="form-control shadow-sm"
+              formControlName="name"
+              placeholder="Ej: Documento de Arquitectura"
+              [class.is-invalid]="
+                deliverableForm.get('name')?.invalid &&
+                deliverableForm.get('name')?.touched
+              "
+            />
+            @if (
+              deliverableForm.get('name')?.hasError('required') &&
+              deliverableForm.get('name')?.touched
+            ) {
               <div class="invalid-feedback">El nombre es obligatorio.</div>
             }
           </div>
 
           <div class="mb-4">
-            <label for="descriptionTextarea" class="form-label fw-bold text-muted small">Descripción</label>
-            <textarea id="descriptionTextarea"
-                      class="form-control shadow-sm" 
-                      rows="4" 
-                      formControlName="description" 
-                      placeholder="Describa el entregable..."
-                      [class.is-invalid]="deliverableForm.get('description')?.invalid && deliverableForm.get('description')?.touched"></textarea>
+            <label
+              for="descriptionTextarea"
+              class="form-label fw-semibold text-dark"
+              >Descripción</label
+            >
+            <textarea
+              id="descriptionTextarea"
+              class="form-control shadow-sm"
+              rows="4"
+              formControlName="description"
+              placeholder="Describa el entregable..."
+              [class.is-invalid]="
+                deliverableForm.get('description')?.invalid &&
+                deliverableForm.get('description')?.touched
+              "
+            ></textarea>
           </div>
 
           <div class="d-flex justify-content-end gap-2 pt-3 border-top">
             @if (isViewMode()) {
-              <button type="button" class="btn btn-sm btn-outline-brand rounded-pill px-4 fw-semibold" (click)="closeModal.emit()">Cerrar</button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+                (click)="closeModal.emit()"
+              >
+                Cerrar
+              </button>
               @if (!isPhaseClosed()) {
-                <button type="button" class="btn btn-sm btn-brand rounded-pill px-4 shadow-sm" (click)="enableEdit()">
-                  <i class="bi bi-pencil me-2"></i> Actualizar
+                <button
+                  type="button"
+                  class="btn btn-sm btn-warning rounded-pill px-4 shadow-sm fw-semibold"
+                  (click)="enableEdit()"
+                >
+                  <i class="fa-solid fa-pencil"></i> Actualizar
                 </button>
               }
             } @else {
-              <button type="button" class="btn btn-sm btn-outline-brand rounded-pill px-4 fw-semibold" (click)="closeModal.emit()" [disabled]="isSubmitting()">Cancelar</button>
+              <!-- <button type="button" class="btn btn-sm btn-outline-brand rounded-pill px-4 fw-semibold" (click)="closeModal.emit()" [disabled]="isSubmitting()">Cancelar</button>
               <button type="submit" class="btn btn-sm btn-brand rounded-pill px-4 shadow-sm" [disabled]="isSubmitting()">
                 @if (isSubmitting()) {
                   <span class="spinner-border spinner-border-sm me-2"></span> Guardando...
                 } @else {
                   <i class="bi bi-check2-circle me-2"></i> {{ isEditMode() ? 'Guardar Cambios' : 'Registrar' }}
+                }
+              </button> -->
+
+              <button
+                type="submit"
+                class="btn btn-sm rounded-pill px-4 d-flex align-items-center shadow-sm"
+                [class.btn-warning]="isEditMode()"
+                [class.text-dark]="isEditMode()"
+                [class.btn-success]="!isEditMode()"
+                [class.text-white]="!isEditMode()"
+                [disabled]="isSubmitting()"
+              >
+                @if (isSubmitting()) {
+                  <span
+                    class="spinner-border spinner-border-sm me-2"
+                    aria-hidden="true"
+                  ></span>
+                  Guardando...
+                } @else {
+                  <i class="bi bi-check2-circle me-2"></i>
+                  {{ isEditMode() ? 'Guardar Cambios' : 'Registrar Entregable' }}
                 }
               </button>
             }

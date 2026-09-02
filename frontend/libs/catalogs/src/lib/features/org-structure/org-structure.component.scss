@@ -2,6 +2,15 @@
   IDENTIDAD VISUAL CANTV (ECOSGRTI) - AJUSTE MODAL DIRECTORIO
    ======================================================== */
 
+$color-magenta: #e91e63;
+$color-purple: #9c27b0;
+$gradient-end: #d500f9; 
+$gradient-start: #9c27b0;
+$text-dark: #2d3748;
+$color-blue: #1c1ce2;
+
+
+
 // Degradado corporativo (Basado en la pantalla de Login y Sidebar)
 .brand-gradient {
   background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%);
@@ -165,6 +174,6 @@
 
   &:hover {
     background-color: rgba(213, 0, 249, 0.05);
-    border-left-color: #d500f9;
+    border-left-color: $color-blue;
   }
 }

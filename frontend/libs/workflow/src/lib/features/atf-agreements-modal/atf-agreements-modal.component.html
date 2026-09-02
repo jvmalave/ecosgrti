@@ -17,7 +17,7 @@
           @if (currentMode() === 'create') {
             Registrar Acuerdo Técnico
           } @else if (currentMode() === 'view') {
-            Detalle del Acuerdo
+            Detalles del Acuerdo
           } @else {
             Actualizar Acuerdo
           }
@@ -31,25 +31,27 @@
       </div>
 
       <div class="modal-body p-4">
-        <div class="alert alert-info mb-4" role="alert">
-          <i class="bi bi-info-circle-fill me-2"></i>
-          Ingrese los detalles del acuerdo técnico-funcional alcanzado para el
-          requerimiento.
-        </div>
+        @if (currentMode() === 'create') {
+          <div
+            class="alert alert-info d-flex align-items-center border-1 shadow-sm rounded-3 mb-4 p-3"
+            role="alert"
+          >
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Ingrese los detalles del acuerdo técnico-funcional alcanzado para el
+            requerimiento.
+          </div>
+        }
 
         <form [formGroup]="agreementForm" (ngSubmit)="onSubmit()">
           <div class="mb-3">
-            <label
-              for="agreement_date"
-              class="form-label fw-bold text-muted small"
-            >
+            <label for="agreement_date" class="form-label fw-semibold">
               Fecha del Acuerdo <span class="text-danger">*</span>
             </label>
             <input
               type="date"
               id="agreement_date"
               class="form-control"
-              [min]="requirementCreationDate()" 
+              [min]="requirementCreationDate()"
               [max]="maxDateAllowed"
               formControlName="agreement_date"
               [class.is-invalid]="
@@ -68,10 +70,7 @@
           </div>
 
           <div class="mb-3">
-            <label
-              for="description"
-              class="form-label fw-bold text-muted small"
-            >
+            <label for="description" class="form-label fw-bold">
               Descripción del Acuerdo <span class="text-danger">*</span>
             </label>
             <textarea
@@ -100,10 +99,11 @@
               </div>
             }
           </div>
+
           <div class="modal-footer bg-light border-0 px-4 py-3">
             <button
               type="button"
-              class="btn btn-sm btn-outline-secondary rounded-pill px-4"
+              class="btn btn-outline-secondary rounded-pill px-4 fw-semibold"
               (click)="closeModal.emit()"
             >
               <i class="bi bi-x-circle me-1"></i>
@@ -113,7 +113,11 @@
             @if (currentMode() === 'create' || currentMode() === 'edit') {
               <button
                 type="submit"
-                class="btn btn-sm btn-brand rounded-pill px-4 shadow-sm"
+                class="btn rounded-pill px-4 shadow-sm fw-semibold"
+                [class.btn-success]="currentMode() === 'create'"
+                [class.btn-warning]="currentMode() === 'edit'"
+                [class.text-white]="currentMode() === 'create'"
+                [class.text-dark]="currentMode() === 'edit'"
                 [disabled]="agreementForm.invalid || isSubmitting()"
               >
                 @if (isSubmitting()) {
@@ -136,7 +140,7 @@
             @if (currentMode() === 'view' && isAtfOpen()) {
               <button
                 type="button"
-                class="btn btn-sm btn-brand rounded-pill px-4 shadow-sm"
+                class="btn btn-warning text-dark rounded-pill px-4 shadow-sm fw-semibold"
                 (click)="switchToEdit()"
               >
                 <i class="bi bi-pencil me-1"></i> Actualizar

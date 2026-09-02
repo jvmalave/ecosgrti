@@ -1,11 +1,20 @@
-<div class="modal-backdrop fade show" style="z-index: 1090 !important;"></div>
+<div class="modal-backdrop fade show" style="z-index: 1090 !important"></div>
 
-<div class="modal fade show d-block" tabindex="-1" style="z-index: 1100 !important;" aria-labelledby="modalRoleTitle">
+<div
+  class="modal fade show d-block"
+  tabindex="-1"
+  style="z-index: 1100 !important"
+  aria-labelledby="modalRoleTitle"
+>
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content shadow-lg border-0 rounded-4">
-      
-      <div class="modal-header brand-gradient text-white rounded-top-4 border-0 pt-3 pb-3 px-4">
-        <h5 class="modal-title fw-bold fs-5 d-flex align-items-center mb-0" id="modalRoleTitle">
+      <div
+        class="modal-header brand-gradient text-white rounded-top-4 border-0 pt-3 pb-3 px-4"
+      >
+        <h5
+          class="modal-title fw-bold fs-5 d-flex align-items-center mb-0"
+          id="modalRoleTitle"
+        >
           @if (isViewMode()) {
             <i class="bi bi-eye me-2"></i> Detalle del Rol Técnico
           } @else if (isEditMode()) {
@@ -14,105 +23,178 @@
             <i class="bi bi-plus-circle me-2"></i> Registrar Nuevo Rol
           }
         </h5>
-        <button type="button" class="btn-close btn-close-white" 
-                (click)="closeModal.emit()" 
-                [disabled]="isSubmitting()">
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          (click)="closeModal.emit()"
+          [disabled]="isSubmitting()"
+        >
           <span class="visually-hidden">Cerrar modal</span>
         </button>
       </div>
 
       <div class="modal-body p-4 bg-light">
         <form [formGroup]="roleForm" (ngSubmit)="onSubmit()">
-          
           <div class="mb-3">
-            <label for="roleNameInput" class="form-label fw-bold text-muted small">Nombre del Rol <span class="text-danger">*</span></label>
-            <input type="text" 
-                  id="roleNameInput"
-                  class="form-control shadow-sm" 
-                  style="border-color: #e1bee7;"
-                  formControlName="role_name" 
-                  placeholder="Ej: Consultor Funcional Senior"
-                  [class.is-invalid]="roleForm.get('role_name')?.invalid && roleForm.get('role_name')?.touched">
-            @if (roleForm.get('role_name')?.hasError('required') && roleForm.get('role_name')?.touched) {
-              <div class="invalid-feedback">El nombre del rol es obligatorio.</div>
+            <label for="roleNameInput" class="form-label fw-bold text-dark"
+              >Nombre del Rol <span class="text-danger">*</span></label
+            >
+            <input
+              type="text"
+              id="roleNameInput"
+              class="form-control shadow-sm"
+              style="border-color: #e1bee7; font-size: 1.1rem"
+              formControlName="role_name"
+              placeholder="Ej: ZFFHTI1RTB"
+              [class.is-invalid]="
+                roleForm.get('role_name')?.invalid &&
+                roleForm.get('role_name')?.touched
+              "
+            />
+            @if (
+              roleForm.get('role_name')?.hasError('required') &&
+              roleForm.get('role_name')?.touched
+            ) {
+              <div class="invalid-feedback">
+                El nombre del rol es obligatorio.
+              </div>
             }
-            @if (roleForm.get('role_name')?.hasError('maxlength') && roleForm.get('role_name')?.touched) {
-              <div class="invalid-feedback">El nombre no puede exceder los 100 caracteres.</div>
+            @if (
+              roleForm.get('role_name')?.hasError('maxlength') &&
+              roleForm.get('role_name')?.touched
+            ) {
+              <div class="invalid-feedback">
+                El nombre no puede exceder los 100 caracteres.
+              </div>
             }
           </div>
 
           <div class="mb-3">
-            <label for="assignmentTypeSelect" class="form-label fw-bold text-muted small">Tipo de Asignación <span class="text-danger">*</span></label>
-            <select id="assignmentTypeSelect"
-                    class="form-select shadow-sm" 
-                    style="border-color: #e1bee7;"
-                    formControlName="assignment_type"
-                    [class.is-invalid]="roleForm.get('assignment_type')?.invalid && roleForm.get('assignment_type')?.touched">
+            <label
+              for="assignmentTypeSelect"
+              class="form-label fw-bold text-dark"
+              >Tipo de Asignación <span class="text-danger">*</span></label
+            >
+            <select
+              id="assignmentTypeSelect"
+              class="form-select shadow-sm"
+              style="border-color: #e1bee7; font-size: 1.1rem"
+              formControlName="assignment_type"
+              [class.is-invalid]="
+                roleForm.get('assignment_type')?.invalid &&
+                roleForm.get('assignment_type')?.touched
+              "
+            >
               <option value="" disabled selected>Seleccione un tipo...</option>
-              <option value="Interno">Interno (Personal de la organización)</option>
-              <option value="Externo">Externo (Proveedor / Consultor)</option>
+              <option value="Masivo">Masivo</option>
+              <option value="Especifico">Específico</option>
+              <option value="Basico">Básico</option>
             </select>
-            @if (roleForm.get('assignment_type')?.invalid && roleForm.get('assignment_type')?.touched) {
-              <div class="invalid-feedback">Debe seleccionar un tipo de asignación.</div>
+            @if (
+              roleForm.get('assignment_type')?.invalid &&
+              roleForm.get('assignment_type')?.touched
+            ) {
+              <div class="invalid-feedback">
+                Debe seleccionar un tipo de asignación.
+              </div>
             }
           </div>
 
           <div class="mb-4">
-            <label for="descriptionTextarea" class="form-label fw-bold text-muted small">Descripción de Funciones <span class="text-danger">*</span></label>
-            <textarea id="descriptionTextarea"
-                      class="form-control shadow-sm" 
-                      style="border-color: #e1bee7;"
-                      rows="4" 
-                      formControlName="description" 
-                      placeholder="Describa brevemente las responsabilidades técnicas que tendrá este rol..."
-                      [class.is-invalid]="roleForm.get('description')?.invalid && roleForm.get('description')?.touched"></textarea>
-            @if (roleForm.get('description')?.hasError('required') && roleForm.get('description')?.touched) {
+            <label
+              for="descriptionTextarea"
+              class="form-label fw-bold text-dark"
+              >Descripción de Funciones
+              <span class="text-danger">*</span></label
+            >
+            <textarea
+              id="descriptionTextarea"
+              class="form-control shadow-sm"
+              style="border-color: #e1bee7; font-size: 1.1rem"
+              rows="4"
+              formControlName="description"
+              placeholder="Describa brevemente características técnicas que tendrá este rol..."
+              [class.is-invalid]="
+                roleForm.get('description')?.invalid &&
+                roleForm.get('description')?.touched
+              "
+            ></textarea>
+            @if (
+              roleForm.get('description')?.hasError('required') &&
+              roleForm.get('description')?.touched
+            ) {
               <div class="invalid-feedback">La descripción es obligatoria.</div>
             }
-            @if (roleForm.get('description')?.hasError('minlength') && roleForm.get('description')?.touched) {
-              <div class="invalid-feedback">La descripción debe tener al menos 10 caracteres.</div>
+            @if (
+              roleForm.get('description')?.hasError('minlength') &&
+              roleForm.get('description')?.touched
+            ) {
+              <div class="invalid-feedback">
+                La descripción debe tener al menos 10 caracteres.
+              </div>
             }
-            @if (roleForm.get('description')?.hasError('maxlength') && roleForm.get('description')?.touched) {
-              <div class="invalid-feedback">La descripción no puede exceder los 500 caracteres.</div>
+            @if (
+              roleForm.get('description')?.hasError('maxlength') &&
+              roleForm.get('description')?.touched
+            ) {
+              <div class="invalid-feedback">
+                La descripción no puede exceder los 500 caracteres.
+              </div>
             }
           </div>
 
           <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-            
             @if (isViewMode()) {
-              <button type="button" class="btn btn-sm btn-outline-brand rounded-pill px-4 fw-semibold" 
-                      (click)="closeModal.emit()">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary rounded-pill px-4 fw-semibold"
+                (click)="closeModal.emit()"
+              >
                 Cerrar
               </button>
-              
+
               @if (!isPhaseClosed()) {
-                <button type="button" class="btn btn-sm btn-brand rounded-pill px-4 d-flex align-items-center shadow-sm" 
-                        (click)="enableEdit()">
-                  <i class="bi bi-pencil me-2"></i> Actualizar
+                <button
+                  type="button"
+                  class="btn btn-warning rounded-pill px-4 d-flex align-items-center shadow-sm fw-semibold"
+                  (click)="enableEdit()"
+                >
+                  <i class="fa-solid fa-pencil me-2"></i>Actualizar
                 </button>
               }
             } @else {
-              <button type="button" class="btn btn-sm btn-outline-brand rounded-pill px-4 fw-semibold" 
-                      (click)="closeModal.emit()" 
-                      [disabled]="isSubmitting()">
+              <button
+                type="button"
+                class="btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+                (click)="closeModal.emit()"
+                [disabled]="isSubmitting()"
+              >
                 Cancelar
               </button>
-              <button type="submit" class="btn btn-sm btn-brand rounded-pill px-4 d-flex align-items-center shadow-sm" 
-                      [disabled]="isSubmitting()">
+              <button
+                type="submit"
+                class="btn rounded-pill px-4 d-flex align-items-center shadow-sm fw-semibold"
+                [class.btn-warning]="isEditMode()"
+                [class.text-dark]="isEditMode()"
+                [class.btn-success]="!isEditMode()"
+                [class.text-white]="!isEditMode()"
+                [disabled]="isSubmitting()"
+              >
                 @if (isSubmitting()) {
-                  <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                  <span
+                    class="spinner-border spinner-border-sm me-2"
+                    aria-hidden="true"
+                  ></span>
                   Guardando...
                 } @else {
-                  <i class="bi bi-check2-circle me-2"></i> {{ isEditMode() ? 'Guardar Cambios' : 'Registrar Rol' }}
+                  <i class="bi bi-check2-circle me-2"></i>
+                  {{ isEditMode() ? 'Guardar Cambios' : 'Registrar Rol' }}
                 }
               </button>
             }
-
           </div>
-
         </form>
       </div>
-
     </div>
   </div>
 </div>

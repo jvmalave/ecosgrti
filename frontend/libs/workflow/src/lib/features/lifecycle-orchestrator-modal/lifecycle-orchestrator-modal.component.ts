@@ -203,6 +203,7 @@ export class LifecycleOrchestratorModalComponent {
   public onPhaseStatusChanged(data: {req_id: string, phase_actual: string, progreso_global: number}): void {
     // Reenviamos el evento hacia el Dashboard padre, el cual sí posee el Store global
     this.requirementUpdated.emit(data);
+    console.log('🚀 Reenviando data al Dashboard:', data);
   }
 
   /**

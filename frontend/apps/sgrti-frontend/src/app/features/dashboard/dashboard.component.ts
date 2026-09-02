@@ -1,3 +1,4 @@
+
 import { Component, OnInit, inject, signal, DestroyRef, computed } from '@angular/core';
 import { CommonModule, UpperCasePipe } from '@angular/common';
 import { Router } from '@angular/router';
@@ -350,24 +351,25 @@ public isGrEnabled(status: string): boolean {
       searchTerm
     ).subscribe({
       next: (response: ApiResponse<RequirementDashboard[]>) => {
+        console.log('Requerimientos cargados', response);
         this.requirements.set(response.data);
         if (response.meta) {
           this.hasMore.set(response.meta.has_more);
         }
 
         // ====================================================================
-        // 🟢 NUEVO: LA MAGIA REACTIVA PARA EL ORQUESTADOR
+        // REACTIVIDAD  PARA EL ORQUESTADOR
         // ====================================================================
-        // NOTA: Reemplaza "selectedRequirement" por el nombre exacto de tu Signal
+        
         const currentSelected = this.selectedReqForOrchestrator(); 
         
         if (currentSelected) {
-          // Buscamos el requerimiento actualizado en los datos recién llegados
+          // Busca el requerimiento actualizado en los datos recién llegados
           const freshReq = response.data.find(r => r.id === currentSelected.id);
           
           if (freshReq) {
-            // Actualizamos el Signal. Esto empujará los datos frescos al Orquestador
-            // y los botones se iluminarán inmediatamente sin necesidad de F5.
+            // Actualiza el Signal. Esto empuja los datos frescos al Orquestador
+            // y los botones se iluminarán inmediatamente sin necesidad de recargar
             this.selectedReqForOrchestrator.set(freshReq);
           }
         }
@@ -623,6 +625,7 @@ public isGrEnabled(status: string): boolean {
     }
 
     console.log('✅ Requerimiento mutado reactivamente a fase:', event.phase_actual);
+    this.loadRequirements();
   }
 
   public getRoleDisplayName(rawRole?: string): string { 
@@ -655,8 +658,45 @@ public isGrEnabled(status: string): boolean {
     return roles.includes('Coord') || roles.includes('coord');
   }
 
+  // ==========================================
+  // LÓGICA DE CONTROL DE ACCESO BASADO EN RECURSOS (ABAC)
+  // ==========================================
 
+  /**
+   * Evalúa si el usuario activo tiene permisos de gestión sobre el requerimiento.
+   * Se requiere ser Administrador, Coordinador, o ser un Consultor CSPE asignado explícitamente a este requerimiento.
+   */
+  public canManageRequirement(req: RequirementDashboard): boolean {
+    const roles = this.user()?.roles || [];
+    
+    // Coordinadores y Administradores tienen control total
+    if (roles.includes('Coord') || roles.includes('Admin') || roles.includes('admin')) {
+      return true;
+    }
+
+    const myUserId = this.user()?.id;
+    
+    // Copia la data a una variable local para tratarla
+    let consultores = req.cspe_consultants;
+
+    // Si el backend (o Redis) envia un String en lugar de un Array, se parsea
+    if (typeof consultores === 'string') {
+      try {
+        consultores = JSON.parse(consultores);
+      } catch (e) {
+        consultores = []; // Si falla el parseo, asumimos arreglo vacío
+        console.log(e)
+      }
+    }
+    
+    // 🟢 Validación estricta: Solo usamos .some() si estamos 100% seguros de que es un Array
+    if (Array.isArray(consultores) && consultores.length > 0) {
+      const consultoresArray = consultores as { person_id: string }[];
+      return consultoresArray.some(consultant => consultant.person_id === myUserId);
+    }
+
+    return false;
+  }
 
 }
-
 
