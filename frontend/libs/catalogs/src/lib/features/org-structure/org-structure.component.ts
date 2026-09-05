@@ -92,7 +92,7 @@ export class OrgStructureComponent implements OnInit {
           this.isLoading.set(false);
           console.error('Error al cargar árbol organizacional:', err);
 
-          // 🟢 Evaluamos si el backend nos rechazó por permisos (403)
+          // Evalua si el backend nos rechazó por permisos (403)
           if (err.status === 403) {
             // Extraemos el mensaje real de Laravel o usamos uno por defecto
             const forbiddenMessage = err.error?.message || 'No tiene permisos para ver esta estructura.';
@@ -247,7 +247,7 @@ export class OrgStructureComponent implements OnInit {
   // MÉTODO PARA ALTERNAR ESTATUS (PATCH)
   // ==========================================
   async toggleStatus(nodeType: 'societies' | 'systems' | 'requesting-units', id: string, currentStatus: boolean, name: string): Promise<void> {
-    const actionText = currentStatus ? 'Inactivar' : 'Activar';
+    const actionText = currentStatus ? 'Desactivar' : 'Activar';
     
     // Usamos el servicio de notificaciones para confirmar la acción
     const confirmed = await this.notificationService.confirm(

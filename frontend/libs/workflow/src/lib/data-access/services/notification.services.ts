@@ -14,10 +14,10 @@ export class NotificationService  {
       toast: true,
       position: 'top-end',
       showConfirmButton: false,
-      timer: 3000
+      timer: 3000,
+      timerProgressBar: true
     });
   }
-
 
   public showSuccess(title: string, message: string): void {
     Swal.fire({
@@ -27,16 +27,13 @@ export class NotificationService  {
       confirmButtonText: 'OK',
       buttonsStyling: false, 
       customClass: {
-        confirmButton: 'btn btn-secondary rounded-pill px-5 py-2 fw-bold shadow-sm',
+        confirmButton: 'btn btn-tbl-success rounded-pill px-5 py-2 fw-bold shadow-sm',
         popup: 'rounded-4 border-top border-4 border-brand',
         title: 'fs-4 text-dark fw-bold'
       }
     });
   }
 
-  /**
-   * Alerta de Error con estilo corporativo (Opcional, pero recomendado)
-   */
   public showError(title: string, message: string): void {
     Swal.fire({
       title: title,
@@ -45,13 +42,12 @@ export class NotificationService  {
       confirmButtonText: 'Entendido',
       buttonsStyling: false, 
       customClass: {
-        confirmButton: 'btn btn-secondary rounded-pill px-5 py-2 fw-bold shadow-sm',
+        confirmButton: 'btn btn-tbl-close rounded-pill px-5 py-2 fw-bold shadow-sm',
         popup: 'rounded-4 border-top border-4 border-brand',
         title: 'fs-4 text-dark fw-bold'
       }
     });
   }
-
 
   public showWarning(title: string, message: string): void {
     Swal.fire({
@@ -61,30 +57,14 @@ export class NotificationService  {
       confirmButtonText: 'Entendido',
       buttonsStyling: false, 
       customClass: {
-        confirmButton: 'btn btn-secondary rounded-pill px-5 py-2 fw-bold shadow-sm', 
+        confirmButton: 'btn btn-tbl-close rounded-pill px-5 py-2 fw-bold shadow-sm', 
         popup: 'rounded-4 border-top border-4 border-brand',
         title: 'fs-4 text-dark fw-bold'
       }
     });
   }
 
-
-  
-
-  // showError(title: string, message: string): void {
-  //   Swal.fire(title, message, 'error');
-  // }
-
-  // showSuccess(title: string, message: string): void {
-  //   Swal.fire(title, message, 'success');
-  // }
-
-  // showWarning(title: string, message: string): void {
-  //   Swal.fire(title, message, 'warning');
-  // }
-
-
-  async confirm(title: string, htmlContent: string, confirmButtonText= 'Sí, continuar'): Promise<boolean> {
+  async confirm(title: string, htmlContent: string, confirmButtonText= 'Si, continuar'): Promise<boolean> {
     return Swal.fire({
       title: title,
       html: htmlContent, 
@@ -95,8 +75,50 @@ export class NotificationService  {
       buttonsStyling: false, 
       customClass: {
         // Inyectamos tus clases de Bootstrap y la clase corporativa morada
-        confirmButton: 'btn btn-success rounded-pill px-4 mx-2 fw-bold shadow-sm', 
-        cancelButton: 'btn btn-outline-secondary rounded-pill px-4 mx-2 fw-medium',
+        confirmButton: 'btn btn-tbl-success rounded-pill px-4 mx-2 fw-bold shadow-sm', 
+        cancelButton: 'btn btn-tbl-close rounded-pill px-4 mx-2 fw-medium',
+        popup: 'rounded-4 border-top border-4 border-brand',
+        title: 'fs-4 text-dark fw-bold'
+      }
+    }).then((result) => {
+      return result.isConfirmed;
+    });
+  }
+
+  async confirmDelete(title: string, htmlContent: string, confirmButtonText= 'Si, Borrar'): Promise<boolean> {
+    return Swal.fire({
+      title: title,
+      html: htmlContent, 
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: confirmButtonText,
+      cancelButtonText: 'Cancelar',
+      buttonsStyling: false, 
+      customClass: {
+        // Inyectamos tus clases de Bootstrap y la clase corporativa morada
+        confirmButton: 'btn btn-tbl-delete rounded-pill px-4 mx-2 fw-bold shadow-sm', 
+        cancelButton: 'btn btn-tbl-close rounded-pill px-4 mx-2 fw-medium',
+        popup: 'rounded-4 border-top border-4 border-brand',
+        title: 'fs-4 text-dark fw-bold'
+      }
+    }).then((result) => {
+      return result.isConfirmed;
+    });
+  }
+
+  async confirmClosure(title: string, htmlContent: string, confirmButtonText= 'Si, Cerrar Fase'): Promise<boolean> {
+    return Swal.fire({
+      title: title,
+      html: htmlContent, 
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: confirmButtonText,
+      cancelButtonText: 'Cancelar',
+      buttonsStyling: false, 
+      customClass: {
+        // Inyectamos tus clases de Bootstrap y la clase corporativa morada
+        confirmButton: 'btn btn-tbl-planning rounded-pill px-4 mx-2 fw-bold shadow-sm', 
+        cancelButton: 'btn btn-tbl-close rounded-pill px-4 mx-2 fw-medium',
         popup: 'rounded-4 border-top border-4 border-brand',
         title: 'fs-4 text-dark fw-bold'
       }
@@ -116,10 +138,15 @@ export class NotificationService  {
         'aria-label': placeholder
       },
       showCancelButton: true,
-      confirmButtonColor: '#198754',
-      cancelButtonColor: '#6c757d',
       confirmButtonText: 'Cerrar y Bloquear',
       cancelButtonText: 'Cancelar',
+      customClass: {
+        // Inyectamos tus clases de Bootstrap y la clase corporativa morada
+        confirmButton: 'btn btn-tbl-planning rounded-pill px-4 mx-2 fw-bold shadow-sm', 
+        cancelButton: 'btn btn-tbl-close rounded-pill px-4 mx-2 fw-medium',
+        popup: 'rounded-4 border-top border-4 border-brand',
+        title: 'fs-4 text-dark fw-bold'
+      },
       preConfirm: (text) => {
         if (!text || text.trim().length < 10) {
           Swal.showValidationMessage('Debe ingresar una justificación de al menos 10 caracteres.');

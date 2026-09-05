@@ -11,19 +11,19 @@
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content shadow-lg border-0 estimation-card">
       <!-- Cabecera del Modal -->
-      <div
-        class="modal-header brand-gradient text-white pt-3 pb-3 border-bottom-0"
-      >
+      <div class="modal-header pt-3 pb-3 border-bottom-0">
         <h5 class="mb-0 fw-bold d-flex align-items-center">
           <i class="bi bi-calendar-range me-2 fs-4"></i>
           Estimación del Requerimiento
         </h5>
         <button
           type="button"
-          class="btn-close btn-close-white shadow-none"
-          aria-label="Cerrar"
+          class="close-btn"
           (click)="closeModal.emit()"
-        ></button>
+          aria-label="Close"
+        >
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
       </div>
 
       <div class="modal-body bg-white p-4">
@@ -41,7 +41,7 @@
             {{ requirementCode() }}
           </span>
         </div>
-        <hr>
+        <hr />
 
         @if (isLoadingData()) {
           <div
@@ -195,7 +195,7 @@
             <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top">
               <button
                 type="button"
-                class="btn btn-outline-secondary px-4 rounded-pill fw-semibold"
+                class="btn btn-tbl-close px-4 rounded-pill fw-semibold"
                 (click)="closeModal.emit()"
               >
                 <i class="bi bi-x-circle me-1"></i> Cancelar
@@ -204,7 +204,7 @@
               @if (!isLocked()) {
                 <button
                   type="button"
-                  class="btn  btn-outline-success px-4 rounded-pill fw-semibold"
+                  class="btn btn-tbl-success px-4 rounded-pill fw-semibold"
                   (click)="onSaveDraft()"
                   [disabled]="estimationForm.invalid || isSubmitting()"
                 >
@@ -214,7 +214,7 @@
                 @if (hasSavedData()) {
                   <button
                     type="button"
-                    class="btn btn-primary px-4 rounded-pill shadow-sm fw-semibold"
+                    class="btn btn-tbl-planning px-4 rounded-pill shadow-sm fw-semibold"
                     (click)="onConfirmClosePhase()"
                     [disabled]="estimationForm.invalid || isSubmitting()"
                   >

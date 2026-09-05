@@ -2,35 +2,46 @@
 
 <div class="modal-overlay">
   <div class="modal-container modal-xl">
-    
     <!-- Header del Modal -->
-    <header class="modal-header d-flex justify-content-between align-items-center brand-gradient">
+    <header
+      class="modal-header d-flex justify-content-between align-items-center"
+    >
       <h3 class="m-0 text-white fw-bold">
-        <i class="fas fa-users-cog me-2"></i> Directorio de Fichas Unificadas de Persona
+        <i class="fas fa-users-cog me-2"></i> Directorio de Fichas Unificadas de
+        Persona
       </h3>
-      <button class="close-btn" type="button" (click)="onClose()" title="Cerrar modal">
-        <i class="bi bi-x"></i>
+      <button
+        class="close-btn"
+        type="button"
+        (click)="onClose()"
+        title="Cerrar modal"
+      >
+        <i class="fa-solid fa-circle-xmark me-2"></i>
       </button>
     </header>
 
     <!-- Body del Modal -->
     <div class="modal-body">
-      
       <!-- Barra de Acciones Superiores -->
       <div class="d-flex justify-content-between align-items-center mb-3">
         <!-- Buscador Reactivo -->
         <div class="input-group w-50">
-          <span class="input-group-text bg-light border-end-0 border-brand"><i class="fas fa-search text-muted"></i></span>
-          <input 
-            type="text" 
-            class="form-control border-start-0 border-brand ps-0 shadow-none" 
-            [formControl]="searchControl" 
+          <span class="input-group-text bg-light border-end-0 border-brand"
+            ><i class="fas fa-search text-muted"></i
+          ></span>
+          <input
+            type="text"
+            class="form-control border-start-0 border-brand ps-0 shadow-none"
+            [formControl]="searchControl"
             placeholder="Filtrar por nombre, apellido o correo..."
           />
         </div>
 
         <!-- Botón para Registrar Nueva Persona (Dentro del modal de listado) -->
-        <button class="btn btn-success rounded-pill d-flex align-items-center gap-2 px-4" (click)="openCreateModal()">
+        <button
+          class="btn btn-success rounded-pill d-flex align-items-center gap-2 px-4 fw-semibold btn-tbl-success"
+          (click)="openCreateModal()"
+        >
           <i class="fas fa-user-plus"></i> Nueva Ficha Unificada
         </button>
       </div>
@@ -43,18 +54,20 @@
               <div class="spinner-border text-brand" role="status">
                 <span class="visually-hidden">Cargando...</span>
               </div>
-              <p class="text-muted mt-2">Consultando registros en el dominio de seguridad...</p>
+              <p class="text-muted mt-2">
+                Consultando registros en el dominio de seguridad...
+              </p>
             </div>
           } @else {
             <div class="table-responsive">
-              <table class="table  table-hover align-middle mb-0">
+              <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                   <tr>
                     <th class="ps-4">Nombre Completo</th>
                     <th>Correo Electrónico</th>
                     <th>Teléfono</th>
                     <th class="text-center">Perfiles Asignados</th>
-                    <th class="text-end pe-4">Acciones</th>
+                    <th class="text-end pe-5">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -68,26 +81,51 @@
                       <td class="text-center">
                         <div class="d-flex justify-content-center gap-1">
                           @if (person.has_system_access) {
-                            <span class="badge bg-info text-dark" title="Posee cuenta de Usuario del Sistema">Usuario</span>
+                            <span
+                              class="badge bg-info text-dark"
+                              title="Posee cuenta de Usuario del Sistema"
+                              >Usuario</span
+                            >
                           }
                           @if (person.is_functional) {
-                            <span class="badge bg-dark text-white" title="Consultor Funcional Asignado">Funcional</span>
+                            <span
+                              class="badge bg-dark text-white"
+                              title="Consultor Funcional Asignado"
+                              >Funcional</span
+                            >
                           }
                           @if (person.is_cspe) {
-                            <span class="badge bg-primary text-white" title="Consultor Técnico CSPE">CSPE</span>
+                            <span
+                              class="badge bg-primary text-white"
+                              title="Consultor Técnico CSPE"
+                              >CSPE</span
+                            >
                           }
-                          @if (!person.has_system_access && !person.is_functional && !person.is_cspe) {
+                          @if (
+                            !person.has_system_access &&
+                            !person.is_functional &&
+                            !person.is_cspe
+                          ) {
                             <span class="badge bg-secondary">Base</span>
                           }
                         </div>
                       </td>
                       <td class="text-end pe-4">
-                        <div class="btn-group btn-group-sm">
-                          <button class="btn btn-sm btn-outline-warning rounded-pill px-3 me-2" title="Editar Ficha" (click)="openEditModal(person.id)">
-                            <i class="fas fa-edit"></i>
+                        <div class="btn-group btn-group-sm gap-2"> 
+                          <button
+                            class="btn btn-sm btn-tbl-edit rounded-pill px-3 me-2 c-table"
+                            (click)="openEditModal(person.id)"
+                            title="Editar Ficha"
+                          >
+                            <i class="fa-solid fa-pen-to-square"></i>
                           </button>
-                          <button class="btn btn-sm btn-outline-danger rounded-pill px-3" title="Desactivar Ficha" (click)="onDelete(person)">
-                            <i class="fas fa-trash-alt"></i>
+                          
+                          <button
+                            class="btn btn-sm btn-tbl-delete rounded-pill px-3 c-table"
+                            (click)="onDelete(person)"
+                            title="Eliminar Ficha"
+                          >
+                            <i class="fa-solid fa-trash-can"></i>
                           </button>
                         </div>
                       </td>
@@ -95,7 +133,8 @@
                   } @empty {
                     <tr>
                       <td colspan="5" class="text-center py-4 text-muted">
-                        No se encontraron registros de identidades unificadas en el sistema.
+                        No se encontraron registros de identidades unificadas en
+                        el sistema.
                       </td>
                     </tr>
                   }
@@ -106,43 +145,52 @@
         </div>
 
         <!-- Footer de Paginación -->
-        <div class="card-footer bg-white py-3 d-flex justify-content-between align-items-center">
-          <span class="text-muted small">Página {{ currentPage() }} de {{ totalPages() }}</span>
+        <div
+          class="card-footer bg-white py-3 d-flex justify-content-between align-items-center"
+        >
+          <span class="text-muted small"
+            >Página {{ currentPage() }} de {{ totalPages() }}</span
+          >
           <div class="btn-group">
-            <button 
-              class="btn btn-outline-secondary btn-sm" 
-              [disabled]="currentPage() === 1" 
-              (click)="changePage(currentPage() - 1)">
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              [disabled]="currentPage() === 1"
+              (click)="changePage(currentPage() - 1)"
+            >
               Anterior
             </button>
-            <button 
-              class="btn btn-outline-secondary btn-sm" 
-              [disabled]="currentPage() === totalPages()" 
-              (click)="changePage(currentPage() + 1)">
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              [disabled]="currentPage() === totalPages()"
+              (click)="changePage(currentPage() + 1)"
+            >
               Siguiente
             </button>
           </div>
         </div>
       </div>
-
     </div>
 
     <!-- Footer del Modal Principal -->
     <footer class="modal-footer">
-      <button type="button" class="btn btn-secondary" 
-      (click)="onClose()" title="Cerrar modal">
-        <i class="bi bi-x me-1"></i>
+      <button
+        type="button"
+        class="btn btn-outline-secondary rounded-pill  px-4 fs-6 fw-semibold btn-tbl-close"
+        (click)="onClose()"
+        title="Cerrar modal"
+      >
+        <i class="fa-solid fa-circle-xmark me-2"></i>
         Cerrar
       </button>
     </footer>
-
   </div>
 </div>
 
 <!-- Sub-Modal para Crear o Editar (Se despliega condicionalmente) -->
 @if (showFormModal()) {
-  <lib-unified-person-modal 
-    [personId]="selectedPersonId()" 
-    (modalClosed)="closeFormModal()">
+  <lib-unified-person-modal
+    [personId]="selectedPersonId()"
+    (modalClosed)="closeFormModal()"
+  >
   </lib-unified-person-modal>
 }

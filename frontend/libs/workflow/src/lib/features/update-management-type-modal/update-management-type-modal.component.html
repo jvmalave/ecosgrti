@@ -6,18 +6,20 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg rounded-4">
       <div
-        class="modal-header brand-gradient text-white rounded-top-4 border-0"
+        class="modal-header rounded-top-4 border-0"
       >
         <h5 class="modal-title fw-bold">
           <i class="bi bi-gear-fill me-2"></i> Actualizar Tipo de Gestión
         </h5>
         <button
           type="button"
-          class="btn-close btn-close-white"
-          aria-label="Cerrar"
+          class="close-btn"
           (click)="closeModal.emit()"
           [disabled]="isSubmitting()"
-        ></button>
+          aria-label="Close"
+        >
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
       </div>
 
       <div class="modal-body p-4 bg-light">
@@ -33,7 +35,7 @@
               role="button"
               tabindex="0"
               [class.border-primary]="selectedType() === option.id"
-              [class.bg-white]="selectedType() !== option.id"
+              [class.bg-secondary-subtle]="selectedType() !== option.id"
               [style.background-color]="
                 selectedType() === option.id ? '#f0f5ff' : ''
               "
@@ -75,19 +77,19 @@
             </div>
           }
         </div>
-        <div class="modal-footer bg-white border-top-0 rounded-bottom-4 mt-4">
+        <div class="modal-footer bg-white border-top-0 rounded-bottom-4 mt-4 gap-3">
           <button
             type="button"
-            class="btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+            class="btn btn-tbl-close rounded-pill px-4 fw-semibold"
             (click)="closeModal.emit()"
             [disabled]="isSubmitting()"
           >
-            <i class="bi bi-x-circle me-1"></i> Cancelar
+            <i class="fa-solid fa-circle-xmark me-2"></i> Cancelar
           </button>
 
           <button
             type="button"
-            class="btn btn-warning rounded-pill px-4 shadow-sm fw-semibold"
+            class="btn btn-tbl-edit rounded-pill px-4 shadow-sm fw-semibold"
             (click)="onSubmit()"
             [disabled]="isSubmitting()"
           >

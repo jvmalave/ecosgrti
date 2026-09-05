@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\Route;
 
 
 // Middleware a todo el grupo de workflow para centralizar la seguridad
-Route::middleware(['auth:api'])->prefix('workflow')->group(function () {
+Route::middleware(['auth:api', 'password.expired'])->prefix('workflow')->group(function () {
 
   // Middeleware RBAC para los usuarios autorizados a acceder al modulo workflow
   Route::middleware(['role:Admin,Coord,ConsCSPE'])->group(function () {

@@ -1,23 +1,28 @@
 <div class="bg-white rounded overflow-hidden" style="position: relative">
+  <!-- Header: Estilo Corporativo CANTV -->
   <div
-    class="modal-header brand-gradient pb-3 pt-4 px-4 d-flex justify-content-between align-items-center"
+    class="modal-header pb-3 pt-4 px-4 d-flex justify-content-between align-items-center"
   >
     <h4 class="mb-0 fw-bold d-flex align-items-center text-white">
       @if (isEditing()) {
         <i class="fa-solid fa-pen-to-square me-2 fs-5"></i>
+      } @else {
+        <i class="fa-solid fa-file-lines me-2 fs-5"></i>
       }
       {{ isEditing() ? 'Editando Requerimiento' : 'Detalles de Requerimiento' }}
     </h4>
+
     <button
       type="button"
-      class="btn-close btn-close-white shadow-none"
-      aria-label="Close"
+      class="close-btn"
       (click)="closeModal()"
-    ></button>
+      aria-label="Close"
+    >
+      <i class="fa-solid fa-circle-xmark"></i>
+    </button>
   </div>
-
   <div class="modal-body p-4 bg-light">
-    <!-- Bloque Izquierdo: Código del Requerimiento -->
+    <!-- Identificador del Requerimiento -->
     <div class="d-flex align-items-center">
       <span class="text-muted fw-bold me-2 fs-6">Requerimiento:</span>
       <span
@@ -31,8 +36,9 @@
         {{ editForm.get('rrti')?.value }}
       </span>
     </div>
-
+    <hr class="my-4" />
     <div class="modal-body p-4">
+      <!-- Banner de inmutabilidad del requerimiento -->
       @if (currentRequirement()?.status === 'RF') {
         <div
           class="alert alert-success d-flex align-items-center mb-4 shadow-sm border-success border-rounded"
@@ -46,10 +52,11 @@
           </div>
         </div>
       }
-
+      <!-- Section de Avance del Requerimiento -->
       <div class="mb-4 bg-light p-3 rounded border">
-        <h5 class="text-muted mb-3">
-          <i class="fa-solid fa-chart-line me-2"></i> Avance del Requerimiento
+        <h5 class="text-muted mb-3 fw-medium">
+          <i class="fa-solid fa-chart-line text-brand me-2"></i> Avance del
+          Requerimiento
         </h5>
 
         <lib-progress-dashboard
@@ -60,27 +67,13 @@
           >
         </lib-progress-dashboard>
       </div>
-
-      <div
-        class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom"
-      >
-        <!-- <div>
-          @if (!isEditing()) {
-            <button
-              class="btn btn-outline-danger rounded-pill fw-bold px-4 shadow-sm"
-              (click)="iniciarBorradoLogico()"
-            >
-              <i class="bi-solid bi-trash me-2"></i>
-              Eliminar Requerimiento
-            </button>
-          }
-        </div> -->
-
+      <!-- Botones de eliminar requerimiento y actualizar requerimiento -->
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3">
         <div>
           <!-- Agregg la validación && req.status !== 'RF' -->
           @if (!isEditing() && currentRequirement()?.status !== 'RF') {
             <button
-              class="btn btn-outline-danger rounded-pill fw-bold px-4 shadow-sm"
+              class="btn btn-tbl-delete rounded-pill fw-bold px-4 shadow-sm"
               (click)="iniciarBorradoLogico()"
             >
               <i class="bi-solid bi-trash me-2"></i>
@@ -88,11 +81,10 @@
             </button>
           }
         </div>
-
         <div class="d-flex gap-2">
           @if (!isEditing()) {
             <button
-              class="btn btn-warning rounded-pill px-4"
+              class="btn btn-tbl-edit rounded-pill px-4"
               (click)="enableEditing()"
               [disabled]="
                 currentRequirement()?.is_locked ||
@@ -101,7 +93,6 @@
             >
               <i class="bi bi-pencil-square me-2"></i>Actualizar Requerimiento
             </button>
-            
           } @else {
             <button
               class="btn btn-outline-secondary rounded-pill px-4"
@@ -120,8 +111,13 @@
           }
         </div>
       </div>
-
+      <hr class="my-4" />
+      <!-- Seccion de Datos Generales del Requerimiento -->
       <form [formGroup]="editForm">
+        <span class="d-block small text-muted mb-3 fs-5 fw-medium"
+          ><i class="fa-solid fa-list text-brand me-2"></i>Datos Generales del
+          Requerimiento
+        </span>
         <div class="row g-4 mb-4">
           <!-- Identificador del requerimiento -->
           <div class="col-md-3">
@@ -129,12 +125,12 @@
             @if (isEditing()) {
               <input
                 type="text"
-                class="form-control border-brand fw-bold"
+                class="form-control border-brand"
                 formControlName="rrti"
               />
             } @else {
               <div
-                class="p-2 border rounded bg-light text-muted input-locked fs-6 fw-semibold"
+                class="p-2 border rounded bg-secondary-subtle text-muted input-locked fs-6 fw-semibold"
               >
                 {{ editForm.get('rrti')?.value }}
               </div>
@@ -142,7 +138,9 @@
           </div>
           <!--  Fecha creacion del requerimiento -->
           <div class="col-md-3">
-            <span class="d-block fw-semibold mb-2 text-muted">Fecha de Creación</span>
+            <span class="d-block fw-semibold mb-2 text-muted"
+              >Fecha de Creación</span
+            >
             @if (isEditing()) {
               <input
                 type="date"
@@ -151,7 +149,7 @@
               />
             } @else {
               <div
-                class="p-2 border rounded bg-light text-muted input-locked fs-6 fw-semibold"
+                class="p-2 border rounded bg-secondary-subtle text-muted input-locked fs-6 fw-semibold"
               >
                 {{ editForm.get('creation_date')?.value | date: 'dd/MM/yyyy' }}
               </div>
@@ -159,7 +157,9 @@
           </div>
           <!-- Tipo Requerimiento -->
           <div class="col-md-3">
-            <span class="d-block fw-semibold mb-2 text-muted">Tipo Requerimiento</span>
+            <span class="d-block fw-semibold mb-2 text-muted"
+              >Tipo Requerimiento</span
+            >
             @if (isEditing()) {
               <select
                 class="form-select border-brand"
@@ -171,7 +171,9 @@
                 }
               </select>
             } @else {
-              <div class="p-2 border rounded bg-light text-muted fs-6 fw-semibold">
+              <div
+                class="p-2 border rounded bg-secondary-subtle text-muted fs-6 fw-semibold"
+              >
                 {{ editForm.get('requirement_type')?.value | uppercase }}
               </div>
             }
@@ -190,7 +192,9 @@
                 }
               </select>
             } @else {
-              <div class="p-2 border rounded bg-light text-muted fs-6 fw-semibold">
+              <div
+                class="p-2 border rounded bg-secondary-subtle text-muted fs-6 fw-semibold"
+              >
                 {{ editForm.get('management_type')?.value | uppercase }}
               </div>
             }
@@ -210,7 +214,7 @@
               ></textarea>
             } @else {
               <div
-                class="p-3 border rounded bg-light text-muted fs-6"
+                class="p-3 border rounded bg-secondary-subtle text-muted fs-6"
                 style="min-height: 80px"
               >
                 {{ editForm.get('description')?.value }}
@@ -218,10 +222,12 @@
             }
           </div>
         </div>
-        <div class="row g-4 mb-4 border-top pt-3">
+        <hr class="my-4" />
+        <!-- Seccion de Estructura Organizacional y Consultores Asignados -->
+        <div class="row g-4 mb-4">
           <div class="col-12 mb-2">
-            <span class="d-block small text-muted fw-bold mb-2 fs-6"
-              ><i class="fa-solid fa-sitemap me-2 text-brand"></i>Jerarquía
+            <span class="d-block text-muted fw-medium mb-2 fs-5"
+              ><i class="fa-solid fa-sitemap text-brand me-2"></i>Jerarquía
               Organizacional Histórica</span
             >
             <div
@@ -260,7 +266,7 @@
               </select>
             } @else {
               <div
-                class="p-2 border rounded bg-light text-muted fw-semibold border-start border-4"
+                class="p-2 border rounded bg-secondary-subtle text-muted fw-semibold border-start border-4"
                 style="border-left-color: #d500f9 !important"
               >
                 {{ selectedConsultantName() }}
@@ -300,14 +306,16 @@
             </div>
           </div>
         </div>
-        <div class="row g-4 border-top pt-3">
+        <hr class="my-4" />
+        <!-- Seccion de Documentos Adjuntos -->
+        <div class="row g-4">
           <div class="col-12">
-            <h6 class="fw-bold text-muted mb-3">
-              <i class="fa-solid fa-paperclip me-2 text-brand"></i>Documentos
+            <h6 class="fw-medium text-muted fs-5">
+              <i class="fa-solid fa-paperclip text-brand me-2"></i>Documentos
               Adjuntos
             </h6>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-6 px-3">
             <span class="d-block small text-muted fs-6 fw-bold mb-2"
               >Notificación RRTI (PDF)</span
             >
@@ -324,9 +332,10 @@
                 <button
                   type="button"
                   (click)="openPrivateDoc(attachedDocs().itReq)"
-                  class="btn btn-info btn-sm rounded-pill px-4 fs-6 fw-medium"
+                  class="btn btn-tbl-info rounded-pill px-4 fs-6 fw-semibold"
                 >
-                  <i class="fa-solid fa-file-pdf me-2"></i> Ver Notificación RRTI
+                  <i class="fa-solid fa-file-pdf me-2"></i> Ver Notificación
+                  RRTI
                 </button>
               } @else {
                 <span class="text-muted small"
@@ -335,7 +344,7 @@
               }
             </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-6 px-3">
             <span class="d-block small text-muted fw-bold fs-6 mb-2"
               >Planilla de Necesidades (PDF)</span
             >
@@ -352,9 +361,9 @@
                 <button
                   type="button"
                   (click)="openPrivateDoc(attachedDocs().needsSpread)"
-                  class="btn btn-info btn-sm rounded-pill px-3 fs-6 fw-medium"
+                  class="btn btn-tbl-info rounded-pill px-3 fs-6 fw-semibold"
                 >
-                <i class="fa-solid fa-file-pdf me-2"> </i>
+                  <i class="fa-solid fa-file-pdf me-2"> </i>
                   Ver Planilla de Necesidades
                 </button>
               } @else {

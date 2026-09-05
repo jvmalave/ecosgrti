@@ -13,7 +13,7 @@ use App\Domains\Core\Http\Controllers\RequirementClosureController;
 
 
 
-Route::prefix('core')->middleware('auth:api')->group(function () {
+Route::prefix('core')->middleware(['auth:api', 'password.expired' ])->group(function () {
 
 
     Route::get('/requirements/download-doc', [RequirementController::class, 'downloadDocument']);

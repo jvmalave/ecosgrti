@@ -9,8 +9,9 @@
 >
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content shadow-lg border-0 rounded-4">
+      <!-- Cabecera -->
       <div
-        class="modal-header brand-gradient text-white rounded-top-4 border-0 pt-3 pb-3 px-4"
+        class="modal-header rounded-top-4 border-0 pt-3 pb-3 px-4"
       >
         <h5
           class="modal-title fw-bold fs-5 d-flex align-items-center mb-0"
@@ -24,17 +25,21 @@
             <i class="bi bi-plus-circle me-2"></i> Registrar Nuevo Entregable
           }
         </h5>
+    
         <button
           type="button"
-          class="btn-close btn-close-white"
+          class="close-btn"
           (click)="closeModal.emit()"
           [disabled]="isSubmitting()"
           aria-label="Cerrar modal"
-        ></button>
+        >
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
       </div>
-
+      <!-- Formulario para Entregables -->
       <div class="modal-body p-4 bg-light">
         <form [formGroup]="deliverableForm" (ngSubmit)="onSubmit()">
+          <!-- Nombre del Entregable -->
           <div class="mb-3">
             <label for="nameInput" class="form-label fw-semibold text-dark"
               >Nombre del Entregable <span class="text-danger">*</span></label
@@ -45,6 +50,7 @@
               class="form-control shadow-sm"
               formControlName="name"
               placeholder="Ej: Documento de Arquitectura"
+              aria-label="nameInput"
               [class.is-invalid]="
                 deliverableForm.get('name')?.invalid &&
                 deliverableForm.get('name')?.touched
@@ -57,7 +63,7 @@
               <div class="invalid-feedback">El nombre es obligatorio.</div>
             }
           </div>
-
+          <!-- Descripción del Entregable-->
           <div class="mb-4">
             <label
               for="descriptionTextarea"
@@ -70,6 +76,7 @@
               rows="4"
               formControlName="description"
               placeholder="Describa el entregable..."
+              aria-label="descriptionTextarea"
               [class.is-invalid]="
                 deliverableForm.get('description')?.invalid &&
                 deliverableForm.get('description')?.touched
@@ -81,36 +88,27 @@
             @if (isViewMode()) {
               <button
                 type="button"
-                class="btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+                class="btn btn-tbl-close rounded-pill px-4 fw-semibold"
                 (click)="closeModal.emit()"
               >
-                Cerrar
+                <i class="fa-solid fa-circle-xmark me-2"></i>Cerrar
               </button>
               @if (!isPhaseClosed()) {
                 <button
                   type="button"
-                  class="btn btn-sm btn-warning rounded-pill px-4 shadow-sm fw-semibold"
+                  class="btn btn-sm btn-tbl-edit rounded-pill px-4 shadow-sm fw-semibold"
                   (click)="enableEdit()"
                 >
                   <i class="fa-solid fa-pencil"></i> Actualizar
                 </button>
               }
             } @else {
-              <!-- <button type="button" class="btn btn-sm btn-outline-brand rounded-pill px-4 fw-semibold" (click)="closeModal.emit()" [disabled]="isSubmitting()">Cancelar</button>
-              <button type="submit" class="btn btn-sm btn-brand rounded-pill px-4 shadow-sm" [disabled]="isSubmitting()">
-                @if (isSubmitting()) {
-                  <span class="spinner-border spinner-border-sm me-2"></span> Guardando...
-                } @else {
-                  <i class="bi bi-check2-circle me-2"></i> {{ isEditMode() ? 'Guardar Cambios' : 'Registrar' }}
-                }
-              </button> -->
-
               <button
                 type="submit"
-                class="btn btn-sm rounded-pill px-4 d-flex align-items-center shadow-sm"
-                [class.btn-warning]="isEditMode()"
+                class="btn rounded-pill px-4 d-flex align-items-center shadow-sm fw-semibold"
+                [class.btn-tbl-edit]="isEditMode()"
                 [class.text-dark]="isEditMode()"
-                [class.btn-success]="!isEditMode()"
+                [class.btn-tbl-success]="!isEditMode()"
                 [class.text-white]="!isEditMode()"
                 [disabled]="isSubmitting()"
               >

@@ -4,11 +4,91 @@
   z-index: 9999 !important;
 }
 
-
 /* ==============================================================
   BOTONES CORPORATIVOS ECOSGRTI (GLOBAL)
    ============================================================== */
 // Botón Primario Corporativo
+
+$color-magenta:  #e91e63;
+$color-purple:   #9c27b0;
+$color-fucsia:   #d500f9;
+$text-dark:      #2d3748;
+$color-blue:     #1c1ce2;
+$gradient-end:   #ff00ff;
+$gradient-start: #1c1ce2;
+$sidebar-bg:     #1c1ce2; // Un tono oscuro azulado muy elegante para el sidebar
+$text-muted:     #64748b;
+$text-white:     #ffffff;
+$color-success:  #22c55e;
+$color-danger:   #ef4444;
+
+
+.modal-header {
+  padding: 1.25rem 1.5rem !important;
+  background: linear-gradient(90deg, $gradient-start 80%, $gradient-end 100%) !important;
+  color: white !important;
+  display: flex !important;
+  justify-content: space-between  !important;
+  align-items: center !important;
+
+  h2, h3 {
+    color: white !important;
+    margin: 0    !important;
+    font-size: 1.25rem  !important;
+    font-weight: 600   !important;
+  }
+
+  .close-btn {
+    background: transparent !important;
+    border: none  !important;
+    color: white  !important;
+    font-size: 1.75rem  !important;
+    line-height: 1  !important;
+    cursor: pointer  !important;
+    transition: transform 0.2s ease !important;
+
+    &:hover {
+      transform: scale(1.3) !important;
+      color: $text-white !important;
+      font-weight: bold  !important;
+    }
+  }
+}
+
+.border-brand {
+  border-color: rgba($color-purple, 0.4) !important;
+  &:focus {
+    box-shadow: 0 0 0 0.25rem rgba($color-purple, 0.25) !important;
+    border-color: $color-fucsia !important;
+  }
+}
+
+.text-blue {
+  color: $color-blue !important;
+}
+
+.text-brand {
+  color: #d500f9 !important;
+}
+
+.badge-requirement {
+  background-color: #f3e8f5 !important; 
+  color: $color-purple !important;
+  border: 1px solid $color-purple !important;
+}
+
+.badge-component {
+  background-color: $color-blue !important; 
+  color: $text-white !important;
+  border: 1px solid $color-blue !important;
+}
+
+
+
+
+
+
+
 .btn-brand {
   background: linear-gradient(90deg, #aa00ff 0%, #d500f9 100%);
   color: white;
@@ -31,10 +111,157 @@
   }
 }
 
-.border-brand {
-  border-color: rgba(213, 0, 249, 0.4) !important;
-  &:focus {
-    box-shadow: 0 0 0 0.25rem rgba(213, 0, 249, 0.25);
-    border-color: #d500f9 !important;
+
+
+
+
+/* ==========================================================================
+  PALETA SEMÁNTICA DEL ORQUESTADOR (Cumplimiento WCAG 2.1)
+   ========================================================================== */
+
+// Definición de Variables de Color (Alto Contraste)
+$color-phase-planning:     #0056b3; // Azul Zafiro
+$color-phase-construction: #b8008a; // Fucsia Corporativo
+$color-phase-validation:   #c45e00; // Naranja Óxido
+$color-phase-success:      #0a7543; // Verde Esmeralda Oscuro
+$color-phase-inactive:     #6c757d; // Gris Neutro (Bootstrap text-muted)
+$color-phase-info:         #087990; // Teal/Azul profundo de alto contraste para detalles
+$color-action-edit:        #d97706; // Ámbar/Naranja oscuro (Alto contraste para edición)
+$color-action-delete:      #dc3545; // Rojo Carmesí (Peligro / Eliminación)
+
+// Mixin para generar la ergonomía visual (Fondo translúcido + Ícono nítido)
+@mixin orchestrator-action-button($base-color) {
+  background-color: rgba($base-color, 0.10) !important;
+  color: $base-color !important;
+  border: 0 !important;
+  border-radius: 1rem; // Bordes redondeados amigables
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+
+  // Forzamos el color del ícono interno
+  i, svg, .fas {
+    color: $base-color !important;
   }
+
+  // Efecto sutil de elevación e intensificación al pasar el cursor
+  &:hover {
+    background-color: rgba($base-color, 0.80);
+    transform: translateY(-3px);
+    scale: 1.1;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    .bg-btn-table{
+      background-color: rgba($base-color, 0.80) !important;
+      transform: translateY(-3px);
+      scale: 1.1;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    i, svg, .fas {
+      color: $base-color !important;
+      font-weight: 800 !important;
+      scale: 1.2;
+    }
+  }
+}
+
+
+
+// Generación de las Clases Utilitarias para Angular
+.btn-phase-planning {
+  @include orchestrator-action-button($color-phase-planning);
+}
+
+.btn-phase-construction {
+  @include orchestrator-action-button($color-phase-construction);
+}
+
+.btn-phase-validation {
+  @include orchestrator-action-button($color-phase-validation);
+}
+
+.btn-phase-success {
+  @include orchestrator-action-button($color-phase-success);
+}
+
+.btn-phase-info {
+  @include orchestrator-action-button($color-phase-info);
+}
+
+.btn-action-edit {
+  @include orchestrator-action-button($color-action-edit);
+}
+
+.btn-action-delete {
+  @include orchestrator-action-button($color-action-delete);
+}
+
+
+
+// Tratamiento específico para las fases bloqueadas o futuras
+.btn-phase-inactive {
+  // Aplicamos la misma lógica del 12% de opacidad para mantener la armonía
+  background-color: rgba($color-phase-inactive, 0.12) !important;
+  color: $color-phase-inactive !important;
+  border: 0 !important; // Eliminamos el borde visible
+  border-radius: 1rem; // Mantenemos la forma de píldora
+  cursor: not-allowed;
+  opacity: 0.8;
+  
+  i, svg, .fas {
+    color: $color-phase-inactive !important;
+  }
+
+  // Anulamos cualquier efecto hover para reforzar la idea de indisponibilidad
+  &:hover {
+    transform: none;
+    background-color: rgba($color-phase-inactive, 0.12);
+    box-shadow: none;
+  }
+}
+
+// ==========================================================================
+// MIXIN Y CLASES PARA BOTONES DE TABLAS (Dashboard y Directorios)
+// ==========================================================================
+
+@mixin table-action-button($base-color) {
+  background-color: rgba($base-color, 0.12) !important;
+  color: $base-color !important;
+  border: 0 !important;
+  border-radius: 1rem;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+
+  i, svg, .fas {
+    color: $base-color !important;
+    transition: color 0.15s ease-in-out; // Transición suave del color
+  }
+
+  // EFECTO HOVER: Inversión de contraste (Fondo sólido, ícono blanco)
+  &:hover {
+    background-color: $base-color !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    scale: 1.1;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+
+
+    i, svg, .fas {
+      color: #ffffff !important;
+      scale: 1.1;
+    }
+  }
+}
+
+// Generación de clases utilitarias para tablas
+.btn-tbl-info         { @include table-action-button($color-phase-info); }
+.btn-tbl-planning     { @include table-action-button($color-phase-planning); }
+.btn-tbl-construction { @include table-action-button($color-phase-construction); }
+.btn-tbl-validation   { @include table-action-button($color-phase-validation); }
+.btn-tbl-success      { @include table-action-button($color-phase-success); }
+.btn-tbl-edit         { @include table-action-button($color-action-edit); }
+.btn-tbl-delete       { @include table-action-button($color-action-delete); }
+.btn-tbl-close        { @include table-action-button($color-phase-inactive);}
+
+// Alias para mantener coherencia semántica en el HTML de las tablas
+.btn-tbl-inactive {
+  @extend .btn-phase-inactive; 
 }

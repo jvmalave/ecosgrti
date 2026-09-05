@@ -1,33 +1,58 @@
 <!-- ======================================================== -->
 <!-- MODAL PRINCIPAL: LISTADO DE HITOS (Z-INDEX 1050)         -->
 <!-- ======================================================== -->
-<div class="modal-overlay" style="z-index: 1050;">
-  <div class="modal-container modal-xl shadow-lg border-0">
-    
-    <!-- Header Corporativo (Estilo Matrices de Progreso) -->
-    <div class="modal-header brand-gradient py-3 px-4 d-flex justify-content-between align-items-center">
-      <h2 class="modal-title text-white fs-5 fw-bold mb-0 d-flex align-items-center">
-        <i class="bi bi-sliders me-2 fs-4"></i> Catálogo Maestro de Hitos Técnicos
+<div class="modal-overlay" style="z-index: 1050">
+  <div class="modal-container shadow-lg border-0">
+    <!-- Header Corporativo -->
+    <div
+      class="modal-header py-3 px-4 d-flex justify-content-between align-items-center"
+    >
+      <h2
+        class="modal-title text-white fs-5 fw-bold mb-0 d-flex align-items-center"
+      >
+        <i class="bi bi-sliders me-2 fs-4"></i> Catálogo Maestro de Hitos
+        Técnicos
       </h2>
-      <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="closeComponent()"></button>
+      <button
+        type="button"
+        class="close-btn"
+        (click)="closeComponent()"
+        aria-label="Close"
+      >
+        <i class="fa-solid fa-circle-xmark"></i>
+      </button>
     </div>
 
     <!-- Cuerpo del Modal -->
     <div class="modal-body p-4 bg-light">
-      
       <!-- Controles: Título de sección y Filtros -->
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="h6 text-brand fw-bold mb-0">Gestión de Ponderaciones de Hitos</h3>
-        
+        <h3 class="h6 text-dark fw-bold mb-0 fs-5">
+          Gestión de Ponderaciones de Hitos
+        </h3>
+
         <div class="d-flex gap-3 align-items-center">
-          <label for="managementTypeSelect" class="form-label mb-0 small text-muted fw-semibold">Tipo de Gestión</label>
-          <select id="managementTypeSelect" class="form-select form-select-sm border-brand w-auto rounded-3 shadow-sm" (change)="onTypeChange($event)" [value]="selectedType()">
+          <label
+            for="managementTypeSelect"
+            class="form-label mb-0 text-muted fw-semibold"
+            >Tipo de Gestión</label
+          >
+          <select
+            id="managementTypeSelect"
+            class="form-select border-dark-subtle w-auto rounded-3 shadow-sm"
+            (change)="onTypeChange($event)"
+            [value]="selectedType()"
+          >
             <option value="ROLES">Roles</option>
             <option value="ENTREGABLES">Entregables</option>
             <option value="MIXTO">Mixto</option>
           </select>
-          
-          <button class="btn btn-sm btn-success rounded-pill px-4 shadow-sm d-flex align-items-center" (click)="openCreateModal()">
+
+          <button
+            class="btn btn-tbl-success rounded-pill px-4 shadow-sm d-flex align-items-center fw-semibold"
+            (click)="openCreateModal()"
+            aria-label="Agregar Hito"
+          >
             <i class="bi bi-plus-circle me-2"></i> Agregar Hito
           </button>
         </div>
@@ -37,14 +62,20 @@
       <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0 bg-white">
-            <thead class="table-light text-muted small text-uppercase fw-semibold">
+            <thead
+              class="table-light text-black small text-uppercase fw-semibold"
+            >
               <tr>
-                <th scope="col" class="ps-4 py-3">Código (Fase)</th>
-                <th scope="col" class="py-3">Fase Técnica</th>
-                <th scope="col" class="py-3">Nombre del Hito</th>
-                <th scope="col" class="py-3 text-center">Status</th>
-                <th scope="col" class="text-end py-3 pe-4">Peso Porcentual (%)</th>
-                <th scope="col" class="py-3 text-center">Posicionamiento</th>
+                <th scope="col" class="ps-4 py-3 text-dark">Código (Fase)</th>
+                <th scope="col" class="py-3 text-dark">Fase Técnica</th>
+                <th scope="col" class="py-3 text-dark">Nombre del Hito</th>
+                <th scope="col" class="py-3 text-center text-dark">Status</th>
+                <th scope="col" class="text-end py-3 pe-4 text-dark">
+                  Peso Porcentual (%)
+                </th>
+                <th scope="col" class="py-3 text-center text-dark">
+                  Posicionamiento
+                </th>
                 <th scope="col" class="text-center pe-4 py-3">Acciones</th>
               </tr>
             </thead>
@@ -59,26 +90,48 @@
               } @else {
                 @for (milestone of milestones(); track milestone.id) {
                   <tr>
-                    <td class="ps-4 fw-bold text-brand small">{{ milestone.phase_code }}</td>
-                    <td class="fw-semibold text-dark small">{{ milestone.phase }}</td>
+                    <td class="ps-4 fw-bold text-dark small">
+                      {{ milestone.phase_code }}
+                    </td>
+                    <td class="fw-semibold text-dark small">
+                      {{ milestone.phase }}
+                    </td>
                     <td class="small">{{ milestone.name }}</td>
                     <td class="text-center">
-                      <span class="badge bg-secondary rounded-pill px-3 py-1">{{ milestone.status_code }}</span>
+                      <span class="badge bg-secondary rounded-pill px-3 py-1">{{
+                        milestone.status_code
+                      }}</span>
                     </td>
                     <td class="text-end fw-bold text-dark pe-4">
-                      <div class="d-flex justify-content-end align-items-center">
+                      <div
+                        class="d-flex justify-content-end align-items-center"
+                      >
                         <span class="me-2">{{ milestone.default_weight }}</span>
-                        <span class="text-brand bg-light px-2 py-1 rounded small">%</span>
+                        <span
+                          class="text-muted bg-light px-2 py-1 rounded small"
+                          >%</span
+                        >
                       </div>
                     </td>
                     <td class="text-center small">
-                      <span class="badge bg-light text-dark rounded-pill px-3 py-1">{{ milestone.sort_order }}</span>
+                      <span
+                        class="badge bg-light text-dark rounded-pill px-3 py-1"
+                        >{{ milestone.sort_order }}</span
+                      >
                     </td>
                     <td class="text-center pe-4">
-                      <button class="btn btn-sm btn-outline-warning rounded-pill px-3 me-2" (click)="openEditModal(milestone)" title="Editar">
+                      <button
+                        class="btn btn-sm btn-tbl-edit rounded-pill px-3 me-2"
+                        (click)="openEditModal(milestone)"
+                        title="Editar"
+                      >
                         <i class="fa-solid fa-pencil"></i>
                       </button>
-                      <button class="btn btn-sm btn-outline-danger rounded-pill px-3" (click)="deleteMilestone(milestone.id)" title="Eliminar">
+                      <button
+                        class="btn btn-sm btn-tbl-delete rounded-pill px-3"
+                        (click)="deleteMilestone(milestone.id)"
+                        title="Eliminar"
+                      >
                         <i class="bi bi-trash"></i>
                       </button>
                     </td>
@@ -97,76 +150,141 @@
 <!-- MODAL INTERNO: CREAR/EDITAR HITO-->
 <!-- ======================================================== -->
 @if (showFormModal()) {
-  <div class="modal-overlay" style="z-index: 1060;">
+  <div class="modal-overlay" style="z-index: 1060">
     <div class="modal-container modal-lg shadow-lg border-0">
-      
       <!-- Header Corporativo -->
       <div class="modal-header brand-gradient py-3 px-4">
-        <h3 id="milestoneModalTitle" class="modal-title text-white fs-5 fw-bold mb-0">
-          <i class="bi" [ngClass]="isEditing() ? 'bi-pencil-square' : 'bi-plus-circle'"></i>
+        <h3
+          id="milestoneModalTitle"
+          class="modal-title text-white fs-5 fw-bold mb-0"
+        >
+          <i
+            class="bi"
+            [ngClass]="isEditing() ? 'bi-pencil-square' : 'bi-plus-circle'"
+          ></i>
           {{ isEditing() ? ' Editar Hito Técnico' : ' Registrar Nuevo Hito' }}
         </h3>
-        <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="closeFormModal()"></button>
+        <button
+          type="button"
+          class="close-btn"
+          (click)="closeFormModal()"
+          aria-label="Close"
+        >
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
       </div>
 
       <!-- Body Formulario -->
       <div class="modal-body p-4 bg-white">
         <form [formGroup]="milestoneForm" (ngSubmit)="saveMilestone()">
-          
           <div class="row g-4 mb-3">
             <div class="col-md-8">
-              <label for="phaseInput" class="form-label text-muted small fw-bold text-uppercase">Nombre de la Fase</label>
-              <input id="phaseInput" type="text" class="form-control form-control-lg border-brand rounded-3 fs-6" formControlName="phase" placeholder="Ej: ANÁLISIS TÉCNICO FUNCIONAL">
+              <label for="phaseInput" class="form-label text-dark fw-semibold"
+                >Nombre de la Fase</label
+              >
+              <input
+                id="phaseInput"
+                type="text"
+                class="form-control form-control-lg rounded-3 fs-6"
+                formControlName="phase"
+                placeholder="Ej: ANÁLISIS TÉCNICO FUNCIONAL"
+              />
             </div>
             <div class="col-md-4">
-              <label for="phaseCodeInput" class="form-label text-muted small fw-bold text-uppercase">Código de Fase</label>
-              <input id="phaseCodeInput" type="text" class="form-control form-control-lg border-brand rounded-3 fs-6 text-uppercase" formControlName="phase_code" placeholder="Ej: ATF">
+              <label
+                for="phaseCodeInput"
+                class="form-label text-dark fw-semibold"
+                >Código de Fase</label
+              >
+              <input
+                id="phaseCodeInput"
+                type="text"
+                class="form-control form-control-lg rounded-3 fs-6 text-uppercase"
+                formControlName="phase_code"
+                placeholder="Ej: ATF"
+              />
             </div>
           </div>
-          // NOMBRE DEL HIT0 Y CÓDIGO DE STATUS
+          <!-- NOMBRE DEL HIT0 Y CÓDIGO DE STATUS -->
           <div class="row g-4 mb-3">
             <div class="col-md-8">
-              <label for="nameInput" class="form-label text-muted small fw-bold text-uppercase">Nombre del Hito</label>
-              <input id="nameInput" type="text" class="form-control form-control-lg border-brand rounded-3 fs-6" formControlName="name" placeholder="Ej: Análisis Técnico Iniciado">
+              <label for="nameInput" class="form-label text-dark fw-semibold"
+                >Nombre del Hito</label
+              >
+              <input
+                id="nameInput"
+                type="text"
+                class="form-control form-control-lg rounded-3 fs-6"
+                formControlName="name"
+                placeholder="Ej: Análisis Técnico Iniciado"
+              />
             </div>
             <div class="col-md-4">
-              <label for="statusCodeInput" class="form-label text-muted small fw-bold text-uppercase">Código (Status)</label>
-              <input id="statusCodeInput" type="text" class="form-control form-control-lg border-brand rounded-3 fs-6 text-uppercase" formControlName="status_code" placeholder="Ej: ATF-I">
+              <label
+                for="statusCodeInput"
+                class="form-label text-dark fw-semibold"
+                >Código (Status)</label
+              >
+              <input
+                id="statusCodeInput"
+                type="text"
+                class="form-control form-control-lg rounded-3 fs-6 text-uppercase"
+                formControlName="status_code"
+                placeholder="Ej: ATF-I"
+              />
             </div>
           </div>
-          // TIPO DE GESTIÓN Y PESO PORCENTUAL
+          <!-- TIPO DE GESTIÓN Y PESO PORCENTUAL -->
           <div class="row g-4 mb-2">
             <div class="col-md-4">
-              <label for="typeInput" class="form-label text-muted small fw-bold text-uppercase">Tipo de Gestión</label>
-              <select id="typeInput" class="form-select form-select-lg border-brand rounded-3 fs-6" formControlName="management_type">
+              <label for="typeInput" class="form-label text-dark fw-semibold"
+                >Tipo de Gestión</label
+              >
+              <select
+                id="typeInput"
+                class="form-select form-select-lg rounded-3 fs-6"
+                formControlName="management_type"
+              >
                 <option value="ROLES">Roles</option>
                 <option value="ENTREGABLES">Entregables</option>
                 <option value="MIXTO">Mixto</option>
               </select>
             </div>
             <div class="col-md-4">
-              <label for="weightInput" class="form-label text-muted small fw-bold text-uppercase">Peso Porcentual (%)</label>
+              <label for="weightInput" class="form-label text-dark fw-semibold"
+                >Peso Porcentual (%)</label
+              >
               <div class="input-group input-group-lg">
-                <input id="weightInput" type="number" class="form-control border-brand rounded-start-3 fs-6 text-end" formControlName="default_weight" step="0.01" min="0">
-                <span class="input-group-text bg-light text-brand fw-bold border-brand border-start-0 rounded-end-3">%</span>
+                <input
+                  id="weightInput"
+                  type="number"
+                  class="form-control rounded-start-3 fs-6 text-end"
+                  formControlName="default_weight"
+                  step="0.01"
+                  min="0"
+                />
+                <span
+                  class="input-group-text bg-light text-muted fw-bold border-start-0 rounded-end-3"
+                  >%</span
+                >
               </div>
             </div>
             <div class="col-md-4">
-                <label for="sort_order" class="form-label text-muted small fw-bold text-uppercase"
-                  >Posición de Secuencia </label
-                >
-                <input
-                  type="number"
-                  id="sort_order"
-                  formControlName="sort_order"
-                  class="form-control form-control-lg border-brand rounded-3 fs-6 text-uppercase"
-                  min="1"
-                  placeholder="Ej: 100"
-                />
-                <div class="form-text text-muted">
-                  Indica el número que determinará su posición exacta en
-                  la matriz.
-                </div>
+              <label for="sort_order" class="form-label text-dark fw-semibold"
+                >Posición de Secuencia
+              </label>
+              <input
+                type="number"
+                id="sort_order"
+                formControlName="sort_order"
+                class="form-control form-control-lg rounded-3 fs-6 text-uppercase"
+                min="1"
+                placeholder="Ej: 100"
+              />
+              <div class="form-text text-muted">
+                Indica el número que determinará su posición exacta en la
+                matriz.
+              </div>
             </div>
           </div>
         </form>
@@ -174,41 +292,38 @@
 
       <!-- Footer Corporativo -->
       <div class="modal-footer bg-light border-top-0 p-3">
-        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-4 me-2" 
-          title="Cerrar modal" 
-          (click)="closeFormModal()">
-          <i class="bi bi-x me-1"></i>
+        <button
+          type="button"
+          class="btn btn-tbl-close fw-semibold rounded-pill px-4 me-2"
+          title="Cerrar modal"
+          (click)="closeFormModal()"
+        >
+          <i class="fa-solid fa-circle-xmark"></i>
           Cancelar
         </button>
 
-        @if(isEditing()){
-          <button type="button" class="btn btn-sm btn-warning rounded-pill px-4 shadow-sm" 
-          [disabled]="milestoneForm.invalid" 
-          (click)="saveMilestone()">
-          <i class="fa-solid fa-pencil"></i>
-          Actualizar Hito
-        </button>
-        }@else {
-          <button type="button" class="btn btn-sm btn-success rounded-pill px-4 shadow-sm" 
-          [disabled]="milestoneForm.invalid" 
-          (click)="saveMilestone()">
-          <i class="bi bi-save me-1"></i>
-          Guardar Hito
+        @if (isEditing()) {
+          <button
+            type="button"
+            class="btn btn-tbl-edit rounded-pill fw-semibold px-4 shadow-sm"
+            [disabled]="milestoneForm.invalid"
+            (click)="saveMilestone()"
+          >
+            <i class="fa-solid fa-pencil m2"></i>
+            Actualizar Hito
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="btn btn-tbl-success rounded-pill fw-semibold px-4 shadow-sm"
+            [disabled]="milestoneForm.invalid"
+            (click)="saveMilestone()"
+          >
+            <i class="fa-solid fa-save me-2"></i>
+            Guardar Hito
           </button>
         }
-
-
-
-
-
-        <!-- <button type="button" class="btn-sm btn-brand rounded-pill px-4 shadow-sm" 
-          [disabled]="milestoneForm.invalid" 
-          (click)="saveMilestone()">
-          <i class="bi bi-save me-1"></i>
-          {{ isEditing() ? 'Actualizar Hito' : 'Guardar Hito' }}
-        </button> -->
       </div>
-      
     </div>
   </div>
 }

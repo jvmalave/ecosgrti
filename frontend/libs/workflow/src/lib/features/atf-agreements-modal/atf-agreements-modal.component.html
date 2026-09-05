@@ -10,7 +10,7 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg">
       <div
-        class="modal-header brand-gradient pb-3 pt-4 px-4 d-flex justify-content-between align-items-center"
+        class="modal-header pb-3 pt-4 px-4 "
       >
         <h5 class="modal-title text-white fw-bold">
           <i class="bi bi-file-earmark-text me-2"></i>
@@ -24,10 +24,12 @@
         </h5>
         <button
           type="button"
-          class="btn-close btn-close-white shadow-none"
-          aria-label="Cerrar"
+          class="close-btn"
           (click)="closeModal.emit()"
-        ></button>
+          aria-label="Close"
+        >
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
       </div>
 
       <div class="modal-body p-4">
@@ -100,13 +102,13 @@
             }
           </div>
 
-          <div class="modal-footer bg-light border-0 px-4 py-3">
+          <div class="modal-footer bg-light border-0 px-4 py-3 gap-3">
             <button
               type="button"
-              class="btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+              class="btn btn-tbl-close rounded-pill px-4 fw-semibold"
               (click)="closeModal.emit()"
             >
-              <i class="bi bi-x-circle me-1"></i>
+              <i class="fa-solid fa-circle-xmark"></i>
               {{ currentMode() === 'view' ? 'Cerrar' : 'Cancelar' }}
             </button>
 
@@ -114,8 +116,8 @@
               <button
                 type="submit"
                 class="btn rounded-pill px-4 shadow-sm fw-semibold"
-                [class.btn-success]="currentMode() === 'create'"
-                [class.btn-warning]="currentMode() === 'edit'"
+                [class.btn-tbl-success]="currentMode() === 'create'"
+                [class.btn-tbl-edit]="currentMode() === 'edit'"
                 [class.text-white]="currentMode() === 'create'"
                 [class.text-dark]="currentMode() === 'edit'"
                 [disabled]="agreementForm.invalid || isSubmitting()"
@@ -131,7 +133,7 @@
                   {{
                     currentMode() === 'create'
                       ? 'Guardar Acuerdo'
-                      : 'Actualizar Cambios'
+                      : 'Guardar Cambios'
                   }}
                 }
               </button>
@@ -140,7 +142,7 @@
             @if (currentMode() === 'view' && isAtfOpen()) {
               <button
                 type="button"
-                class="btn btn-warning text-dark rounded-pill px-4 shadow-sm fw-semibold"
+                class="btn btn-tbl-edit rounded-pill px-4 shadow-sm fw-semibold"
                 (click)="switchToEdit()"
               >
                 <i class="bi bi-pencil me-1"></i> Actualizar

@@ -6,9 +6,12 @@ import { Subscription } from 'rxjs';
 import { ReactiveFormsModule, FormControl } from '@angular/forms'; 
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators'; 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'; 
+import { HttpErrorResponse } from '@angular/common/http';
+import Swal from 'sweetalert2';
 
 // Imports de tus servicios e interfaces
 import { AuthService } from '@ecosgrti/security/data-access';
+import { PasswordChangeModalService } from '@ecosgrti/shared';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import {
@@ -71,11 +74,15 @@ export class DashboardComponent implements OnInit {
   private destroyRef = inject(DestroyRef); // Inyectado para gestionar la limpieza de suscripciones
   public readonly workflowState = inject(WorkflowStateService);
   readonly phaseService = inject(WorkflowPhaseService);
-  
+  public readonly passwordChangeModalService = inject(PasswordChangeModalService);
 
   // ==========================================
   // 2. ESTADO REACTIVO (SIGNALS Y FORM CONTROLS)
   // ==========================================
+
+  // Signals para el control del Dropdown
+  public isDropdownOpen = signal<boolean>(false);
+  
 
   public selectedReqCodeForAtf = signal<string>('');
   public atfModalMode = signal<'create' | 'view'>('create');
@@ -155,11 +162,100 @@ export class DashboardComponent implements OnInit {
     this.activeConfigModal.set(modalType);
     this.isConfigMenuOpen.set(false); // Cierra el menú lateral tras elegir
   }
+
 // Cierra el modal de configuración listando la ficha unificada
   public closeConfigModal(): void {
     //console.log('2. [Padre] Evento recibido en el Dashboard. Destruyendo el modal...');
     this.activeConfigModal.set('NONE');
   }
+
+  //cambiar contraseña de forma voluntaria (sin que el sistema lo pida)
+//   public async cambiarContrasenaVoluntario(): Promise<void> {
+//   const data = await this.passwordChangeModalService.abrirModalCambioPassword();
+
+//   if (data) {
+//     Swal.fire({
+//       title: 'Actualizando credenciales...',
+//       allowOutsideClick: false,
+//       didOpen: () => { Swal.showLoading(); }
+//     });
+
+//     this.authService.changePassword(data).subscribe({
+//       next: (res) => {
+//         Swal.fire({
+//           title: '¡Bóveda Asegurada!',
+//           text: res.message,
+//           icon: 'success',
+//           customClass: { popup: 'rounded-4' },
+//           confirmButtonColor: '#0d6efd'
+//         });
+//       },
+//       error: (err: HttpErrorResponse) => {
+//         const errorMessage = err.error?.message || 'No se pudo actualizar la contraseña. Verifica tus datos.';
+//         Swal.fire({
+//           title: 'Error de Seguridad',
+//           text: errorMessage,
+//           icon: 'error',
+//           confirmButtonColor: '#0d6efd',
+//           customClass: { popup: 'rounded-4' }
+//         });
+//       }
+//     });
+//   }
+// }
+
+// Método para abrir/cerrar
+public toggleDropdown(): void {
+  this.isDropdownOpen.update((val) => !val);
+}
+
+public async cambiarContrasenaVoluntario(): Promise<void> {
+  this.isDropdownOpen.set(false); // Cerramos el menú al hacer clic
+  
+  const data = await this.passwordChangeModalService.abrirModalCambioPassword();
+
+  if (data) {
+    Swal.fire({
+      title: 'Actualizando credenciales...',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    this.authService.changePassword(data).subscribe({
+      next: (res) => {
+        Swal.fire({
+          title: '¡Bóveda Asegurada!',
+          text: res.message,
+          icon: 'success',
+          customClass: { popup: 'rounded-4' },
+          confirmButtonColor: '#0d6efd'
+        });
+      },
+      error: (err: HttpErrorResponse) => {
+        const errorMessage = err.error?.message || 'No se pudo actualizar la contraseña. Verifica tus datos.';
+        Swal.fire({
+          title: 'Error de Seguridad',
+          text: errorMessage,
+          icon: 'error',
+          confirmButtonColor: '#0d6efd',
+          customClass: { popup: 'rounded-4' }
+        });
+      }
+    });
+  }
+}
+
+
+public logoutDropdown(): void {
+  this.isDropdownOpen.set(false); // Cerramos el menú al hacer clic
+  this.authService.logout().subscribe({
+      next: () => {
+        localStorage.removeItem('dashboard_context'); 
+        this.router.navigate(['/login']);
+      }
+    });
+}
+
   // Control Reactivo para el Buscador
   searchControl = new FormControl('');
   public selectedReqManagementType = computed(() => {
@@ -697,6 +793,19 @@ public isGrEnabled(status: string): boolean {
 
     return false;
   }
+
+  // Metodo para obtener las iniciales de un nombre completo
+  getInitials(fullName: string | undefined | null): string {
+  if (!fullName) return '';
+  
+  return fullName
+    .trim()
+    .split(' ')
+    .filter(name => name.length > 0) // Evita errores si hay múltiples espacios
+    .map(name => name.charAt(0))
+    .join('')
+    .toUpperCase();
+}
 
 }
 

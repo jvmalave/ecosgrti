@@ -107,7 +107,7 @@
 
       <div class="mt-auto pt-4 border-top border-white border-opacity-25">
         <button (click)="logout()" class="btn btn-logout-white w-100 py-2">
-          <i class="fas fa-power-off me-2"></i> Salir
+          <i class="fas fa-sign-out-alt me-3"></i>Cerrar Sesión
         </button>
       </div>
     </aside>
@@ -119,18 +119,65 @@
         <h1 class="h5 mb-0 fw-bold text-secondary">Panel Principal</h1>
 
         @if (user()) {
-          <div class="d-flex align-items-center gap-3">
-            <div class="text-end d-none d-sm-block">
-              <p class="mb-0 fw-bold text-dark">{{ user()?.username }}</p>
-              <p class="mb-0 text-muted small text-uppercase">
-                {{ getRoleDisplayName(user()?.roles?.[0]) }}
-              </p>
-            </div>
+          <div class="dropdown">
+            <!-- Elemento activador del menú controlado por Angular -->
             <div
-              class="brand-avatar text-white fw-bold d-flex align-items-center justify-content-center rounded-circle"
+              class="d-flex align-items-center gap-3 user-select-none"
+              role="button"
+              tabindex="0"
+              (click)="toggleDropdown()"
             >
-              {{ user()?.username?.substring(0, 2) | uppercase }}
+              <div class="text-end d-none d-sm-block">
+                <p class="mb-0 fw-bold text-dark">{{ user()?.username }}</p>
+                <p class="mb-0 text-muted small text-uppercase">
+                  {{ getRoleDisplayName(user()?.roles?.[0]) }}
+                </p>
+              </div>
+              <div
+                class="brand-avatar text-white fw-bold d-flex align-items-center justify-content-center rounded-circle shadow-sm"
+              >
+                <!-- {{ user()?.username?.substring(0, 2) | uppercase }} -->
+                {{ getInitials(this.user()?.fullName) | uppercase }}
+              </div>
             </div>
+
+            <!-- Menú Desplegable (se muestra si la señal es true) -->
+            <ul
+              class="dropdown-menu dropdown-menu-end shadow rounded-3 mt-2 border-0"
+              [class.show]="isDropdownOpen()"
+              style="position: absolute; right: 0; top: 100%"
+            >
+              <li
+                class="d-header text-uppercase d-flex align-items-center p-4 text-nowrap"
+              >
+                <div
+                  class="brand-avatar text-white fw-bold d-flex align-items-center justify-content-center rounded-circle shadow-sm me-3"
+                >
+                  {{ getInitials(this.user()?.fullName) | uppercase }}
+                </div>
+                <!-- <i class="fas fa-user me-2"></i>  -->
+                {{ user()?.fullName }}
+              </li>
+              <li>
+                <button
+                  class="dropdown-item py-3 d-flex align-items-center"
+                  (click)="cambiarContrasenaVoluntario()"
+                >
+                  <i class="fas fa-key text-muted me-3"></i>
+                  <span class="fw-medium">Cambiar Contraseña</span>
+                </button>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <button
+                  class="dropdown-item py-3 text-danger d-flex align-items-center"
+                  (click)="logoutDropdown()"
+                >
+                  <i class="fas fa-sign-out-alt me-3"></i>
+                  <span class="fw-medium">Cerrar Sesión</span>
+                </button>
+              </li>
+            </ul>
           </div>
         }
       </header>
@@ -145,15 +192,6 @@
                 <h2 class="h4 fw-bold text-dark">
                   ¡Hola, {{ user()?.fullName }} gusto verte de nuevo !
                 </h2>
-                <!-- <p class="text-muted mt-2 mb-0">
-                  Has ingresado al sistema con el rol:
-                  
-                  <span
-                    class="badge badge-brand rounded-pill ms-2 px-3 py-2 text-uppercase"
-                  >
-                    {{ getRoleDisplayName(user()?.roles?.[0]) }}
-                  </span>
-                </p> -->
               </div>
             </div>
           </div>
@@ -185,13 +223,13 @@
             </ul>
 
             <!-- Buscador Reactivo -->
-            <div class="input-group w-25">
-              <span class="input-group-text bg-light border-end-0 border-brand"
+            <div class="input-group w-25 pe-4">
+              <span class="input-group-text bg-light border-end-0 border-secondary shadow-none"
                 ><i class="fas fa-search text-muted"></i
               ></span>
               <input
                 type="text"
-                class="form-control border-start-0 border-brand ps-0 shadow-none"
+                class="form-control border-start-0  border-secondary ps-0 shadow-none"
                 [formControl]="searchControl"
                 placeholder="Buscar por código RRTI..."
               />
@@ -200,10 +238,10 @@
 
           <!-- Botón para crear nuevo requerimiento -->
           @if (isCoord) {
-            <div class="d-flex justify-content-end">
+            <div class="d-flex justify-content-end pe-5">
               <button
                 type="button"
-                class="btn btn-success rounded-pill px-5 shadow-sm fw-semibold"
+                class="btn btn-success rounded-pill px-5 shadow-sm fw-semibold btn-tbl-success"
                 (click)="openCreateModal()"
               >
                 <i class="bi bi-plus-circle me-2"></i>Nuevo Requerimiento
@@ -266,33 +304,34 @@
                         <td>{{ req.creation_date | date: 'dd/MM/yyyy' }}</td>
                         <td>
                           <span
-                            class="badge border px-3 py-1 {{
+                            class="badge border px-3 py-1 text-uppercase fw-semibold {{
                               req.status | reqStatus: 'class'
                             }}"
+                            style="font-size: 0.8rem"
                           >
                             {{ req.status | reqStatus: 'label' }}
                           </span>
                         </td>
                         <td class="align-middle text-center">
                           <div
-                            class="d-flex align-items-center justify-content-center gap-2"
+                            class="d-flex align-items-center justify-content-center gap-3"
                           >
-                            <!-- Botón Ver Detalles  -->
+                            <!-- Ver Detalles -->
                             <button
-                              class="btn btn-md btn-outline-info rounded-pill px-3"
+                              class="btn btn-md btn-tbl-info rounded-pill px-3"
                               (click)="openDetailModal(req.id)"
                               title="Ver Detalles"
                             >
                               <i class="fa-solid fa-eye"></i>
                             </button>
 
-                            <!-- 1. Botón Gestionar Estimación -->
+                            <!-- Gestionar Estimación -->
                             <button
                               class="btn btn-md rounded-pill px-3"
                               [ngClass]="
                                 canManageRequirement(req)
-                                  ? 'btn-outline-warning'
-                                  : 'btn-unauthorized'
+                                  ? 'btn-tbl-validation'
+                                  : 'btn-tbl-inactive'
                               "
                               [disabled]="!canManageRequirement(req)"
                               (click)="openEstimationModal(req)"
@@ -301,15 +340,15 @@
                               <i class="fa-solid fa-calendar"></i>
                             </button>
 
-                            <!-- 2. Botón Gestionar Acuerdos (Combina Permisos + Fase ATF) -->
+                            <!-- Gestionar Acuerdos -->
                             <button
                               class="btn btn-md rounded-pill px-3"
                               [ngClass]="
-                                canManageRequirement(req)
-                                  ? 'btn-outline-primary'
-                                  : 'btn-unauthorized'
+                                canManageRequirement(req) &&
+                                isAtfEnabled(req.status)
+                                  ? 'btn-tbl-planning'
+                                  : 'btn-tbl-inactive'
                               "
-                              [class.opacity-50]="!isAtfEnabled(req.status)"
                               [disabled]="
                                 !canManageRequirement(req) ||
                                 !isAtfEnabled(req.status)
@@ -320,15 +359,15 @@
                               <i class="fa-solid fa-handshake"></i>
                             </button>
 
-                            <!-- Botón Gestionar Requerimiento  -->
+                            <!-- Gestionar Requerimiento -->
                             <button
                               class="btn btn-md rounded-pill px-3"
                               [ngClass]="
-                                canManageRequirement(req)
-                                  ? 'btn-outline-secondary'
-                                  : 'btn-unauthorized'
+                                canManageRequirement(req) &&
+                                isGrEnabled(req.status)
+                                  ? 'btn-tbl-construction'
+                                  : 'btn-tbl-inactive'
                               "
-                              [class.opacity-50]="!isGrEnabled(req.status)"
                               [disabled]="
                                 !canManageRequirement(req) ||
                                 !isGrEnabled(req.status)
@@ -338,28 +377,32 @@
                             >
                               <i class="fa-solid fa-gear"></i>
                             </button>
-                            <!-- Botón condicional de Cierre / Visor de Acta -->
+
+                            <!-- Cierre / Visor de Acta -->
                             @if (context() === 'HISTORICO' || isCoord) {
                               <button
-                                class="btn btn-md btn-outline-dark rounded-pill px-3"
+                                class="btn btn-md rounded-pill px-3"
+                                [ngClass]="
+                                  req.status === 'RF' || isCloseEnabled(req)
+                                    ? 'btn-tbl-success'
+                                    : 'btn-tbl-inactive'
+                                "
+                                [disabled]="
+                                  req.status !== 'RF' && !isCloseEnabled(req)
+                                "
                                 [title]="
                                   req.status === 'RF'
                                     ? 'Ver Acta de Cierre'
                                     : 'Cerrar Requerimiento'
                                 "
-                                [class.opacity-50]="
-                                  req.status !== 'RF' && !isCloseEnabled(req)
-                                "
-                                [disabled]="
-                                  req.status !== 'RF' && !isCloseEnabled(req)
-                                "
                                 (click)="openClosureModal(req)"
                               >
-                                <!-- Muta visualmente: Ojo si ya está cerrado (RF), candado si está pendiente -->
                                 <i
                                   class="fa-solid"
                                   [ngClass]="
-                                    req.status === 'RF' ? 'fa-eye' : 'fa-lock'
+                                    req.status === 'RF'
+                                      ? 'fa-eye'
+                                      : 'fa-clipboard-check'
                                   "
                                 ></i>
                               </button>

@@ -3,13 +3,20 @@
 <div class="modal fade show d-block" tabindex="-1" style="z-index: 1065 !important;">
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
-      
-      <div class="modal-header brand-gradient text-white pt-3 pb-3 px-4 d-flex justify-content-between align-items-center border-0">
+      <!-- cabecera  -->
+      <div class="modal-header pt-3 pb-3 px-4 border-0">
         <h5 class="modal-title fw-bold mb-0">
           <i class="bi bi-person-badge me-2 fs-5"></i> 
           Gestión de Roles
         </h5>
-        <button type="button" class="btn-close btn-close-white" (click)="closeList.emit()" aria-label="Cerrar"></button>
+        <button
+          type="button"
+          class="close-btn"
+          (click)="closeList.emit()"
+          aria-label="Close"
+        >
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
       </div>
 
       <div class="modal-body p-4 bg-light">
@@ -17,7 +24,7 @@
         <div class="d-flex align-items-center mb-4">
           <span class="text-muted fw-semibold me-2 fs-6">Requerimiento:</span>
           <span
-            class="badge badge-req rounded-pill px-4 py-2 me-2 fs-6 fw-semibold"
+            class="badge badge-requirement rounded-pill px-4 py-2 me-2 fs-6 fw-semibold"
           >
             {{ requirementName() }}
           </span>
@@ -35,7 +42,7 @@
           </div>
 
           @if (!isPhaseClosed()) {
-            <button class="btn btn-success rounded-pill px-4 shadow-sm text-nowrap d-flex align-items-center fw-semibold"
+            <button class="btn btn-tbl-success rounded-pill px-5 shadow-sm text-nowrap d-flex align-items-center fw-semibold"
                     (click)="openCreateModal()">
               <i class="bi bi-plus-circle me-2"></i> Agregar Nuevo Rol
             </button>
@@ -79,13 +86,13 @@
                           {{ role.description.length > 50 ? (role.description | slice:0:50) + '...' : role.description }}
                         </td>
                         <td class="px-4 py-3 text-end text-nowrap">
-                          <button class="btn btn-outline-info rounded-pill me-2 d-inline-flex justify-content-center align-items-center" 
+                          <button class="btn btn-tbl-info rounded-pill me-2 d-inline-flex justify-content-center align-items-center" 
                           title="Mostrar Detalle" (click)="openViewModal(role)">
                             <i class="fa-solid fa-eye"></i>
                           </button>
                           
                           @if (!isPhaseClosed()) {
-                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                            <button class="btn btn-sm btn-tbl-delete rounded-pill px-3"
                             title="Eliminar Rol" (click)="deleteRole(role.id)">
                               <i class="bi bi-trash"></i>
                             </button>

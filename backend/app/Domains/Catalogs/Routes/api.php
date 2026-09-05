@@ -12,7 +12,7 @@ use App\Domains\Catalogs\Http\Controllers\MilestoneController;
 | API Routes - Dominio Catalogs (Gestión de Catálogos)
 |--------------------------------------------------------------------------
 */
-Route::prefix('catalogs')->middleware('auth:api')->group(function () {
+Route::prefix('catalogs')->middleware(['auth:api', 'password.expired' ])->group(function () {
 
     /*
     |--------------------------------------------------------------------------

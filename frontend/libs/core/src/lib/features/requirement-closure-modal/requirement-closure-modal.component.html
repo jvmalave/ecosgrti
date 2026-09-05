@@ -10,7 +10,7 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg">
       <!-- HEADER CORPORATIVO -->
-      <div class="modal-header bg-brand text-white border-0 py-3">
+      <div class="modal-header text-white border-0 py-3">
         <h5 class="modal-title fw-bold">
           <i
             class="fa-solid me-2"
@@ -25,13 +25,11 @@
               : 'Cierre Histórico Absoluto'
           }}
         </h5>
-        <button
-          type="button"
-          class="btn-close btn-close-white"
-          (click)="closeModal.emit()"
-          [disabled]="isLoading()"
-        >
-          <span class="d-none">Cerrar</span>
+        <button type="button" class="close-btn" 
+          (click)="closeModal.emit()" 
+          aria-label="Close"
+          >
+          <i class="fa-solid fa-circle-xmark"></i>
         </button>
       </div>
 
@@ -44,12 +42,7 @@
         <div class="d-flex align-items-center mb-3">
           <span class="text-muted fw-bold me-2 fs-6">Requerimiento:</span>
           <span
-            class="badge rounded-pill px-3 py-2 fs-6"
-            style="
-              background-color: #f3e8f5;
-              color: #8e1482;
-              border: 1px solid #8e1482;
-            "
+            class="badge badge-requirement rounded-pill px-3 py-2 fs-6"
           >
             {{ req.rrti }}
           </span>
@@ -105,9 +98,9 @@
           <hr class="mb-4 text-muted" />
 
           <!-- BOTONES DE DESCARGA CON IDENTIDAD CORPORATIVA -->
-          <div class="d-grid gap-3">
+          <div class="d-flex gap-3 justify-content-between">
             <button
-              class="btn btn-info rounded-pill shadow-sm py-2 fw-semibold"
+              class="btn btn-tbl-info rounded-pill shadow-sm py-2 fw-semibold ps-2"
               (click)="downloadAct()"
             >
               <i class="fa-solid fa-file-pdf me-2"></i> Ver Acta de Cierre
@@ -116,7 +109,7 @@
 
             @if (req.notification_support_path) {
               <button
-                class="btn btn-outline-info rounded-pill py-2 shadow-sm fw-semibold"
+                class="btn btn-tbl-info rounded-pill py-2 shadow-sm fw-semibold pe-2"
                 (click)="downloadSupport()"
               >
                 <i class="fa-solid fa-paperclip me-2"></i> Ver Soporte Físico
@@ -275,7 +268,7 @@
           @if (!isDraftGenerated()) {
             <button
               type="button"
-              class="btn btn-outline-secondary rounded-pill px-4"
+              class="btn btn-tbl-close rounded-pill px-4 fw-semibold"
               (click)="closeModal.emit()"
               [disabled]="isLoading()"
             >
@@ -283,7 +276,7 @@
             </button>
             <button
               type="button"
-              class="btn btn-outline-success rounded-pill px-4"
+              class="btn btn-tbl-success rounded-pill px-4 fw-semibold" 
               (click)="generateDraft()"
               [disabled]="isLoading() || closureForm.invalid || !selectedFile()"
             >
@@ -298,7 +291,7 @@
           } @else {
             <button
               type="button"
-              class="btn btn-outline-warning rounded-pill px-4"
+              class="btn btn-tbl-edit rounded-pill px-4 fw-semibold"
               (click)="cancelDraft()"
               [disabled]="isLoading()"
             >
@@ -306,7 +299,7 @@
             </button>
             <button
               type="button"
-              class="btn btn-success rounded-pill px-4"
+              class="btn btn-tbl-planning rounded-pill px-4 fw-semibold"
               (click)="confirmClosure()"
               [disabled]="isLoading()"
             >
@@ -321,15 +314,16 @@
           }
         }
         <!-- Botonera para el MODO SNAPSHOT INMUTABLE -->
-        @else {
+        <!-- @else {
           <button
             type="button"
-            class="btn btn-outline-secondary rounded-pill px-4"
+            class="btn btn-tbl-close rounded-pill px-4 fw-semibold"
             (click)="closeModal.emit()"
           >
+          <i class="fa-solid fa-circle-xmark me-2"></i>
             Cerrar Visor
           </button>
-        }
+        } -->
       </div>
     </div>
   </div>

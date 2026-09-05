@@ -11,8 +11,7 @@ $color-danger: #ef4444;
 
 // --- Sidebar (Menú Lateral) ---
 .sidebar-brand {
-  // Aplicamos el degradado lineal de arriba hacia abajo (o inclinado)
-  background: $sidebar-bg !important;
+  background: linear-gradient(180deg, $gradient-start 80%, $gradient-end 100%);
   box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
 
@@ -24,14 +23,14 @@ $color-danger: #ef4444;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     padding-bottom: 1.5rem;
     .logo-cantv {
-    max-height:  100px; // Ajusta según tu logo
-  }
+      max-height:  100px; // Ajusta según tu logo
+    }
   }
 
   // Estilo de navegación sobre degradado
   .nav-link {
     color: rgba(255, 255, 255, 0.85) !important;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 1.2rem;
     transition: all 0.3s ease;
     margin: 0.2rem 0;
@@ -62,6 +61,21 @@ $color-danger: #ef4444;
 
 .bg-brand { 
   background: #d500f9 !important; color: white; 
+} 
+
+.d-header{ 
+  background: $gradient-start !important; 
+  color: white; 
+  font-weight: 600;
+  font-size: 1rem;
+  .brand-avatar {
+  width: 36px;
+  height: 36px;
+  background: white;
+  color: $gradient-start !important;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
 } 
 
 // .bg-brand { 

@@ -11,17 +11,20 @@
     <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
       
       <!-- Encabezado Modal con gradiente corporativo -->
-      <div class="modal-header brand-gradient text-white px-4 py-3 border-0">
+      <div class="modal-header  px-4 py-3 border-0">
         <h5 class="modal-title fw-bold d-flex align-items-center" id="deliverablesListModalLabel">
           <i class="bi bi-file-earmark-text me-2 fs-4"></i>
           Gestión de Entregables
         </h5>
+        
         <button
           type="button"
-          class="btn-close btn-close-white"
-          (click)=handleClose()
-          aria-label="Cerrar modal"
-        ></button>
+          class="close-btn"
+          (click)="handleClose()"
+          aria-label="Close"
+        >
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
       </div>
 
       <div class="modal-body p-4 bg-light">
@@ -30,7 +33,7 @@
         <div class="d-flex align-items-center mb-4">
           <span class="text-muted fw-bold me-2 fs-6">Requerimiento:</span>
           <span
-            class="badge badge-req rounded-pill px-3 py-2 me-2 fs-6 fw-semibold"
+            class="badge badge-requirement rounded-pill px-3 py-2 me-2 fs-6 fw-semibold"
           >
             {{ requirementNumber() }}
           </span>
@@ -47,6 +50,7 @@
               type="text" 
               class="form-control border-start-0 rounded-end-pill ps-0" 
               placeholder="Buscar entregable por nombre..."
+              aria-label="Buscar entregable por nombre..."
               [ngModel]="searchTerm()"
               (ngModelChange)="updateSearch($event)"
               [disabled]="deliverables().length === 0"
@@ -54,11 +58,11 @@
           </div>
 
           <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary rounded-pill px-4 shadow-sm fw-medium d-flex align-items-center fw-semibold" (click)=handleClose() aria-label="Volver">
+            <!-- <button class="btn btn-outline-secondary rounded-pill px-4 shadow-sm fw-medium d-flex align-items-center fw-semibold" (click)=handleClose() aria-label="Volver">
               <i class="bi bi-arrow-left me-2"></i> Volver
-            </button>
+            </button> -->
             @if (!isPhaseClosed()) {
-              <button class="btn btn-success rounded-pill px-4 shadow-sm fw-medium d-flex align-items-center fw-semibold" (click)="openCreateModal()">
+              <button class="btn btn-tbl-success rounded-pill px-4 shadow-sm fw-medium d-flex align-items-center fw-semibold" (click)="openCreateModal()">
                 <i class="bi bi-plus-circle me-2"></i> Agregar Entregable
               </button>
             }
@@ -96,17 +100,20 @@
                         </td>
                         <td class="px-4 py-3 text-end text-nowrap">
                           <button 
-                            class="btn btn-outline-info rounded-pill px-3 me-2" 
+                            class="btn btn-tbl-info rounded-pill px-3 me-2" 
                             (click)="openViewModal(deliverable)"
-                            title="Ver / Actualizar Detalle"
+                            aria-label="Ver / Actualizar Detalles"
+                            title="Ver / Actualizar Detalles"
                           >
                             <i class="fa-solid fa-eye"></i>
                           </button>
 
                           @if (!isPhaseClosed()) {
-                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" 
+                            <button class="btn btn-tbl-delete rounded-pill px-3" 
                               title="Eliminar Entregable" 
+                              aria-label="Eliminar Entregables"
                               (click)="onDelete(deliverable)">
+                              
                               <i class="bi bi-trash"></i>
                             </button>
                             }

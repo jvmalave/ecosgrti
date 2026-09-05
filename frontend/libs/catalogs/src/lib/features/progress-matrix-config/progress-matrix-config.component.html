@@ -5,7 +5,7 @@
     <!-- Encabezado Corporativo -->
     <div class="modal-header">
       <h5 class="mb-0 fw-bold d-flex align-items-center">
-        <i class="bi bi-sliders me-2"></i>
+        <i class="fas fa-sliders-h me-2"></i>
         Configuración de Matrices de Progreso
       </h5>
       <div class="d-flex align-items-center gap-3">
@@ -20,11 +20,10 @@
           (click)="closeComponent()"
           title="Cerrar modal"
           >
-          <i class="bi bi-x"></i>
+          <i class="fa-solid fa-circle-xmark"></i>
         </button>
       </div>
     </div>
-
     <!-- Cuerpo del Modal -->
     <div class="modal-body p-4">
       <form [formGroup]="matrixForm" (ngSubmit)="publishNewVersion()">
@@ -90,7 +89,7 @@
                             "
                           />
                           <span
-                            class="input-group-text bg-light text-brand fw-bold"
+                            class="input-group-text bg-light text-secondary fw-bold"
                             >%</span
                           >
                         </div>
@@ -164,20 +163,20 @@
       <div class="d-flex gap-2">
         <button 
         type="button" 
-        class="btn-sm btn-outline-secondary rounded-pill px-4"
+        class="btn btn-tbl-close rounded-pill px-4 fw-semibold"
         (click)="closeComponent()" title="Cerrar modal">
-          <i class="bi bi-x-circle me-1"></i>
+          <i class="fa-solid fa-circle-xmark"></i>
           Cerrar
         </button>
 
 
         <button
           type="button"
-          class="btn btn-sm btn-success rounded-pill px-5"
+          class="btn  btn-tbl-success rounded-pill px-5 fw-semibold"
           (click)="publishNewVersion()"
           [disabled]="matrixForm.invalid || currentTotalSum() !== 100"
         >
-          <i class="bi bi-cloud-arrow-up-fill me-2"></i> Publicar Versión
+          <i class="fa-solid fa-cloud-arrow-up me-2"></i> Publicar Versión
         </button>
       </div>
     </div>

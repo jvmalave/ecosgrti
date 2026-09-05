@@ -37,6 +37,14 @@ export class UnifiedPersonModalComponent implements OnInit {
   public requestingUnits = signal<RequestingUnitOption[]>([]);
   public systemRoles = ['Admin', 'Coord', 'ConsCSPE', 'Gerente', 'Viewer'];
 
+  public readonly roleMasks: Record<string, string> = {
+  'Admin': 'ADMINISTRADOR',
+  'Coord': 'COORDINADOR-CSPE',
+  'ConsCSPE': 'CONSULTOR-CSPE',
+  'Gerente': 'GERENTE',
+  'Viewer': 'AUDITOR'
+};
+
   constructor() {
     effect(() => {
       // RN-Regla Aprovisionamiento Condicional: Si es CSPE, fuerza el acceso al sistema

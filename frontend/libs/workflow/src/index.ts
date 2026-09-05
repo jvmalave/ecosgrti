@@ -3,7 +3,7 @@ export * from './lib/features/atf-agreements-list-modal/atf-agreements-list-moda
 export * from './lib/features/dt-registers-modal/dt-registers-modal.component';
 export * from './lib/features/dt-roles-list-modal/dt-roles-list-modal.component';
 export * from './lib/features/lifecycle-orchestrator-modal/lifecycle-orchestrator-modal.component';
-export * from '../../core/src/lib/features/requirement-closure-modal/requirement-closure-modal.component'
+// export * from '../../core/src/lib/features/requirement-closure-modal/requirement-closure-modal.component'
 
 
 export * from './lib/data-access/models/workflow-state.interface';

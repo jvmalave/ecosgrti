@@ -7,15 +7,16 @@ $footer-purple: #7b1fa2;
 $text-white: #ffffff;
 $text-muted: #6c757d;
 $sidebar-bg: #1c1ce2; // Un tono oscuro azulado muy elegante para el sidebar
-$text-muted: #64748b;
-$text-white: #ffffff;
-$color-success: #22c55e;
+$color-success: #198754;
 $color-danger: #ef4444;
+$color-blue: $sidebar-bg;
+$color-secondary: #6c757d;  // Gris oscuro
+
 
 
 // --- Mixins y utilidades (para sombras e inputs) ---
 @mixin subtle-shadow {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px  rgba(0, 0, 0, 0.1);
 }
 
 // --- Estilos generales ---
@@ -26,7 +27,8 @@ body {
 
 // --- Componente de Cabecera (Header) ---
 .login-header {
-  background: $sidebar-bg !important;
+  // background: $sidebar-bg !important;
+  background: linear-gradient(90deg, $gradient-start 70%, $gradient-end 100%);
   color: $text-white;
   padding: 2rem 1.5rem;
   
@@ -79,7 +81,7 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 50%; // Hace el botón un círculo perfecto
-    border: 3px solid $color-magenta; // Borde rosa vibrante
+    border: 3px solid $color-success; // Borde verde vibrante
     background-color: transparent;
     display: flex;
     align-items: center;
@@ -88,15 +90,79 @@ body {
     padding: 0;
 
     &:hover {
-      background-color: rgba($color-magenta, 0.1);
+      background-color: rgba($color-success, 0.8);
       transform: scale(1.05); // Pequeña animación al pasar el ratón
+      svg {
+        fill: white; // Pintamos el icono blanco
+      }
     }
 
     // Estilo para el icono dentro del botón
     svg {
       width: 32px;
       height: 32px;
-      fill: $color-magenta; // Color del icono
+      fill: $color-success; // Color del icono
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      border-color: #ccc; // Lo ponemos gris
+      
+      svg { fill: #ccc; } // Pintamos el icono gris
+      
+      &:hover {
+        background-color: transparent;
+        transform: none; // Quitamos la animación
+      }
+    }
+  }
+
+  
+
+  
+
+  // El texto debajo del botón
+  .btn-label {
+    font-size: 1rem;
+    color: $text-muted;
+    font-weight: 600;
+  }
+}
+
+
+.circular-btn-wrapper-cancel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+
+  // El botón circular real
+  .circular-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%; // Hace el botón un círculo perfecto
+    border: 3px solid $color-secondary; // Borde gris oscuro
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    padding: 0;
+
+    &:hover {
+      background-color: rgba($color-secondary, 0.8);
+      transform: scale(1.05);
+      svg { 
+        fill: $text-white;
+       } // Cambiamos el color del icono al pasar el ratón
+      
+    }
+
+    // Estilo para el icono dentro del botón
+    svg {
+      width: 32px;
+      height: 32px;
+      fill: $color-secondary; // Color del icono
     }
 
     &:disabled {
@@ -114,14 +180,14 @@ body {
 
   // El texto debajo del botón
   .btn-label {
-    font-size: 0.85rem;
+    font-size: 1rem;
     color: $text-muted;
-    font-weight: 500;
+    font-weight: 600;
   }
 }
 
 // --- Componente de Pie de Página (Footer) ---
 .login-footer {
-  background-color: $sidebar-bg !important;
+  background: linear-gradient(90deg, $gradient-start 70%, $gradient-end 100%);
   height: 50px; // O el grosor que desees
 }
