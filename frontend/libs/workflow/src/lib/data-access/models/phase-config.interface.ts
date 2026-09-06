@@ -1,7 +1,8 @@
 /**
  * Define los códigos de las fases soportadas por el motor polimórfico.
  */
-export type PhaseCode = 'DT' | 'COR' | 'COE' | 'PI' | 'CER' | 'CEE';
+
+export type PhaseCode = 'DT' | 'COR' | 'COE' | 'PI' | 'CER' | 'CEE' | 'PAP' | 'AU';
 
 /**
  * Contrato que dicta el comportamiento, textos dinámicos y rutas API de la fase.
@@ -70,7 +71,7 @@ export const PHASE_CONFIGURATIONS: Record<PhaseCode, PhaseConfig> = {
     emptyStateText: 'No hay observaciones de certificación.',
     initEndpoint: 'roles-init',
     parentEntityPath: 'roles',
-    childEntityPath: 'results' // Adaptación conceptual, dependerá de tus endpoints
+    childEntityPath: 'results' 
   },
   CEE: {
     phaseCode: 'CEE',
@@ -81,5 +82,25 @@ export const PHASE_CONFIGURATIONS: Record<PhaseCode, PhaseConfig> = {
     initEndpoint: 'deliverables-init',
     parentEntityPath: 'deliverables',
     childEntityPath: 'results' 
+  },
+  PAP: {
+    phaseCode: 'PAP',
+    phaseName: 'Pase a Producción',
+    apiEndpoint: 'pap',
+    modalTitle: 'Roles en Pase a Producción',
+    emptyStateText: 'No hay órdenes de transporte registradas para este rol.',
+    initEndpoint: 'roles-init',
+    parentEntityPath: 'roles',
+    childEntityPath: 'orders' 
+  },
+  AU: {
+    phaseCode: 'AU',
+    phaseName: 'Asignación de Usuarios',
+    apiEndpoint: 'au',
+    modalTitle: 'Asignación de Usuarios',
+    emptyStateText: 'No hay planillas de acceso registradas.',
+    initEndpoint: 'roles-init',
+    parentEntityPath: 'roles',
+    childEntityPath: 'accesses'
   }
 };

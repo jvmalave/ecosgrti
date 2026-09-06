@@ -8,307 +8,307 @@
 ) {
   <div class="modal-overlay">
     <div class="modal-dialog-custom">
-      <!-- CABECERA -->
-      <div
-        class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center"
-      >
-        <h5 class="m-0 fw-bold">
-          <i class="fa-solid fa-layer-group me-2"></i> {{ modalTitle() }}
-        </h5>
-
-        <!-- Botón de cierre conectado al output -->
-        <button
-          type="button"
-          class="btn text-white fs-5 p-0 border-0 shadow-none"
-          (click)="closeModal.emit()"
+        <!-- CABECERA -->
+        <div
+          class="modal-header text-white p-3 d-flex justify-content-between align-items-center"
         >
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
+          <h5 class="m-0 fw-bold">
+            <i class="fa-solid fa-layer-group me-2"></i> {{ modalTitle() }}
+          </h5>
 
-      <div class="modal-body-scroll p-4">
-        <div class="row mb-4">
-          <!-- BUSCADOR REACTIVO -->
-          <div class="row mb-4">
-            <div class="col-md-6">
-              <span
-                class="badge bg-light text-brand ms-3 border border-light rounded-pill fs-6 shadow-sm"
-              >
-                Requerimiento: {{ rrti() }}
-              </span>
-            </div>
-            <div class="col-md-6 offset-md-6">
-              <div class="input-group">
-                <span class="input-group-text bg-light border-end-0">
-                  <i class="fa-solid fa-magnifying-glass text-muted"></i>
+          <!-- Botón de cierre conectado al output -->
+          <button
+            type="button"
+            class="close-btn"
+            (click)="closeModal.emit()"
+          >
+            <i class="fa-solid fa-circle-xmark"></i>
+          </button>
+        </div>
+
+        <div class="modal-body-scroll p-4">
+          <div class="row mb-4 mt-4">
+            <div class="row" d-flex align-items-center justify-content-between>
+            <!-- BUSCADOR REACTIVO -->
+              <div class="col-md-6 d-flex align-items-center">
+                <span class="text-muted fw-bold me-2 fs-6">Requerimiento:</span>
+                <span
+                  class="badge badge-requirement rounded-pill px-3 py-2 fs-6 fw-semibold"
+                >
+                  {{ rrti() }}
                 </span>
-                <input
-                  type="text"
-                  class="form-control border-start-0 ps-0 shadow-none"
-                  placeholder="Buscar {{
-                    itemName() | lowercase
-                  }} por nombre..."
-                  (input)="updateSearch($event)"
-                />
+              </div>
+              <div class="col-md-6">
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0">
+                    <i class="fa-solid fa-magnifying-glass text-muted"></i>
+                  </span>
+                  <input
+                    type="text"
+                    class="form-control border-start-0 ps-0 shadow-none"
+                    placeholder="Buscar {{
+                      itemName() | lowercase
+                    }} por nombre..."
+                    (input)="updateSearch($event)"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-
-          <!-- BANNER DE FASE CERRADA -->
-          @if (!isPhaseActive()) {
-            <div
-              class="alert alert-success d-flex align-items-center mt-3 shadow-sm"
-              role="alert"
-            >
-              <i class="fa-solid fa-lock fs-2 me-3"></i>
-              <div>
-                <h6 class="fw-bold mb-1">
-                  Fase de {{ config().phaseName }} Cerrada
-                </h6>
-                <p class="mb-0 small">
-                  Esta fase ha concluido. Todos los elementos y sus bitácoras se
-                  encuentran en estado inmutable.
-                </p>
+            <hr class="my-4 "/>
+            <!-- BANNER DE FASE CERRADA -->
+            @if (!isPhaseActive()) {
+              <div
+                class="alert alert-success d-flex align-items-center my-3 shadow-sm"
+                role="alert"
+              >
+                <i class="fa-solid fa-lock fs-2 me-3"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">
+                    Fase de {{ config().phaseName }} Cerrada
+                  </h6>
+                  <p class="mb-0 small">
+                    Esta fase ha concluido. Todos los elementos y sus bitácoras se
+                    encuentran en estado inmutable.
+                  </p>
+                </div>
               </div>
-            </div>
-          }
+            }
 
-          <!-- ================================================================= -->
-          <!-- ELEMENTOS EN PROCESO -->
-          <!-- ================================================================= -->
-          <h6 class="text-brand fw-bold mb-3 border-bottom pb-2">
-            <i class="fa-solid fa-spinner fa-spin-pulse me-2"></i>
-            {{ itemNamePlural() }} en Proceso
-          </h6>
+            <!-- ================================================================= -->
+            <!-- ELEMENTOS EN PROCESO -->
+            <!-- ================================================================= -->
+            <h6 class="text-blue fw-bold mb-3 border-bottom pb-2 mt-4">
+              <i class="fa-solid fa-layer-group me-2"></i>
+              {{ itemNamePlural() }} en Proceso
+            </h6>
 
-          <div class="table-responsive mb-4">
-            <table class="table table-hover align-middle border">
-              <thead class="table-light text-muted small">
-                <tr>
-                  <th class="text-uppercase">{{ itemName() }}</th>
-                  <th class="text-center">ESTADO</th>
-                  <th class="text-end">ACCIONES</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (item of activeItems(); track item.id) {
+            <div class="table-responsive mb-4">
+              <table class="table table-hover align-middle border">
+                <thead class="table-light text-muted small">
                   <tr>
-                    <td class="fw-medium">
-                      <i
-                        class="fa-solid text-muted me-2"
-                        [ngClass]="
-                          isDeliverablesPhase() ? 'fa-box-open' : 'fa-user-tie'
-                        "
-                      ></i>
-                      {{ item.name || item.master_deliverable?.name }}
-                    </td>
-                    <td class="text-center">
-                      <span
-                        class="badge badge-in-progress rounded-pill px-3 py-2"
-                        >EN PROCESO</span
-                      >
-                    </td>
-                    <td class="text-end">
-                      <!--  BIFURCACIÓN DE BOTONES SEGÚN LA FASE -->
-                      @if (config().phaseCode === 'PI') {
-                        <!-- BOTONERA EXCLUSIVA PARA PRUEBAS INTEGRALES (PI) -->
-                        <button
-                          class="btn btn-sm btn-outline-brand me-2 rounded-pill px-3"
-                          (click)="openRegisters(item)"
-                          title="Gestionar Bitácora"
-                        >
-                          <i class="fa-solid fa-book-journal-whills me-1"></i>
-                          Bitácora
-                          <!-- Opcional: Mostrar un badge con la cantidad de registros -->
-                          <!-- @if ((item.registers_count ?? 0) > 0) {
-                            <span
-                              class="badge bg-info text-white ms-1 rounded-pill"
-                              >{{ (item.registers_count ?? 0) }}</span
-                            >
-                          } -->
-                        </button>
-
-                        <!-- Botón Usuarios (Bloqueado si no hay bitácora) -->
-                        <button
-                          class="btn btn-sm btn-outline-info me-2 rounded-pill px-3"
-                          [disabled]="(item.registers_count ?? 0) === 0"
-                          (click)="openTestUsers(item)"
-                          [title]="
-                            (item.registers_count ?? 0) === 0
-                              ? 'Debe registrar primero un avance en la bitácora'
-                              : 'Asignar Usuarios'
+                    <th class="text-uppercase">{{ itemName() }}</th>
+                    <th class="text-center">ESTADO</th>
+                    <th class="text-end">ACCIONES</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of activeItems(); track item.id) {
+                    <tr>
+                      <td class="fw-medium">
+                        <i
+                          class="fa-solid text-muted me-2"
+                          [ngClass]="
+                            isDeliverablesPhase() ? 'fa-box-open' : 'fa-user-tie'
                           "
+                        ></i>
+                        {{ item.name || item.master_deliverable?.name }}
+                      </td>
+                      <td class="text-center">
+                        <span
+                          class="badge badge-in-progress rounded-pill px-3 py-2"
+                          >EN PROCESO</span
                         >
-                          <i class="fa-solid fa-users me-1"></i> Usuario
-                        </button>
-
-                        <!-- Botón Aprobación | Ver Acta (Bloqueado si no hay bitácora o si ya está aprobado) -->
-                        @if (!item.is_approved) {
-                          <!-- Botón original: Registrar Aprobación (Bloqueado si no hay bitácora) -->
+                      </td>
+                      <td class="text-end gap-2">
+                        <!--  BIFURCACIÓN DE BOTONES SEGÚN LA FASE -->
+                        @if (config().phaseCode === 'PI') {
+                          <!-- BOTONERA EXCLUSIVA PARA PRUEBAS INTEGRALES (PI) -->
                           <button
-                            class="btn btn-sm btn-outline-success me-2 rounded-pill px-3"
+                            class="btn btn-sm btn-tbl-construction me-2 rounded-pill px-3"
+                            (click)="openRegisters(item)"
+                            title="Gestionar Bitácora"
+                          >
+                            <i class="fa-solid fa-book-journal-whills me-1"></i>
+                            Bitácora
+                            <!-- Opcional: Mostrar un badge con la cantidad de registros -->
+                            <!-- @if ((item.registers_count ?? 0) > 0) {
+                              <span
+                                class="badge bg-info text-white ms-1 rounded-pill"
+                                >{{ (item.registers_count ?? 0) }}</span
+                              >
+                            } -->
+                          </button>
+
+                          <!-- Botón Usuarios (Bloqueado si no hay bitácora) -->
+                          <button
+                            class="btn btn-sm btn-tbl-planning me-2 rounded-pill px-3"
                             [disabled]="(item.registers_count ?? 0) === 0"
-                            (click)="openFunctionalApproval(item)"
+                            (click)="openTestUsers(item)"
                             [title]="
                               (item.registers_count ?? 0) === 0
                                 ? 'Debe registrar primero un avance en la bitácora'
-                                : 'Registrar Aprobación'
+                                : 'Asignar Usuarios de Pruebas'
                             "
                           >
-                            <i class="fa-solid fa-file-signature me-1"></i>
-                            Aprobación
+                            <i class="fa-solid fa-users me-1"></i> Usuario
+                          </button>
+
+                          @if (!item.is_approved) {
+                            <!-- Botón: Registrar Aprobación (Bloqueado si no hay usuarios de prueba) -->
+                            <button
+                              class="btn btn-sm btn-tbl-success me-2 rounded-pill px-3"
+                              [disabled]="(item.test_users_count ?? 0) === 0"
+                              (click)="openFunctionalApproval(item)"
+                              [title]="
+                                (item.test_users_count ?? 0) === 0
+                                  ? 'Debe registrar primero al menos un usuario de pruebas'
+                                  : 'Registrar Aprobación'
+                              "
+                            >
+                              <i class="fa-solid fa-file-signature me-1"></i>
+                              Aprobación
+                            </button>
+                          } @else {
+                            <!-- Botón nuevo: Ver Acta (Solo lectura, siempre disponible cuando está aprobado) -->
+                            <button
+                              class="btn btn-sm btn-tbl-info me-2 rounded-pill px-4"
+                              (click)="viewApprovalDocument(item)"
+                              title="Ver Acta de Aprobación"
+                            >
+                              <i class="fa-solid fa-file-pdf me-1"></i> Ver Acta
+                            </button>
+                          }
+
+                          <button
+                            class="btn btn-sm btn-tbl-close rounded-pill px-3 shadow-sm"
+                            [disabled]="!canClosePiRole(item)"
+                            [title]="getClosePiRoleTooltip(item)"
+                            (click)="closeItem(item)"
+                          >
+                            <i class="fa-solid fa-lock me-1"></i> Cerrar
                           </button>
                         } @else {
-                          <!-- Botón nuevo: Ver Acta (Solo lectura, siempre disponible cuando está aprobado) -->
+                          <!-- BOTONERA ESTÁNDAR (DT, COR, COE) -->
                           <button
-                            class="btn btn-sm btn-success me-2 rounded-pill px-4"
-                            (click)="viewApprovalDocument(item)"
-                            title="Ver Acta de Aprobación"
+                            class="btn btn-sm btn-tbl-construction me-2 rounded-pill px-3"
+                            (click)="openRegisters(item)"
                           >
-                            <i class="fa-solid fa-file-pdf me-1"></i> Ver Acta
+                            <i class="fa-solid fa-book-journal-whills me-1"></i>
+                            Bitácora
+                          </button>
+
+                          <button
+                            class="btn btn-sm btn-tbl-close rounded-pill px-3 shadow-sm"
+                            [disabled]="(item.registers_count || 0) === 0"
+                            (click)="closeItem(item)"
+                          >
+                            <i class="fa-solid fa-lock me-1"></i> Cerrar
                           </button>
                         }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="3" class="text-center text-muted py-4">
+                        <i
+                          class="fa-regular fa-folder-open fs-2 mb-2 opacity-50 d-block"
+                        ></i>
+                        No se encontraron {{ itemNamePlural() | lowercase }} en
+                        proceso.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
 
-                        <button
-                          class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm"
-                          [disabled]="!canClosePiRole(item)"
-                          [title]="getClosePiRoleTooltip(item)"
-                          (click)="closeItem(item)"
+            <!-- ================================================================= -->
+            <!-- ELEMENTOS CERRADOS -->
+            <!-- ================================================================= -->
+            <h6 class="text-success fw-bold mb-3 border-bottom pb-2 mt-4">
+              <i class="fa-solid fa-check-double me-2"></i>
+              {{ itemNamePlural() }} Cerrados
+            </h6>
+
+            <div class="table-responsive mb-4">
+              <table class="table table-hover align-middle border">
+                <thead class="table-light text-muted small">
+                  <tr>
+                    <th class="text-uppercase">{{ itemName() }}</th>
+                    <th class="text-center">ESTADO</th>
+                    <th class="text-end">ACCIONES</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of closedItems(); track item.id) {
+                    <tr>
+                      <td class="fw-medium text-muted">
+                        <i
+                          class="fa-solid text-muted me-2"
+                          [ngClass]="
+                            isDeliverablesPhase()
+                              ? 'fa-box-archive'
+                              : 'fa-user-lock'
+                          "
+                        ></i>
+                        {{ item.name || item.master_deliverable?.name }}
+                      </td>
+                      <td class="text-center">
+                        <span class="badge badge-closed rounded-pill px-3 py-2"
+                          >CERRADO</span
                         >
-                          <i class="fa-solid fa-lock me-1"></i> Cerrar
-                        </button>
-                      } @else {
-                        <!-- BOTONERA ESTÁNDAR (DT, COR, COE) -->
+                      </td>
+                      <td class="text-end">
                         <button
-                          class="btn btn-sm btn-outline-brand me-2 rounded-pill px-3"
+                          class="btn btn-sm btn-tbl-info me-2 rounded-pill px-3"
                           (click)="openRegisters(item)"
                         >
-                          <i class="fa-solid fa-book-journal-whills me-1"></i>
-                          Bitácora
+                          <i class="fa-solid fa-eye me-1"></i> Ver Bitácora
                         </button>
 
-                        <button
-                          class="btn btn-sm btn-outline-brand rounded-pill px-3 shadow-sm"
-                          [disabled]="(item.registers_count || 0) === 0"
-                          (click)="closeItem(item)"
-                        >
-                          <i class="fa-solid fa-lock me-1"></i> Cerrar
-                        </button>
-                      }
-                    </td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="3" class="text-center text-muted py-4">
-                      <i
-                        class="fa-regular fa-folder-open fs-2 mb-2 opacity-50 d-block"
-                      ></i>
-                      No se encontraron {{ itemNamePlural() | lowercase }} en
-                      proceso.
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+                        @if (isPhaseActive()) {
+                          <button
+                            class="btn btn-sm btn-tbl-edit me-2 rounded-pill px-3 text-dark"
+                            (click)="reopenItem(item)"
+                          >
+                            <i class="fa-solid fa-lock-open me-1"></i> Reabrir
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="3" class="text-center text-muted py-4">
+                        <i
+                          class="fa-regular fa-folder-closed fs-2 mb-2 opacity-50 d-block"
+                        ></i>
+                        No hay {{ itemNamePlural() | lowercase }} cerrados.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <!-- ================================================================= -->
-          <!-- ELEMENTOS CERRADOS -->
+          <!-- FOOTER DEL MODAL PRINCIPAL -->
           <!-- ================================================================= -->
-          <h6 class="text-success fw-bold mb-3 border-bottom pb-2 mt-4">
-            <i class="fa-solid fa-check-double me-2"></i>
-            {{ itemNamePlural() }} Cerrados
-          </h6>
-
-          <div class="table-responsive mb-4">
-            <table class="table table-hover align-middle border">
-              <thead class="table-light text-muted small">
-                <tr>
-                  <th class="text-uppercase">{{ itemName() }}</th>
-                  <th class="text-center">ESTADO</th>
-                  <th class="text-end">ACCIONES</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (item of closedItems(); track item.id) {
-                  <tr>
-                    <td class="fw-medium text-muted">
-                      <i
-                        class="fa-solid text-muted me-2"
-                        [ngClass]="
-                          isDeliverablesPhase()
-                            ? 'fa-box-archive'
-                            : 'fa-user-lock'
-                        "
-                      ></i>
-                      {{ item.name || item.master_deliverable?.name }}
-                    </td>
-                    <td class="text-center">
-                      <span class="badge badge-closed rounded-pill px-3 py-2"
-                        >CERRADO</span
-                      >
-                    </td>
-                    <td class="text-end">
-                      <button
-                        class="btn btn-sm btn-outline-brand me-2 rounded-pill px-3"
-                        (click)="openRegisters(item)"
-                      >
-                        <i class="fa-solid fa-eye me-1"></i> Ver Bitácora
-                      </button>
-
-                      @if (isPhaseActive()) {
-                        <button
-                          class="btn btn-sm btn-outline-warning text-dark"
-                          (click)="reopenItem(item)"
-                        >
-                          <i class="fa-solid fa-lock-open me-1"></i> Reabrir
-                        </button>
-                      }
-                    </td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="3" class="text-center text-muted py-4">
-                      <i
-                        class="fa-regular fa-folder-closed fs-2 mb-2 opacity-50 d-block"
-                      ></i>
-                      No hay {{ itemNamePlural() | lowercase }} cerrados.
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- ================================================================= -->
-        <!-- FOOTER DEL MODAL PRINCIPAL -->
-        <!-- ================================================================= -->
-        @if (isPhaseActive()) {
-          <div
-            class="modal-footer bg-light d-flex justify-content-between align-items-center w-100"
-          >
-            <span class="small text-muted">
-              <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase,
-              todos los elementos deben estar cerrados.
-            </span>
-
-            <button
-              class="btn btn-brand px-4"
-              (click)="closeGlobalPhase()"
-              [disabled]="isLoading() || !isPhaseCloseEnabled()"
+          @if (isPhaseActive()) {
+            <div
+              class="modal-footer d-flex justify-content-between align-items-center w-100 mb-3"
             >
-              @if (isLoading()) {
-                <i class="fa-solid fa-circle-notch fa-spin me-2"></i>
-                Cerrando...
-              } @else {
-                <i class="fa-solid fa-flag-checkered me-2"></i> Cerrar Fase
-                {{ config().phaseName }}
-              }
-            </button>
-          </div>
-        }
-      </div>
+              <span class="small text-danger fw-semibold">
+                <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase,
+                todos los componentes deben estar cerrados.
+              </span>
+
+              <button
+                class="btn btn-tbl-planning rounded-pill px-5 py-3 shadow-sm fw-bold d-flex align-items-center"
+                (click)="closeGlobalPhase()"
+                [disabled]="isLoading() || !isPhaseCloseEnabled()"
+              >
+                @if (isLoading()) {
+                  <i class="fa-solid fa-circle-notch fa-spin me-2"></i>
+                  Cerrando...
+                } @else {
+                  <i class="fa-solid fa-flag-checkered me-2"></i> Cerrar Fase
+                  {{ config().phaseName }}
+                }
+              </button>
+            </div>
+          }
+        </div>
     </div>
   </div>
 }

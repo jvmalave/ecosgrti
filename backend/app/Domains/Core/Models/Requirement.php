@@ -49,7 +49,12 @@ class Requirement extends Model
     'snapshot_society_name',
     'snapshot_system_name',
     'snapshot_unit_name',
-    'progress_percentage'
+    'progress_percentage',
+    'notification_date',
+    'completion_date',
+    'closure_act_path',
+    'notification_support_path',
+    'conformity_declaration'
   ];
 
   protected static function newFactory()
@@ -83,9 +88,9 @@ class Requirement extends Model
       : $this->phaseHistories()->get();
 
     foreach ($histories as $history) {
-      // 🟢 CORRECCIÓN: Usamos phase_status_code
+      // Extrae las fases inmutables a partir del phase_status_code
       if (str_ends_with($history->phase_status_code, '-C')) {
-        // Separamos 'DT-C' y nos quedamos con 'DT'
+        // Separa 'DT-C' y nos quedamos con 'DT'
         $parts = explode('-', $history->phase_status_code);
         if (isset($parts[0])) {
           $frozen[] = $parts[0];
@@ -145,4 +150,32 @@ class Requirement extends Model
   {
     return $this->belongsTo(ProgressMatrix::class, 'progress_matrix_id');
   }
+
+  /**
+     * Relación 1 a N: Un requerimiento tiene muchos acuerdos ATF.
+     */
+    public function atfAgreements()
+    {
+        // Viendo tu barra lateral, el modelo AtfAgreement está en el dominio Workflow
+        return $this->hasMany(\App\Domains\Workflow\Models\AtfAgreement::class, 'requirement_id');
+    }
+
+    /**
+     * Relación 1 a N: Un requerimiento tiene muchos roles.
+     */
+    public function roles()
+    {
+        // Ajusta la ruta del modelo según cómo lo hayas nombrado en tu proyecto
+        // Ej: CorRole::class, RequirementRole::class, etc.
+        return $this->hasMany(\App\Domains\Workflow\Models\CorRole::class, 'requirement_id');
+    }
+
+    /**
+     * Relación 1 a N: Un requerimiento tiene muchos entregables.
+     */
+    public function deliverables()
+    {
+        // Ajusta la ruta del modelo de tu entregable
+        return $this->hasMany(\App\Domains\Workflow\Models\Deliverable::class, 'requirement_id');
+    }
 }

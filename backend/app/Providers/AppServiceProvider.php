@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+use App\Policies\RequirementPolicy;
+use App\Domains\Core\Models\Requirement;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,5 +30,8 @@ class AppServiceProvider extends ServiceProvider
             database_path('migrations/audit'),
             database_path('migrations/workflow'),
         ]);
+
+        // Vinculamos tu modelo del dominio con su escudo de seguridad
+        Gate::policy(Requirement::class, RequirementPolicy::class);
     }
 }

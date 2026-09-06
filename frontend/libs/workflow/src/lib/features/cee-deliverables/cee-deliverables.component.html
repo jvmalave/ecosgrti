@@ -1,11 +1,21 @@
 <div class="fade-in p-4">
   <!-- Cabecera: Requerimiento, Buscador y Botón de Cierre -->
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+  <div
+    class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3"
+  >
     <!-- Lado Izquierdo: Badge -->
-    <div>
-      <span class="badge badge-brand rounded-pill fw-bold px-3 py-2 text-uppercase">
+    <div class="d-flex align-items-center gap-3">
+      <span
+        class="badge badge-brand rounded-pill fw-bold px-3 py-2 text-uppercase"
+      >
         Requerimiento: {{ rrti() }}
       </span>
+      <button
+        class="btn btn-sm btn-outline-brand rounded-pill fw-bold px-3 shadow-sm d-flex align-items-center"
+        (click)="showCeeStatusModal.set(true)"
+      >
+        <i class="fa-solid fa-layer-group me-2"></i> Estatus Global
+      </button>
     </div>
 
     <!-- Lado Derecho: Buscador Compacto -->
@@ -47,11 +57,19 @@
 
   <!-- BANNER DE FASE CERRADA -->
   @if (isPhaseClosed()) {
-    <div class="d-flex align-items-center mb-4 p-3 rounded-3 shadow-sm" style="background-color: #e8f5e9; border: 1px solid #c8e6c9;">
-      <i class="fa-solid fa-lock fs-3 me-3" style="color: #2e7d32;"></i>
+    <div
+      class="d-flex align-items-center mb-4 p-3 rounded-3 shadow-sm"
+      style="background-color: #e8f5e9; border: 1px solid #c8e6c9"
+    >
+      <i class="fa-solid fa-lock fs-3 me-3" style="color: #2e7d32"></i>
       <div>
-        <h6 class="fw-bold mb-1" style="color: #1b5e20;">Fase de Certificación - Entregables Cerrada</h6>
-        <span class="small" style="color: #2e7d32;">Esta fase ha concluido. Todos los elementos y sus bitácoras se encuentran en estado inmutable.</span>
+        <h6 class="fw-bold mb-1" style="color: #1b5e20">
+          Fase de Certificación - Entregables Cerrada
+        </h6>
+        <span class="small" style="color: #2e7d32"
+          >Esta fase ha concluido. Todos los elementos y sus bitácoras se
+          encuentran en estado inmutable.</span
+        >
       </div>
     </div>
   }
@@ -61,7 +79,8 @@
     <div class="mb-5">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="fw-bold mb-0 text-brand">
-          <i class="fa-solid fa-file-signature me-2"></i> Entregables por Certificar
+          <i class="fa-solid fa-file-signature me-2"></i> Entregables por
+          Certificar
         </h6>
 
         <button
@@ -91,7 +110,11 @@
               <td class="text-center align-middle">
                 <span
                   class="badge rounded-pill fw-bold px-3 py-1"
-                  style="background-color: #fff3e0; color: #e65100; border: 1px solid #ffe0b2;"
+                  style="
+                    background-color: #fff3e0;
+                    color: #e65100;
+                    border: 1px solid #ffe0b2;
+                  "
                 >
                   PENDIENTE
                 </span>
@@ -103,7 +126,9 @@
                     type="checkbox"
                     [value]="deliverable.id"
                     [checked]="deliverablesToProcess().includes(deliverable.id)"
-                    (change)="toggleDeliverableSelection(deliverable.id, $event)"
+                    (change)="
+                      toggleDeliverableSelection(deliverable.id, $event)
+                    "
                   />
                 </div>
               </td>
@@ -125,7 +150,9 @@
         <thead class="table-light">
           <tr>
             <th class="ps-3" style="width: 35%">TICKET CEE</th>
-            <th class="text-center" style="width: 25%">ENTREGABLES ASOCIADOS</th>
+            <th class="text-center" style="width: 25%">
+              ENTREGABLES ASOCIADOS
+            </th>
             <th class="text-center" style="width: 20%">ESTADO</th>
             <th class="text-end pe-3" style="width: 20%">ACCIONES</th>
           </tr>
@@ -138,12 +165,16 @@
                 {{ ticket.ticketNumber }}
               </td>
               <td class="text-center align-middle">
-                <span class="badge bg-light text-dark border px-3 py-1 fw-medium">
+                <span
+                  class="badge bg-light text-dark border px-3 py-1 fw-medium"
+                >
                   {{ ticket.deliverablesCount }} Entregable(s)
                 </span>
               </td>
               <td class="text-center align-middle">
-                <span class="badge rounded-pill badge-in-progress fw-bold px-3 py-1">
+                <span
+                  class="badge rounded-pill badge-in-progress fw-bold px-3 py-1"
+                >
                   EN PROCESO
                 </span>
               </td>
@@ -173,7 +204,9 @@
         <thead class="table-light">
           <tr>
             <th class="ps-3" style="width: 35%">TICKET CEE</th>
-            <th class="text-center" style="width: 25%">ENTREGABLES ASOCIADOS</th>
+            <th class="text-center" style="width: 25%">
+              ENTREGABLES ASOCIADOS
+            </th>
             <th class="text-center" style="width: 20%">ESTADO</th>
             <th class="text-end pe-3" style="width: 20%">ACCIONES</th>
           </tr>
@@ -186,7 +219,9 @@
                 {{ ticket.ticketNumber }}
               </td>
               <td class="text-center align-middle">
-                <span class="badge bg-light text-dark border px-3 py-1 fw-medium">
+                <span
+                  class="badge bg-light text-dark border px-3 py-1 fw-medium"
+                >
                   {{ ticket.deliverablesCount }} Entregable(s)
                 </span>
               </td>
@@ -212,17 +247,21 @@
 
   <!-- FOOTER DE ACCIÓN GLOBAL -->
   @if (!isPhaseClosed()) {
-    <div class="d-flex flex-wrap justify-content-between align-items-center mt-5 pt-3 border-top gap-3">
+    <div
+      class="d-flex flex-wrap justify-content-between align-items-center mt-5 pt-3 border-top gap-3"
+    >
       <div class="text-muted small fw-medium">
-        <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase, todos los entregables deben estar certificados.
+        <i class="fa-solid fa-circle-info me-1"></i> Para cerrar la fase, todos
+        los entregables deben estar certificados.
       </div>
-      
-      <button 
+
+      <button
         class="btn btn-brand rounded-pill px-4 fw-bold shadow-sm text-nowrap"
         [disabled]="!canClosePhase()"
         (click)="finalizeCeePhase()"
       >
-        <i class="fa-solid fa-flag-checkered me-2"></i> Cerrar Fase Certificación - Entregables
+        <i class="fa-solid fa-flag-checkered me-2"></i> Cerrar Fase
+        Certificación - Entregables
       </button>
     </div>
   }
@@ -246,10 +285,23 @@
     [ticketId]="activeTicketId()"
     [ticketNumber]="activeTicketNumber()"
     [deliverablesInTicket]="activeDeliverables()"
-    [viewMode]="isResultViewMode()" 
+    [viewMode]="isResultViewMode()"
     [rrti]="rrti()"
     (closeForm)="showResultModal.set(false)"
     (resultRegistered)="onResultSuccessfullyRegistered()"
   >
   </lib-cee-result-form>
-} 
+}
+
+<!-- ========================================== -->
+<!-- MODAL: ESTATUS GLOBAL DE ENTREGABLES (CEE) -->
+<!-- ========================================== -->
+@if (showCeeStatusModal()) {
+  <lib-global-status-modal
+    [modalTitle]="'Estatus Entregables en  Certificación'"
+    [requirementId]="rrti()"
+    [columns]="statusColumnsData()"
+    (closeModal)="showCeeStatusModal.set(false)"
+  >
+  </lib-global-status-modal>
+}

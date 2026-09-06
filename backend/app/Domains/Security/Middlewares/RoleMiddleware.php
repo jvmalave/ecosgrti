@@ -18,25 +18,25 @@ class RoleMiddleware
     {
         $user = $request->user();
         
-        // Extraemos los roles gracias al Cast del Modelo
+        // Extrae los roles gracias al Cast del Modelo
         $userRoles = $user->roles ?? []; 
         
-        // 💡 DEFENSA: Si PostgreSQL lo entrega como String JSON plano en la nube, lo forzamos a Array
+        // Si PostgreSQL lo entrega como String JSON plano en la nube,se forza a Array
         if (is_string($userRoles)) {
             $userRoles = json_decode($userRoles, true) ?? [];
         }
 
-        // Si por alguna razón no es un array válido, lo inicializamos vacío para prevenir fallos en array_map
+        // Si por alguna razón no es un array válido, se inicializa como vacío para prevenir fallos en array_map
         if (!is_array($userRoles)) {
             $userRoles = [];
         }
 
-        // POR QUÉ: Normalizamos ambos arreglos a minúsculas (lowercase) 
+        // Se Normalizan ambos arreglos a minúsculas (lowercase) 
         // para garantizar una comparación tolerante a errores de tipeo en la BD o en las Rutas.
         $normalizedUserRoles = array_map('strtolower', $userRoles);
         $normalizedRequiredRoles = array_map('strtolower', $roles);
 
-        // Comparamos usando los arreglos normalizados
+        // Comparación usando los arreglos normalizados
         if (empty(array_intersect($normalizedUserRoles, $normalizedRequiredRoles))) {
             
             \Illuminate\Support\Facades\Log::warning('Bloqueo RBAC: Intento de acceso sin privilegios', [

@@ -86,9 +86,18 @@ export class UnifiedPersonListModalComponent implements OnInit, OnDestroy {
         this.totalPages.set(response.meta?.last_page || 1);
         this.isLoading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.isLoading.set(false);
         this.notificationService.showError('Error de Conexión', 'No se pudo cargar el listado de identidades.');
+
+        if (err.status === 403) {
+            // Extraemos el mensaje real de Laravel o usamos uno por defecto
+            const forbiddenMessage = err.error?.message || 'No tiene permisos para ver esta estructura.';
+            this.notificationService.showError('Acceso Denegado', forbiddenMessage);
+          } else {
+            // Para otros errores (500, 404, etc.) mantenemos el mensaje genérico
+            this.notificationService.showError('Error de API', 'No se pudo cargar el listado de identidades.');
+          }
       }
     });
   }
@@ -133,6 +142,8 @@ export class UnifiedPersonListModalComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  
 
   public onClose(): void {
     this.modalClosed.emit();

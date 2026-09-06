@@ -529,7 +529,7 @@ class RequirementService
             throw new InvalidArgumentException("Operación denegada: El requerimiento se encuentra inmutable debido a un Hard Gate activo.");
         }
 
-        $this->validateChronologicalSequence($phasesData, Carbon::parse($requirement->created_at));
+        $this->validateChronologicalSequence($phasesData, Carbon::parse($requirement->creation_date));
 
         return DB::transaction(function () use ($requirementId, $phasesData, $userId) {
 

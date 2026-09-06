@@ -3,16 +3,20 @@
     <!-- Header Reactivo al Modo de Edición -->
     <header class="modal-header">
       <h2 class="d-flex align-items-center gap-2">
-        <i class="fas fa-id-card"></i> 
+        <i class="fas fa-id-card"></i>
         @if (isEditMode()) {
           Actualizar Ficha Unificada
         } @else {
           Nueva Ficha Unificada de Persona
         }
       </h2>
-      <button class="close-btn" type="button" 
-        (click)="onClose()" title="Cerrar modal">
-        <i class="bi bi-x"></i>
+      <button
+        class="close-btn"
+        type="button"
+        (click)="onClose()"
+        title="Cerrar modal"
+      >
+        <i class="fa-solid fa-circle-xmark"></i>
       </button>
     </header>
 
@@ -20,83 +24,144 @@
       <fieldset class="form-section">
         <legend>Datos Personales</legend>
         <div class="grid-2-cols">
-          
           <!-- NOMBRES -->
           <div class="form-group">
-            <label for="first_name_input">Nombres *</label>
+            <label for="first_name_input" class="form-label fs-6"
+              >Nombres <span class="text-danger">*</span></label
+            >
             <input
               id="first_name_input"
               type="text"
               formControlName="first_name"
               class="form-control"
               placeholder="Ingrese los nombres"
-              [class.is-invalid]="personForm.get('first_name')?.invalid && personForm.get('first_name')?.touched"
+              [class.is-invalid]="
+                personForm.get('first_name')?.invalid &&
+                personForm.get('first_name')?.touched
+              "
             />
-            @if (personForm.get('first_name')?.invalid && personForm.get('first_name')?.touched) {
+            @if (
+              personForm.get('first_name')?.invalid &&
+              personForm.get('first_name')?.touched
+            ) {
               <div class="invalid-feedback">
-                @if (personForm.get('first_name')?.hasError('required')) { <span>Los nombres son obligatorios.</span> }
-                @if (personForm.get('first_name')?.hasError('maxlength')) { <span>No puede exceder los 255 caracteres.</span> }
-                @if (personForm.get('first_name')?.hasError('serverError')) { <span>{{ personForm.get('first_name')?.getError('serverError') }}</span> }
+                @if (personForm.get('first_name')?.hasError('required')) {
+                  <span>Los nombres son obligatorios.</span>
+                }
+                @if (personForm.get('first_name')?.hasError('maxlength')) {
+                  <span>No puede exceder los 255 caracteres.</span>
+                }
+                @if (personForm.get('first_name')?.hasError('serverError')) {
+                  <span>{{
+                    personForm.get('first_name')?.getError('serverError')
+                  }}</span>
+                }
               </div>
             }
           </div>
 
           <!-- APELLIDOS -->
           <div class="form-group">
-            <label for="last_name_input">Apellidos *</label>
+            <label for="last_name_input" class="form-label fs-6"
+              >Apellidos <span class="text-danger">*</span></label
+            >
             <input
               id="last_name_input"
               type="text"
               formControlName="last_name"
               class="form-control"
               placeholder="Ingrese los apellidos"
-              [class.is-invalid]="personForm.get('last_name')?.invalid && personForm.get('last_name')?.touched"
+              [class.is-invalid]="
+                personForm.get('last_name')?.invalid &&
+                personForm.get('last_name')?.touched
+              "
             />
-            @if (personForm.get('last_name')?.invalid && personForm.get('last_name')?.touched) {
+            @if (
+              personForm.get('last_name')?.invalid &&
+              personForm.get('last_name')?.touched
+            ) {
               <div class="invalid-feedback">
-                @if (personForm.get('last_name')?.hasError('required')) { <span>Los apellidos son obligatorios.</span> }
-                @if (personForm.get('last_name')?.hasError('maxlength')) { <span>No puede exceder los 255 caracteres.</span> }
-                @if (personForm.get('last_name')?.hasError('serverError')) { <span>{{ personForm.get('last_name')?.getError('serverError') }}</span> }
+                @if (personForm.get('last_name')?.hasError('required')) {
+                  <span>Los apellidos son obligatorios.</span>
+                }
+                @if (personForm.get('last_name')?.hasError('maxlength')) {
+                  <span>No puede exceder los 255 caracteres.</span>
+                }
+                @if (personForm.get('last_name')?.hasError('serverError')) {
+                  <span>{{
+                    personForm.get('last_name')?.getError('serverError')
+                  }}</span>
+                }
               </div>
             }
           </div>
 
           <!-- CORREO ELECTRÓNICO -->
           <div class="form-group">
-            <label for="email">Correo Electrónico *</label>
+            <label for="email" class="form-label fs-6"
+              >Correo Electrónico <span class="text-danger">*</span></label
+            >
             <input
               type="email"
               id="email"
               class="form-control"
               formControlName="email"
               placeholder="usuario@cantv.com.ve"
-              [class.is-invalid]="personForm.get('email')?.invalid && personForm.get('email')?.touched"
+              [class.is-invalid]="
+                personForm.get('email')?.invalid &&
+                personForm.get('email')?.touched
+              "
             />
-            @if (personForm.get('email')?.invalid && personForm.get('email')?.touched) {
+            @if (
+              personForm.get('email')?.invalid &&
+              personForm.get('email')?.touched
+            ) {
               <div class="invalid-feedback">
-                @if (personForm.get('email')?.hasError('required')) { <span>El correo electrónico es obligatorio.</span> }
-                @if (personForm.get('email')?.hasError('email')) { <span>Debe ingresar un formato de correo válido.</span> }
-                @if (personForm.get('email')?.hasError('maxlength')) { <span>El correo no puede exceder los 255 caracteres.</span> }
-                @if (personForm.get('email')?.hasError('serverError')) { <span>{{ personForm.get('email')?.getError('serverError') }}</span> }
+                @if (personForm.get('email')?.hasError('required')) {
+                  <span>El correo electrónico es obligatorio.</span>
+                }
+                @if (personForm.get('email')?.hasError('email')) {
+                  <span>Debe ingresar un formato de correo válido.</span>
+                }
+                @if (personForm.get('email')?.hasError('maxlength')) {
+                  <span>El correo no puede exceder los 255 caracteres.</span>
+                }
+                @if (personForm.get('email')?.hasError('serverError')) {
+                  <span>{{
+                    personForm.get('email')?.getError('serverError')
+                  }}</span>
+                }
               </div>
             }
           </div>
 
           <!-- TELÉFONO -->
           <div class="form-group">
-            <label for="phone_input">Teléfono</label>
+            <label for="phone_input" class="form-label fs-6">Teléfono</label>
             <input
               id="phone_input"
               type="text"
               formControlName="phone"
               class="form-control"
               placeholder="+58 412 0000000"
-              [class.is-invalid]="personForm.get('phone')?.invalid && personForm.get('phone')?.touched"
+              [class.is-invalid]="
+                personForm.get('phone')?.invalid &&
+                personForm.get('phone')?.touched
+              "
             />
-            @if (personForm.get('phone')?.invalid && personForm.get('phone')?.touched) {
+            @if (
+              personForm.get('phone')?.invalid &&
+              personForm.get('phone')?.touched
+            ) {
               <div class="invalid-feedback">
-                @if (personForm.get('phone')?.hasError('maxlength')) { <span>El teléfono no puede exceder los 255 caracteres.</span> }
-                @if (personForm.get('phone')?.hasError('serverError')) { <span>{{ personForm.get('phone')?.getError('serverError') }}</span> }
+                @if (personForm.get('phone')?.hasError('maxlength')) {
+                  <span>El teléfono no puede exceder los 255 caracteres.</span>
+                }
+                @if (personForm.get('phone')?.hasError('serverError')) {
+                  <span>{{
+                    personForm.get('phone')?.getError('serverError')
+                  }}</span>
+                }
               </div>
             }
           </div>
@@ -108,19 +173,27 @@
         <legend>Perfiles y Accesos</legend>
         <div class="toggles-grid">
           <label for="is_functional_toggle" class="toggle-control">
-            <input id="is_functional_toggle" type="checkbox" formControlName="is_functional" />
+            <input
+              id="is_functional_toggle"
+              type="checkbox"
+              formControlName="is_functional"
+            />
             <span class="toggle-slider"></span> Es Consultor Funcional
           </label>
           <label for="is_cspe_toggle" class="toggle-control">
-            <input id="is_cspe_toggle" type="checkbox" formControlName="is_cspe" />
+            <input
+              id="is_cspe_toggle"
+              type="checkbox"
+              formControlName="is_cspe"
+            />
             <span class="toggle-slider"></span> Es Consultor CSPE
           </label>
           <label for="has_system_access_toggle" class="toggle-control">
             <!-- Bloqueamos visualmente el toggle de sistema si es CSPE (Regla de negocio) -->
-            <input 
-              id="has_system_access_toggle" 
-              type="checkbox" 
-              formControlName="has_system_access" 
+            <input
+              id="has_system_access_toggle"
+              type="checkbox"
+              formControlName="has_system_access"
             />
             <span class="toggle-slider"></span> Posee Acceso al Sistema
           </label>
@@ -132,22 +205,42 @@
         <fieldset class="form-section highlight-section">
           <legend>Asignación Organizacional</legend>
           <div class="form-group">
-            <label for="requesting_unit_select">Unidad Solicitante *</label>
+            <label for="requesting_unit_select" class="form-label fs-6"
+              >Unidad Solicitante <span class="text-danger">*</span></label
+            >
             <select
               id="requesting_unit_select"
               formControlName="requesting_unit_id"
               class="form-control"
-              [class.is-invalid]="personForm.get('requesting_unit_id')?.invalid && personForm.get('requesting_unit_id')?.touched"
+              [class.is-invalid]="
+                personForm.get('requesting_unit_id')?.invalid &&
+                personForm.get('requesting_unit_id')?.touched
+              "
             >
               <option [ngValue]="null">Seleccione una unidad...</option>
               @for (unit of requestingUnits(); track unit.id) {
                 <option [value]="unit.id">{{ unit.name }}</option>
               }
             </select>
-            @if (personForm.get('requesting_unit_id')?.invalid && personForm.get('requesting_unit_id')?.touched) {
+            @if (
+              personForm.get('requesting_unit_id')?.invalid &&
+              personForm.get('requesting_unit_id')?.touched
+            ) {
               <div class="invalid-feedback">
-                @if (personForm.get('requesting_unit_id')?.hasError('required')) { <span>Debe seleccionar una unidad solicitante.</span> }
-                @if (personForm.get('requesting_unit_id')?.hasError('serverError')) { <span>{{ personForm.get('requesting_unit_id')?.getError('serverError') }}</span> }
+                @if (
+                  personForm.get('requesting_unit_id')?.hasError('required')
+                ) {
+                  <span>Debe seleccionar una unidad solicitante.</span>
+                }
+                @if (
+                  personForm.get('requesting_unit_id')?.hasError('serverError')
+                ) {
+                  <span>{{
+                    personForm
+                      .get('requesting_unit_id')
+                      ?.getError('serverError')
+                  }}</span>
+                }
               </div>
             }
           </div>
@@ -159,35 +252,57 @@
         <fieldset class="form-section highlight-section">
           <legend>Credenciales de Acceso</legend>
           <div class="grid-2-cols">
-            
-            <!-- USUARIO (NAME) -->
+            <!-- IDENTIFICADOR DE USUARIO -->
             <div class="form-group">
-              <label for="username_input">Nombre del Usuario *</label>
+              <label for="username_input" class="form-label fs-6"
+                >Nombre del Usuario <span class="text-danger">*</span></label
+              >
               <input
                 id="username_input"
                 type="text"
                 formControlName="name"
-                class="form-control"
+                class="form-control bg-light text-muted"
+                readonly
+                style="cursor: not-allowed; user-select: none"
+                placeholder="Generado automáticamente"
                 autocomplete="new-password"
-                [class.is-invalid]="personForm.get('name')?.invalid && personForm.get('name')?.touched"
+                [class.is-invalid]="
+                  personForm.get('name')?.invalid &&
+                  personForm.get('name')?.touched
+                "
               />
-              @if (personForm.get('name')?.invalid && personForm.get('name')?.touched) {
+              @if (
+                personForm.get('name')?.invalid &&
+                personForm.get('name')?.touched
+              ) {
                 <div class="invalid-feedback">
-                  @if (personForm.get('name')?.hasError('required')) { <span>El identificador de usuario es obligatorio.</span> }
-                  @if (personForm.get('name')?.hasError('maxlength')) { <span>No puede exceder los 255 caracteres.</span> }
-                  @if (personForm.get('name')?.hasError('serverError')) { <span>{{ personForm.get('name')?.getError('serverError') }}</span> }
+                  @if (personForm.get('name')?.hasError('required')) {
+                    <span>El identificador de usuario es obligatorio.</span>
+                  }
+                  @if (personForm.get('name')?.hasError('maxlength')) {
+                    <span>No puede exceder los 255 caracteres.</span>
+                  }
+                  @if (personForm.get('name')?.hasError('serverError')) {
+                    <span>{{
+                      personForm.get('name')?.getError('serverError')
+                    }}</span>
+                  }
                 </div>
               }
             </div>
 
             <!-- CONTRASEÑA (Dinámica: Opcional en Update, Obligatoria en Create) -->
             <div class="form-group">
-              <label for="password_input">
+              <label for="password_input" class="form-label fs-6">
                 Contraseña
                 @if (!isEditMode()) {
-                  *
+                  <span class="text-danger">*</span>
                 } @else {
-                  <small class="text-muted" style="font-weight: normal; margin-left: 5px;">(Opcional)</small>
+                  <small
+                    class="text-muted"
+                    style="font-weight: normal; margin-left: 5px"
+                    >(Opcional)</small
+                  >
                 }
               </label>
               <input
@@ -196,60 +311,106 @@
                 formControlName="password"
                 class="form-control"
                 autocomplete="new-password"
-                [placeholder]="isEditMode() ? 'Dejar en blanco para mantener la actual' : 'Ingrese una contraseña segura'"
-                [class.is-invalid]="personForm.get('password')?.invalid && personForm.get('password')?.touched"
+                [placeholder]="
+                  isEditMode()
+                    ? 'Dejar en blanco para mantener la actual'
+                    : 'Ingrese una contraseña segura'
+                "
+                [class.is-invalid]="
+                  personForm.get('password')?.invalid &&
+                  personForm.get('password')?.touched
+                "
               />
-              @if (personForm.get('password')?.invalid && personForm.get('password')?.touched) {
+              @if (
+                personForm.get('password')?.invalid &&
+                personForm.get('password')?.touched
+              ) {
                 <div class="invalid-feedback">
-                  @if (personForm.get('password')?.hasError('required')) { <span>La contraseña es obligatoria.</span> }
-                  @if (personForm.get('password')?.hasError('minlength')) { <span>Debe contener al menos 8 caracteres.</span> }
-                  @if (personForm.get('password')?.hasError('serverError')) { <span>{{ personForm.get('password')?.getError('serverError') }}</span> }
+                  @if (personForm.get('password')?.hasError('required')) {
+                    <span>La contraseña es obligatoria.</span>
+                  }
+                  @if (personForm.get('password')?.hasError('minlength')) {
+                    <span>Debe contener al menos 8 caracteres.</span>
+                  }
+                  @if (personForm.get('password')?.hasError('serverError')) {
+                    <span>{{
+                      personForm.get('password')?.getError('serverError')
+                    }}</span>
+                  }
                 </div>
               }
             </div>
 
             <!-- ROLES -->
             <div class="form-group span-full">
-              <label for="roles_select">Roles de Sistema *</label>
+              <label for="roles_select" class="form-label fs-6"
+                >Roles de Sistema <span class="text-danger">*</span></label
+              >
               <select
                 id="roles_select"
                 formControlName="roles"
                 class="form-control"
                 multiple
-                [class.is-invalid]="personForm.get('roles')?.invalid && personForm.get('roles')?.touched"
+                [class.is-invalid]="
+                  personForm.get('roles')?.invalid &&
+                  personForm.get('roles')?.touched
+                "
               >
                 @for (role of systemRoles; track role) {
-                  <option [value]="role">{{ role }}</option>
+                  <!-- El valor (value) se mantiene original para el formulario, pero el texto mostrado usa el diccionario -->
+                  <option [value]="role">
+                    {{ roleMasks[role] || (role | uppercase) }}
+                  </option>
                 }
               </select>
-              @if (personForm.get('roles')?.invalid && personForm.get('roles')?.touched) {
+              @if (
+                personForm.get('roles')?.invalid &&
+                personForm.get('roles')?.touched
+              ) {
                 <div class="invalid-feedback">
-                  @if (personForm.get('roles')?.hasError('required')) { <span>Debe asignar al menos un rol.</span> }
-                  @if (personForm.get('roles')?.hasError('serverError')) { <span>{{ personForm.get('roles')?.getError('serverError') }}</span> }
+                  @if (personForm.get('roles')?.hasError('required')) {
+                    <span>Debe asignar al menos un rol.</span>
+                  }
+                  @if (personForm.get('roles')?.hasError('serverError')) {
+                    <span>{{
+                      personForm.get('roles')?.getError('serverError')
+                    }}</span>
+                  }
                 </div>
               }
-              <small class="help-text">Presione Ctrl (o Cmd) para seleccionar múltiples roles.</small>
+              <small class="help-text"
+                >Presione Ctrl (o Cmd) para seleccionar múltiples roles.</small
+              >
             </div>
           </div>
         </fieldset>
       }
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" 
-          (click)="onClose()">
-          <i class="bi bi-x-circle me-1"></i>
-          Cancelar</button>
-        <!-- Botón de Confirmación Reactivo -->
-        <button type="submit" class="btn btn-primary" 
-          [disabled]="personForm.invalid">
-          @if (isEditMode()) {
-            <i class="bi bi-save me-1"></i>
-            Guardar Cambios
-          } @else {
-            <i class="bi bi-person-plus me-1"></i>
-            Registrar Identidad
-          }
+        <button type="button" class="btn btn-secondary" (click)="onClose()">
+          <i class="fa-solid fa-circle-xmark me-2"></i>
+          Cancelar
         </button>
+        <!-- Botón de Confirmación Reactivo -->
+        @if (isEditMode()) {
+          <button
+            type="submit"
+            class="btn btn-warning"
+            [disabled]="personForm.invalid"
+          >
+            <i class="fa-solid fa-pencil me-2"></i>
+            Actualizar
+          </button>
+        } @else {
+          <button
+            type="submit"
+            class="btn btn-success"
+            [disabled]="personForm.invalid"
+          >
+            <i class="fa-solid fa-user-plus me-2"></i>
+            Registrar Identidad
+          </button>
+        }
       </div>
     </form>
   </div>

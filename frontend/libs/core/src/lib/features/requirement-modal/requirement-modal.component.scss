@@ -2,9 +2,56 @@
   IDENTIDAD VISUAL CANTV (ECOSGRTI)
    ======================================================== */
 
+$color-magenta: #e91e63;
+$color-purple: #9c27b0;
+$gradient-end: #ff00ff;
+$gradient-start: #1c1ce2;
+$sidebar-bg: #1c1ce2; // Un tono oscuro azulado muy elegante para el sidebar
+$text-muted: #64748b;
+$text-white: #ffffff;
+$color-success: #198754;
+$color-danger: #ef4444;
+$color-info: #3b82f6;
+$color-warning: #f59e0b;
+$color-dark: #1e293b;
+$color-light: #f3f4f6;
+$color-gray: #64748b;
+$color-blue: #1c1ce2;
+
+
+
 .brand-gradient {
   background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%) !important;
   border-bottom: 3px solid #ea80fc !important;
+}
+
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(90deg, $gradient-start 80%, $gradient-end 100%) !important;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h2, h3, h5 {
+    color: white !important;
+    margin: 0;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.3);
+      color: $text-white;
+    }
+  }
 }
 
 .text-brand {
@@ -49,11 +96,44 @@
 }
 
 /* Estilos complementarios para los Badges del Organigrama */
-.badge-soft-brand {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
+.badge-soft-society {
+  background-color: $gradient-start;
+  color: $text-white;
   border: 1px solid #e1bee7;
 }
+
+.badge-soft-system {
+  background-color: $color-info;
+  color: $text-white;
+  border: 1px solid #e1bee7;
+}
+
+.badge-soft-unit {
+  background-color: $text-muted;
+  color: $text-white;
+  border: 1px solid #e1bee7;
+}
+
+
+
+
+// ========================================================
+// EFECTO DE FONDO (OSCURECIDO Y DIFUMINADO)
+// ========================================================
+.modal-backdrop.show {
+  // Quitamos la opacidad por defecto de Bootstrap (0.5) para controlarla con RGBA
+  opacity: 1 !important; 
+  
+  // Fondo negro al 65% de opacidad (puedes subirlo a 0.75 si lo quieres más oscuro)
+  background-color: rgba(0, 0, 0, 0.65) !important; 
+  
+  // El toque mágico del difuminado
+  backdrop-filter: blur(5px) !important; 
+  -webkit-backdrop-filter: blur(5px) !important; // Soporte para navegadores basados en WebKit (Safari)
+}
+
+
+
 
 /* ========================================================
   ÍCONOS PERSONALIZADOS (IMÁGENES)
@@ -74,3 +154,4 @@
 .alert{
       border-left: 4px solid rgba(3, 21, 1, 0.4) !important; 
 }
+

@@ -4,7 +4,6 @@ import { Component, inject, input, output, OnInit, signal, computed } from '@ang
 import { CommonModule } from '@angular/common';
 import { WorkflowApiService,  } from '../../data-access/services/atf.service';
 import { AtfAgreementDetail } from '../../data-access/models/atf-agreement.model';
-import Swal from 'sweetalert2';
 import { UpdateManagementTypeModalComponent } from '../update-management-type-modal/update-management-type-modal.component';
 import { AtfRolesListComponent } from '../atf-roles-list/atf-roles-list.component';
 import { AtfDeliverablesListComponent } from '../atf-deliverables-list-modal/atf-deliverables-list-modal.component';
@@ -94,50 +93,33 @@ export class AtfAgreementsListModalComponent implements OnInit {
     this.viewAgreementDetail.emit(agreement);
   }
 
-  public deleteAgreement(agreementId: string): void {
-    Swal.fire({
-      title: '¿Estas seguro de eliminar acuerdo?',
-      text: "Esta acción removerá el acuerdo de la lista ",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33', // Rojo peligro
-      cancelButtonColor: '#6c757d', // Gris secundario
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      
-      if (result.isConfirmed) {
-        // Ejecutamos la petición HTTP
-        this.workflowApi.deleteAgreement(this.requirementId(), agreementId).subscribe({
-          next: () => {
-            // Mostramos alerta de éxito (Toast o Modal pequeño)
-            Swal.fire(
-              '¡Eliminado!',
-              'El acuerdo técnico ha sido removido.',
-              'success'
-            );
-            
-            // Refrescamos la vista local o disparamos el evento para que el Dashboard recargue
-            // Si tienes un array local signal llamado 'agreements', puedes filtrarlo directamente:
-            this.agreements.update(items => items.filter(item => item.id !== agreementId));
-            
-            // O emitir una señal global de actualización:
-            this.workflowApi.refreshDashboard$.next();
-          },
-          error: (err) => {
-            console.error('Error al eliminar:', err);
-            Swal.fire(
-              'Error',
-              'No se pudo eliminar el acuerdo. Intente de nuevo.',
-              'error'
-            );
-          }
-        });
-      }
-      
-    });
+  public async deleteAgreement(agreementId: string): Promise<void> {
+    // Esperar la respuesta del usuario a través de tu servicio 
+    const isConfirmed = await this.notificationService.confirmDelete(
+      '¿Estás seguro de eliminar el acuerdo?',
+      'Esta acción removerá el acuerdo de la lista permanentemente.',
+      'Sí, eliminar'
+    );
+    //  Si se confirma, procede con la petición
+    if (isConfirmed) {
+      this.workflowApi.deleteAgreement(this.requirementId(), agreementId).subscribe({
+        next: () => {
+          // Muestra alerta de éxito 
+          this.notificationService.toastSuccess('El acuerdo técnico ha sido removido.')
+          // Actualiza la señal local para remover el ítem de la vista inmediatamente
+          this.agreements.update(items => items.filter(item => item.id !== agreementId));
+          // Emite la señal global de actualización
+          this.workflowApi.refreshDashboard$.next();
+        },
+        error: (err) => {
+          console.error('Error al eliminar:', err);
+          // Muestra alerta de error
+          this.notificationService.showError('Error', 'No se pudo eliminar el acuerdo. Intente de nuevo.');
+        }
+      });
+    }
   }
-
+  
   // Método para manejar la actualización exitosa
   public onTypeUpdated(event: { tipo_gestion: string, progreso_global: number }): void {
     this.isUpdateTypeModalOpen.set(false);
@@ -185,34 +167,44 @@ export class AtfAgreementsListModalComponent implements OnInit {
   /**
    * Invocación del modal de confirmación
    */
-  public confirmClosure(): void {
+  public async confirmClosure():  Promise<void> {
     // Bloqueo de seguridad en el cliente
     if (!this.isReadyToClose()) {
-      Swal.fire({
-        title: 'Quórum Insuficiente',
-        text: this.closureReasons().join(' '),
-        icon: 'warning',
-        confirmButtonColor: '#8e1482'
-      });
+      this.notificationService.showWarning('Quórum Insuficiente', 'No se puede cerrar la Fase Análisis Técnico Funcional sin alcanzar el quórum necesario.');
+      // Swal.fire({
+      //   title: 'Quórum Insuficiente',
+      //   text: this.closureReasons().join(' '),
+      //   icon: 'warning',
+      //   confirmButtonColor: '#8e1482'
+      // });
       return;
     }
 
     // Modal de advertencia de Inmutabilida
-    
-    Swal.fire({
-      title: '¿Estás seguro de cerrar la Fase Análisis Técnico Funcional?',
-      text: 'Esta acción es definitiva. Todos los Acuerdos, Roles y Entregables pasarán a ser de Solo Lectura.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#8e1482', // Color brand
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Sí, Cerrar Fase',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.executeClosure();
-      }
-    });
+
+    const isConfirmed = await this.notificationService.confirmClosure(
+      '¿Estás seguro de cerrar la Fase Análisis Técnico Funcional?',
+      'Esta acción es definitiva. Todos los Acuerdos, Roles y Entregables pasarán a ser de Solo Lectura.',
+      'Sí, Cerrar Fase'
+    );
+    if(isConfirmed){
+      this.executeClosure();
+      return;
+    }
+    // Swal.fire({
+    //   title: '¿Estás seguro de cerrar la Fase Análisis Técnico Funcional?',
+    //   text: 'Esta acción es definitiva. Todos los Acuerdos, Roles y Entregables pasarán a ser de Solo Lectura.',
+    //   icon: 'warning',
+    //   showCancelButton: true,
+    //   confirmButtonColor: '#8e1482', // Color brand
+    //   cancelButtonColor: '#6c757d',
+    //   confirmButtonText: 'Sí, Cerrar Fase',
+    //   cancelButtonText: 'Cancelar'
+    // }).then((result) => {
+    //   if (result.isConfirmed) {
+    //     this.executeClosure();
+    //   }
+    // });
   }
 
   /**
@@ -221,20 +213,21 @@ export class AtfAgreementsListModalComponent implements OnInit {
   private executeClosure(): void {
     this.atfClosureService.closeAtfPhase(this.requirementId()).subscribe({
       next: (res) => {
-        // 1. Notificación de éxito
+        // Notificación de éxito
         this.notificationService.toastSuccess(res.message)
         // Swal.fire('Operación Exitosa', res.message, 'success');
         
-        // 2. Transición de Estado Reactivo
+        // Transición de Estado Reactivo
         this.isAtfClosed.set(true); 
         this.atfPhaseClosed.emit(); // Notificamos al Dashboard principal
         
-        // 3. Notificamos a través del bus de eventos para bloquear componentes hijos
+        // Notifica a través del bus de eventos para bloquear componentes hijos
         this.atfClosureService.atfClosed$.next(); 
       },
       error: (err) => {
         const errorMsg = err.error?.message || 'Error al procesar el cierre de la fase ATF.';
-        Swal.fire('Error Transaccional', errorMsg, 'error');
+        this.notificationService.showError('Error Transaccional', errorMsg || 'No se pudo procesar el cierre de la fase ATF');
+        // Swal.fire('Error Transaccional', errorMsg, 'error');
       }
     });
   }

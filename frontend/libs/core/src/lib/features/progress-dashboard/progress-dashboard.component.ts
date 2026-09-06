@@ -45,7 +45,8 @@ export class ProgressDashboardComponent {
     'PI-C':  'Pruebas Integrales Cerradas',
     'PAP-I': 'Pase a Producción en Proceso',
     'PAP-C': 'Pase a Producción Cerrado',
-    'AU': 'Asignado a Usuario Cerrado',
+    "AU-I": "Asignación a Usuario en Proceso",
+    'AU-C': 'Asignación a Usuario Cerrado',
     'RF': 'Requerimiento Cerrado',
   };
 

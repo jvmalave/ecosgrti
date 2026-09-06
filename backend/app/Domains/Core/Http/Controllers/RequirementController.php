@@ -20,6 +20,11 @@ use App\Domains\Security\Http\Requests\ValidateSpecialKeyRequest;
 use App\Domains\Core\Http\Requests\DestroyRequirementRequest;
 use App\Domains\Core\Http\Requests\ClosePlanningRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use App\Domains\Core\Models\Requirement;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
 
 use Exception;
 
@@ -149,6 +154,10 @@ class RequirementController extends Controller implements RequirementDocs
   public function saveEstimationDraft(StoreEstimationRequest $request, string $id): JsonResponse
   {
     try {
+      $requirement = Requirement::findOrFail($id);
+      Gate::authorize('manage', $requirement);
+
+
       $userId = (string) auth()->id();
 
       $estimation = $this->requirementService->saveEstimationDraft(
@@ -203,23 +212,36 @@ class RequirementController extends Controller implements RequirementDocs
    * * @param string $id UUID del requerimiento
    * @return JsonResponse
    */
+  
   public function showEstimation(string $id): JsonResponse
   {
     try {
-      // Delegamos la lógica al dominio
+      // Protege la lectura de la estimación
+      $requirement = Requirement::findOrFail($id);
+      Gate::authorize('manage', $requirement);
+
+      // Delega la lógica al dominio
       $data = $this->requirementService->getEstimationDetails($id);
 
       return response()->json([
         'success' => true,
         'data'    => $data
       ], 200);
+
+    } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+      return response()->json([
+        'success' => false,
+        'message' => 'Acceso denegado. Solo el consultor asignado puede ver o gestionar esta estimación.'
+      ], 403);
+      
     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
       return response()->json([
         'success' => false,
         'message' => 'Requerimiento no encontrado en la base de datos.'
       ], 404);
+      
     } catch (Exception $e) {
-      // Captura de errores inesperados para evitar exponer la traza al cliente
+      // Captura de errores inesperados
       return response()->json([
         'success' => false,
         'message' => 'Error interno al obtener la estimación.',
@@ -227,7 +249,9 @@ class RequirementController extends Controller implements RequirementDocs
       ], 500);
     }
   }
-
+  
+  
+  
   /**
    * US24/CU-009 - Solicitar Ticket de Borrado Lógico
    */
@@ -296,6 +320,11 @@ class RequirementController extends Controller implements RequirementDocs
   public function closePlanning(ClosePlanningRequest $request, string $id): JsonResponse
   {
     try {
+
+    $requirement = Requirement::findOrFail($id);
+      Gate::authorize('manage', $requirement);
+
+
       $userId = Auth::id() ?? 'system-uuid-fallback'; // En producción, aseguramos el UUID del usuario
       $justification = $request->validated('justification');
 
@@ -361,4 +390,25 @@ class RequirementController extends Controller implements RequirementDocs
       ], $statusCode);
     }
   }
+
+  /**
+ * Permite descargar o visualizar documentos privados de requerimientos de forma segura.
+ */
+public function downloadDocument(Request $request): StreamedResponse|JsonResponse
+{
+    // Recibimos la ruta relativa guardada en la base de datos (ej: requirements/it_docs/archivo.pdf)
+    $path = $request->query('path');
+
+    if (!$path || !Storage::disk('private')->exists($path)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'El archivo solicitado no existe o no se encuentra disponible.'
+        ], 404);
+    }
+
+    // Retornamos el archivo de forma segura desde el disco privado
+    return Storage::disk('private')->response($path);
+}
+
+
 }

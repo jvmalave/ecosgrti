@@ -1,8 +1,18 @@
-// frontend/libs/catalogs/src/lib/features/milestone-config/milestone-config.component.scss
-
 /* ========================================================
-  1. CAPA FLOTANTE Y MODAL SUPERPUESTO (CORRECCIÓN VISUAL)
-  ======================================================== */
+  IDENTIDAD VISUAL CORPORATIVA CANTV
+   ======================================================== */
+
+$color-magenta: #e91e63;
+$color-purple: #9c27b0;
+$text-dark: #2d3748;
+$color-blue: #1c1ce2;
+$gradient-end: #ff00ff;
+$gradient-start: #1c1ce2;
+$sidebar-bg: #1c1ce2; // Un tono oscuro azulado muy elegante para el sidebar
+$text-muted: #64748b;
+$text-white: #ffffff;
+$color-success: #22c55e;
+$color-danger: #ef4444;
 
 .modal-overlay {
   position: fixed;
@@ -14,23 +24,23 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1060; // Z-index alto para garantizar superposición total sobre el Dashboard y Aside
+  z-index: 1070; // Z-index alto para garantizar superposición total sobre el Dashboard y Aside
   overflow-y: auto;
   padding: 20px;
-  backdrop-filter: blur(2px); // Efecto visual moderno
+  backdrop-filter: blur(3px); // Efecto visual moderno
 }
 
 .modal-container {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 15px 35px rgba(98, 0, 234, 0.2);
-  width: 100%;
+  width: 1500px; // Ancho máximo para pantallas grandes
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   border: 1px solid rgba(213, 0, 249, 0.2);
-  max-height: 90vh;
+  max-height: 95vh;
 
   // Anchos máximos dinámicos
   &.modal-xl {
@@ -57,6 +67,10 @@
     transform: translateY(0) scale(1);
   }
 }
+
+
+
+
 
 /* ========================================================
   2. IDENTIDAD VISUAL CORPORATIVA CANTV
@@ -128,17 +142,32 @@
   overflow: hidden;
 }
 
-.modal-header .close-btn {
-  background: transparent;
-  border: none;
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(90deg, $gradient-start 80%, $gradient-end 100%) !important;
   color: white;
-  font-size: 1.5rem;
-  line-height: 1;
-  transition: transform 0.2s ease;
-  
-  &:hover {
-    transform: scale(1.1);
-    color: #ea80fc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h2, h3, h5 {
+    color: white !important;
+    margin: 0;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.3);
+      color: $text-white;
+    }
   }
 }
 

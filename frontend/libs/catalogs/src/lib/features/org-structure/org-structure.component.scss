@@ -2,9 +2,22 @@
   IDENTIDAD VISUAL CANTV (ECOSGRTI) - AJUSTE MODAL DIRECTORIO
    ======================================================== */
 
+$color-magenta: #e91e63;
+$color-purple: #9c27b0;
+$text-dark: #2d3748;
+$color-blue: #1c1ce2;
+$gradient-end: #ff00ff;
+$gradient-start: #1c1ce2;
+$sidebar-bg: #1c1ce2; // Un tono oscuro azulado muy elegante para el sidebar
+$text-muted: #64748b;
+$text-white: #ffffff;
+$color-success: #22c55e;
+$color-danger: #ef4444;
+
+
 // Degradado corporativo (Basado en la pantalla de Login y Sidebar)
 .brand-gradient {
-  background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%);
+  background: linear-gradient(90deg, $gradient-start 80%, $gradient-end 100%) !important;
   border-bottom: 3px solid #ea80fc;
 }
 
@@ -86,7 +99,7 @@
   border-radius: 12px;
   box-shadow: 0 15px 35px rgba(98, 0, 234, 0.2);
   width: 100%;
-  max-width: 1200px;
+  max-width: 1800px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -101,9 +114,8 @@
 
 .modal-header {
   padding: 1.25rem 1.5rem;
-  background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%);
+  background: linear-gradient(90deg, $gradient-start 80%, $gradient-end 100%) !important;
   color: white;
-  border-bottom: 3px solid #ea80fc;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -125,8 +137,8 @@
     transition: transform 0.2s ease;
 
     &:hover {
-      transform: scale(1.1);
-      color: #ea80fc;
+      transform: scale(1.3);
+      color: $text-white;
     }
   }
 }
@@ -165,6 +177,6 @@
 
   &:hover {
     background-color: rgba(213, 0, 249, 0.05);
-    border-left-color: #d500f9;
+    border-left-color: $color-blue;
   }
 }

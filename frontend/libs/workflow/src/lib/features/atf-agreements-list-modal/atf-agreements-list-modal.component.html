@@ -7,9 +7,10 @@
   aria-labelledby="atfListModalLabel"
   aria-hidden="false"
 >
-  <div class="modal-dialog modal-lg modal-dialog-centered">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
-      <div class="modal-header brand-gradient text-white px-4 py-3 border-0">
+      <!-- Cabecera -->
+      <div class="modal-header px-4 py-3 border-0">
         <h5
           class="modal-title fw-bold d-flex align-items-center"
           id="atfListModalLabel"
@@ -17,52 +18,39 @@
           <i class="bi bi-card-checklist me-2 fs-4"></i>
           Gestión de Acuerdos Técnicos (ATF)
         </h5>
+
         <button
           type="button"
-          class="btn-close btn-close-white"
+          class="close-btn"
           (click)="closeModal.emit()"
-          aria-label="Cerrar modal"
+          aria-label="Close"
         >
-          <span class="visually-hidden">Cerrar</span>
+          <i class="fa-solid fa-circle-xmark"></i>
         </button>
       </div>
-
       <div class="modal-body p-4 bg-light">
         
-        <!--  Banner de inmutabilida  -->
-        @if (isAtfClosed()) {
-          <div class="alert d-flex align-items-center border-0 shadow-sm rounded-3 mb-4 p-3" style="background-color: #f3e8f5; border-left: 5px solid #8e1482 !important;">
-            <i class="bi bi-shield-lock-fill fs-3 me-3" style="color: #8e1482;"></i>
-            <div>
-              <h6 class="mb-1 fw-bold" style="color: #8e1482;">Fase Análisis Técnico Funcional Completada</h6>
-              <p class="mb-0 small text-muted">Todos los componentes y acuerdos se encuentran en modo de solo lectura, garantizando su inmutabilidad.</p>
-            </div>
-          </div>
-        }
-
+        <!-- Idenficador de Requerimiento y Tipo de Gestión -->
         <div class="d-flex justify-content-between align-items-center mb-4">
           <div class="d-flex align-items-center">
-            <span class="text-muted fw-bold me-2 small">Requerimiento:</span>
+            <span class="text-muted fw-bold me-2 fs-6">Requerimiento:</span>
             <span
-              class="badge rounded-pill px-3 py-2"
-              style="background-color: #f3e8f5; color: #8e1482; border: 1px solid #8e1482;"
+              class="badge badge-requirement rounded-pill px-3 py-2 fs-6 fw-semibold"
             >
               {{ requirementCode() }}
             </span>
           </div>
 
           <div class="d-flex align-items-center">
-            <span class="text-muted fw-bold me-2 small">Tipo de Gestión:</span>
+            <span class="text-muted fw-bold me-2 fs-6">Tipo de Gestión:</span>
             <span
-              class="badge rounded-pill px-3 py-2 me-2"
-              style="background-color: #f3e8f5; color: #8e1482; border: 1px solid #8e1482;"
+              class="badge badge-type rounded-pill px-3 py-2 fs-6 fw-semibold me-2"
             >
               {{ currentManagementType() | titlecase }}
             </span>
-            <!-- Ocultamos el botón de editar tipo de gestión si la fase está cerrada -->
             @if (!isAtfClosed()) {
               <button
-                class="btn btn-sm btn-outline-brand rounded-circle d-flex align-items-center justify-content-center"
+                class="btn btn-sm btn-tbl-edit rounded-circle d-flex align-items-center justify-content-center"
                 style="width: 32px; height: 32px"
                 (click)="isUpdateTypeModalOpen.set(true)"
                 title="Actualizar Tipo de Gestión"
@@ -72,48 +60,83 @@
             }
           </div>
         </div>
-
+        <!--  Banner de inmutabilida  -->
+        @if (isAtfClosed()) {
+          <div
+            class="alert alert-success d-flex align-items-center border-1 shadow-sm rounded-3 mb-4 p-3"
+            role="alert"
+          >
+            <i class="bi bi-shield-lock-fill fs-3 me-3"></i>
+            <div>
+              <h6 class="mb-1 fw-bold">
+                Fase Análisis Técnico Funcional Completada
+              </h6>
+              <p class="mb-0 text-muted">
+                Todos los componentes y acuerdos se encuentran en modo de solo
+                lectura, garantizando su inmutabilidad.
+              </p>
+            </div>
+          </div>
+        }
+        <!-- tabla de acuerdos -->
         <div class="card border-0 shadow-sm rounded-3">
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th class="px-4 py-3 text-muted fw-bold small text-uppercase">Fecha</th>
-                    <th class="px-4 py-3 text-muted fw-bold small text-uppercase">Descripción del Acuerdo</th>
-                    <th class="px-4 py-3 text-end text-muted fw-bold small text-uppercase">Acciones</th>
+                    <th
+                      class="px-4 py-3 text-muted fw-bold small text-uppercase"
+                    >
+                      Fecha
+                    </th>
+                    <th
+                      class="px-4 py-3 text-muted fw-bold small text-uppercase"
+                    >
+                      Descripción del Acuerdo
+                    </th>
+                    <th
+                      class="px-4 py-3 text-end text-muted fw-bold small text-uppercase"
+                    >
+                      Acciones
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (item of agreements(); track item.id) {
                     <tr>
                       <td class="px-4 py-3 text-nowrap">
-                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill px-3 py-2">
+                        <span
+                          class="badge bg-secondary bg-opacity-10 text-dark border border-secondary-subtle rounded-pill px-3 py-2 fw-semibold"
+                          style="font-size: 0.9rem"
+                        >
                           <i class="bi bi-calendar-event me-1"></i>
                           {{ item.agreement_date | date: 'dd/MM/yyyy' }}
                         </span>
                       </td>
 
-                      <td class="px-4 py-3 text-secondary" [title]="item.description">
+                      <td
+                        class="px-4 py-3 text-dark"
+                        [title]="item.description"
+                      >
                         {{
-                          item.description.length > 20
-                            ? (item.description | slice: 0 : 20) + '...'
+                          item.description.length > 100
+                            ? (item.description | slice: 0 : 100) + '...'
                             : item.description
                         }}
                       </td>
 
                       <td class="px-4 py-3 text-end text-nowrap">
                         <button
-                          class="btn btn-sm btn-outline-brand rounded-pill px-3 me-2"
+                          class="btn btn-sm btn-tbl-info rounded-pill px-3 me-2"
                           (click)="viewAgreement(item)"
-                          title="Ver Detalle del Acuerdo"
+                          title="Ver Detalles del Acuerdo"
                         >
-                          <i class="bi bi-eye"></i>
+                          <i class="fa-solid fa-eye"></i>
                         </button>
-                        <!-- Ocultamos la eliminación si la fase está cerrada -->
                         @if (!isAtfClosed()) {
                           <button
-                            class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                            class="btn btn-sm btn-tbl-delete rounded-pill px-3"
                             (click)="deleteAgreement(item.id)"
                             title="Eliminar Acuerdo"
                           >
@@ -124,9 +147,16 @@
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="3" class="text-center py-5 text-muted bg-light">
-                        <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-25"></i>
-                        <span class="fw-medium">No hay acuerdos técnicos registrados.</span>
+                      <td
+                        colspan="3"
+                        class="text-center py-5 text-muted bg-light"
+                      >
+                        <i
+                          class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-25"
+                        ></i>
+                        <span class="fw-medium"
+                          >No hay acuerdos técnicos registrados.</span
+                        >
                         @if (!isAtfClosed()) {
                           <p class="small text-muted mt-1 mb-0">
                             Haz clic en "Agregar Acuerdo" para comenzar.
@@ -142,54 +172,96 @@
         </div>
 
         <!-- 🚀 BLOQUE DE CONTROLES: Basado en la inmutabilidad de la fase -->
-        <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+        <div
+          class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center gap-3"
+        >
           <div class="d-flex gap-2">
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-brand rounded-pill px-3 d-flex align-items-center"
-              [disabled]="!canManageRoles()"
-              (click)="openRolesManagement()"
-              [title]="!hasAgreements() ? 'Requiere al menos un acuerdo para habilitarse' : (isAtfClosed() ? 'Ver Roles (Solo Lectura)' : 'Gestionar Roles')"
-            >
-              <i class="bi" [ngClass]="isAtfClosed() ? 'bi-eye' : 'bi-person-badge'" class="me-2"></i> 
-              {{ isAtfClosed() ? 'Ver Roles' : 'Gestión de Roles' }}
-            </button>
+            @if (isAtfClosed()) {
+              <button
+                type="button"
+                class="btn btn-tbl-info rounded-pill px-3 d-flex align-items-center fw-semibold me-2"
+                [disabled]="!canManageRoles()"
+                (click)="openRolesManagement()"
+                [title]="'Ver Roles (Solo Lectura)'"
+              >
+                <i class="fa-solid fa-eye me-2"></i>
+                Ver Roles
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn btn-tbl-success rounded-pill px-3 d-flex align-items-center fw-semibold"
+                [disabled]="!canManageRoles()"
+                (click)="openRolesManagement()"
+                [title]="
+                  !hasAgreements()
+                    ? 'Requiere al menos un acuerdo para habilitarse'
+                    : 'Gestionar Roles'
+                "
+              >
+                <i class="bi bi-person-badge me-2"></i>
+                Gestionar Roles
+              </button>
+            }
 
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-brand rounded-pill px-3 d-flex align-items-center"
-              [disabled]="!canManageDeliverables()"
-              (click)="openDeliverablesManagement()"
-              [title]="!hasAgreements() ? 'Requiere al menos un acuerdo para habilitarse' : (isAtfClosed() ? 'Ver Entregables (Solo Lectura)' : 'Gestionar Entregables')"
-            >
-              <i class="bi" [ngClass]="isAtfClosed() ? 'bi-eye' : 'bi-files'" class="me-2"></i> 
-              {{ isAtfClosed() ? 'Ver Entregables' : 'Gestión de Entregables' }}
-            </button>
+            @if (isAtfClosed()) {
+              <button
+                type="button"
+                class="btn btn-tbl-info rounded-pill px-3 d-flex align-items-center fw-semibold"
+                [disabled]="!canManageDeliverables()"
+                (click)="openDeliverablesManagement()"
+                [title]="'Ver Entregables (Solo Lectura)'"
+              >
+                <i class="fa-solid fa-eye me-2"></i>
+                Ver Entregables
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn btn-tbl-success rounded-pill px-3 d-flex align-items-center fw-semibold"
+                [disabled]="!canManageDeliverables()"
+                (click)="openDeliverablesManagement()"
+                [title]="
+                  !hasAgreements()
+                    ? 'Requiere al menos un acuerdo para habilitarse'
+                    : 'Gestionar Entregables'
+                "
+              >
+                <i class="bi bi-files me-2"></i>
+                Gestionar Entregables
+              </button>
+            }
           </div>
 
-          <!-- 🚀 El botón "Agregar Acuerdo" vuelve a la vida -->
+          <!-- 🚀 El botón "Agregar Acuerdo"  -->
           @if (!isAtfClosed()) {
             <div>
               <button
-                class="btn btn-sm btn-brand rounded-pill px-3 shadow-sm d-flex align-items-center"
+                class="btn btn-md btn-tbl-success rounded-pill px-3 shadow-sm fw-semibold d-flex align-items-center"
                 (click)="openCreateModal.emit()"
               >
-                <i class="bi bi-plus-circle me-1"></i> Agregar Acuerdo
+                <i class="bi bi-plus-circle me-2"></i> Agregar Acuerdo
               </button>
             </div>
           }
         </div>
 
-        <!-- 🚀 BLOQUE HARD GATE (CIERRE DE FASE) -->
+        <!-- BLOQUE HARD GATE (CIERRE DE FASE) -->
         @if (!isAtfClosed()) {
-          <div class="mt-4 p-3 rounded-3 d-flex justify-content-between align-items-center" style="background-color: #fdfdfd; border: 1px dashed #ced4da;">
-            <div>
+          <div
+            class="row mt-4 p-3 rounded-3 d-flex justify-content-between align-items-center"
+            style="background-color: #fdfdfd; border: 1px dashed #ced4da"
+          >
+            <div class="col-5">
               @if (!isReadyToClose()) {
                 <div class="d-flex align-items-center text-danger small">
                   <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
                   <div>
                     <strong class="d-block">Bloqueo de Cierre Activo:</strong>
-                    <span>{{ closureReasons().join(' ') || 'Requiere al menos 1 acuerdo y 1 componente definido.' }}</span>
+                    <span>{{
+                      closureReasons().join(' ') ||
+                        'Requiere al menos 1 acuerdo y 1 componente definido.'
+                    }}</span>
                   </div>
                 </div>
               } @else {
@@ -197,22 +269,34 @@
                   <i class="bi bi-check-circle-fill fs-5 me-2"></i>
                   <div>
                     <strong class="d-block">Quórum Técnico Alcanzado:</strong>
-                    <span>El requerimiento está listo para finalizar el Análisis Técnico Funcional.</span>
+                    <span
+                      >El requerimiento está listo para finalizar el Análisis
+                      Técnico Funcional.</span
+                    >
                   </div>
                 </div>
               }
             </div>
-            
+            <div class="col-7 d-flex justify-content-end ">
             <button
               type="button"
-              class="btn rounded-pill px-4 shadow-sm fw-bold d-flex align-items-center"
-              [ngClass]="isReadyToClose() ? 'btn-brand' : 'btn-secondary opacity-50'"
+              class="btn rounded-pill px-4 py-3 shadow-sm fw-bold d-flex align-items-center"
+              [ngClass]="
+                isReadyToClose() ? 'btn-tbl-planning' : 'btn-tbl-planning opacity-50'
+              "
               [disabled]="!isReadyToClose()"
               (click)="confirmClosure()"
             >
-              <i class="bi" [ngClass]="isReadyToClose() ? 'bi-door-open-fill' : 'bi-lock-fill'" class="me-2"></i> 
+              <i
+                class="bi"
+                [ngClass]="
+                  isReadyToClose() ? 'bi-door-open-fill' : 'bi-lock-fill'
+                "
+                class="me-2"
+              ></i>
               Cerrar Fase Análisis Técnico Funcional
             </button>
+            </div>
           </div>
         }
 

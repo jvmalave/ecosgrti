@@ -1,153 +1,188 @@
 <div class="modal-overlay">
   <div class="modal-dialog-custom">
-
     <!-- CABECERA CORPORATIVA POLIMÓRFICA -->
     <div
-      class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center"
+      class="modal-header text-white p-3 d-flex justify-content-between align-items-center"
     >
       <h5 class="m-0 fw-bold">
         <i class="fa-solid fa-book-journal-whills me-2"></i> {{ modalTitle() }}
       </h5>
       <button
         type="button"
-        class="btn text-white fs-5 p-0 border-0 shadow-none"
+        class="close-btn"
         (click)="closeModal.emit()"
+        aria-label="Close"
       >
-        <i class="fa-solid fa-xmark"></i>
+        <i class="fa-solid fa-circle-xmark"></i>
       </button>
     </div>
 
     <!-- CUERPO CON SCROLL -->
     <div class="modal-body-scroll p-4">
+      <!-- IDENTIFICADOR DE REQUERIMIENTO -->
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <span
-          class="badge bg-light text-brand ms-3 border border-light rounded-pill fs-6 shadow-sm"
-        >
-          Requerimiento: {{ rrti() }}
-        </span>
-        <span
-          class="badge bg-light text-brand ms-3 border border-light rounded-pill fs-6 shadow-sm"
-        >
-          <!-- 🟢 Polimorfismo inyectado directamente desde el Signal -->
-          {{ parentLabel() }}: {{ parentName() }}
-        </span>
+        <div class="col-md-6 d-flex align-items-center ps-5">
+          <span class="text-muted fw-bold me-2 fs-6">Requerimiento:</span>
+          <span
+            class="badge badge-requirement rounded-pill px-3 py-2 fs-6 fw-semibold"
+          >
+            {{ rrti() }}
+          </span>
+        </div>
+        <div class="col-md-6 d-flex align-items-center justify-content-end pe-5">
+          <span class="text-muted fw-bold me-2 fs-6">{{ parentLabel() }}:</span>
+          <span
+            class="badge badge-component rounded-pill px-3 py-2 fs-6 fw-semibold"
+          >
+            {{ parentName() }}
+          </span>
+        </div>
       </div>
-
       <!-- BANNER DE COMPONENTE CERRADO -->
       @if (parentStatus() === 'CLOSED') {
-        <div class="alert alert-success d-flex align-items-center mt-3 shadow-sm" role="alert">
+        <div
+          class="alert alert-success d-flex align-items-center mt-3 shadow-sm"
+          role="alert"
+        >
           <i class="fa-solid fa-lock fs-2 me-3"></i>
           <div>
-            <h6 class="fw-bold mb-1">{{ parentLabel() }} "{{ parentName() }}" es Inmutable</h6>
-            <p class="mb-0 small">El ciclo de vida de este elemento ha concluido. Por integridad de los datos, no es posible agregar, editar o eliminar {{ recordNamePlural() }} de su bitácora.</p>
+            <h6 class="fw-bold mb-1">
+              {{ parentLabel() }} "{{ parentName() }}" es Inmutable
+            </h6>
+            <p class="mb-0 small">
+              El ciclo de vida de este elemento ha concluido. Por integridad de
+              los datos, no es posible agregar, editar o eliminar
+              {{ recordNamePlural() }} de su bitácora.
+            </p>
           </div>
         </div>
       }
-
       <!-- Contenedor del Formulario de Registro -->
       @if (parentStatus() !== 'CLOSED') {
-          <div class="card border border-light shadow-sm mb-4">
-            <div class="card-body bg-white rounded p-4">
-              <h6 class="text-brand fw-bold mb-3 border-bottom pb-2">
+        <div class="card border border-light shadow-sm mb-4">
+          <div class="card-body bg-white rounded p-4">
+            <h6 class="text-secondary fw-bold mb-3 border-bottom pb-2">
+              @if (editingRecordId()) {
+                <i class="fa-solid fa-pen text-warning me-2"></i> Editando
+                {{ recordName() | titlecase }}
+              } @else {
+                <i class="fa-solid fa-pen-to-square me-2"></i> Agregar Nuev{{
+                  isCoePhase() ? 'a' : 'o'
+                }}
+                {{ recordName() | titlecase }}
+              }
+            </h6>
+
+            <form
+              [formGroup]="registerForm"
+              (ngSubmit)="onSubmit()"
+              class="row g-3"
+            >
+            <!-- TITULO DEL REGISTRO -->
+              <div class="col-md-8">
+                <label for="reg-tit" class="form-label text-muted small fw-bold"
+                  >Título</label
+                >
+                <input
+                  id="reg-tit"
+                  type="text"
+                  formControlName="title"
+                  class="form-control"
+                  arialabel="Ej. Diseño de Arquitectura Cloud"
+                  [class.is-invalid]="
+                    registerForm.get('title')?.invalid &&
+                    registerForm.get('title')?.touched
+                  "
+                  placeholder="Ej. Diseño de Arquitectura Cloud"
+                />
+              </div>
+              <!-- FECHA DE CREACIÓN -->
+              <div class="col-md-4">
+                <label
+                  for="reg-date"
+                  class="form-label text-muted small fw-bold"
+                  >Fecha de Creación</label
+                >
+                <input
+                  id="reg-date"
+                  type="date"
+                  formControlName="date"
+                  class="form-control"
+                  arialabel="Ej. 2022-12-31"
+                  [class.is-invalid]="
+                    registerForm.get('date')?.invalid &&
+                    registerForm.get('date')?.touched
+                  "
+                />
+              </div>
+                <!-- DESCRIPCION DETALLADA -->
+              <div class="col-12">
+                <label
+                  for="reg-desc"
+                  class="form-label text-muted small fw-bold"
+                  >Descripción Detallada</label
+                >
+                <textarea
+                  id="reg-desc"
+                  formControlName="description"
+                  class="form-control"
+                  arialabel="Redacte los detalles técnicos, decisiones tomadas, o enlaces a repositorios..."
+                  rows="3"
+                  [class.is-invalid]="
+                    registerForm.get('description')?.invalid &&
+                    registerForm.get('description')?.touched
+                  "
+                  placeholder="Redacte los detalles técnicos, decisiones tomadas, o enlaces a repositorios..."
+                ></textarea>
+              </div>
+              <!-- BOTONERA -->
+              <div class="col-12 text-end mt-3 gap-2">
                 @if (editingRecordId()) {
-                  <i class="fa-solid fa-pen text-warning me-2"></i> Editando {{ recordName() | titlecase }}
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-tbl-close px-4 rounded-pill me-2"
+                    (click)="resetForm()"
+                  >
+                    <i class="fa-solid fa-xmark-circle me-1"></i> Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    class="btn btn-sm btn-tbl-edit me-2 rounded-pill shadow-sm px-3"
+                    [disabled]="registerForm.invalid || isSaving()"
+                  >
+                    @if (isSaving()) {
+                      <i class="fa-solid fa-circle-notch fa-spin me-2"></i>
+                      Actualizando...
+                    } @else {
+                      <i class="fa-solid fa-cloud-arrow-up me-2"></i> Actualizar
+                      {{ recordName() | titlecase }}
+                    }
+                  </button>
                 } @else {
-                  <i class="fa-solid fa-pen-to-square me-2"></i> Agregar Nuev{{ isCoePhase() ? 'a' : 'o' }} {{ recordName() | titlecase }}
+                  <button
+                    type="submit"
+                    class="btn btn-sm btn-tbl-success me-2 rounded-pill shadow-sm px-3"
+                    [disabled]="registerForm.invalid || isSaving()"
+                  >
+                    @if (isSaving()) {
+                      <i class="fa-solid fa-circle-notch fa-spin me-2"></i>
+                      Guardando...
+                    } @else {
+                      <i class="fa-solid fa-save me-2"></i> Guardar en Bitácora
+                    }
+                  </button>
                 }
-              </h6>
-    
-              <form
-                [formGroup]="registerForm"
-                (ngSubmit)="onSubmit()"
-                class="row g-3"
-              >
-                <div class="col-md-8">
-                  <label for="reg-tit" class="form-label text-muted small fw-bold">Título</label>
-                  <input
-                    id="reg-tit"
-                    type="text"
-                    formControlName="title"
-                    class="form-control"
-                    [class.is-invalid]="
-                      registerForm.get('title')?.invalid &&
-                      registerForm.get('title')?.touched
-                    "
-                    placeholder="Ej. Diseño de Arquitectura Cloud"
-                  />
-                </div>
-    
-                <div class="col-md-4">
-                  <label for="reg-date" class="form-label text-muted small fw-bold">Fecha de Creación</label>
-                  <input
-                    id="reg-date"
-                    type="date"
-                    formControlName="date"
-                    class="form-control"
-                    [class.is-invalid]="
-                      registerForm.get('date')?.invalid &&
-                      registerForm.get('date')?.touched
-                    "
-                  />
-                </div>
-    
-                <div class="col-12">
-                  <label for="reg-desc" class="form-label text-muted small fw-bold">Descripción Detallada</label>
-                  <textarea
-                    id="reg-desc"
-                    formControlName="description"
-                    class="form-control"
-                    rows="3"
-                    [class.is-invalid]="
-                      registerForm.get('description')?.invalid &&
-                      registerForm.get('description')?.touched
-                    "
-                    placeholder="Redacte los detalles técnicos, decisiones tomadas, o enlaces a repositorios..."
-                  ></textarea>
-                </div>
-    
-                <div class="col-12 text-end mt-3">
-                  @if (editingRecordId()) {
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline-secondary px-4 rounded-pill me-2"
-                      (click)="resetForm()"
-                    >
-                      <i class="fa-solid fa-xmark-circle me-1"></i> Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      class="btn btn-sm btn-outline-brand me-2 rounded-pill shadow-sm px-3"
-                      [disabled]="registerForm.invalid || isSaving()"
-                    >
-                      @if (isSaving()) {
-                        <i class="fa-solid fa-circle-notch fa-spin me-2"></i> Actualizando...
-                      } @else {
-                        <i class="fa-solid fa-cloud-arrow-up me-2"></i> Actualizar {{ recordName() | titlecase }}
-                      }
-                    </button>
-                  } @else {
-                    <button
-                      type="submit"
-                      class="btn btn-sm btn-outline-brand me-2 rounded-pill shadow-sm px-3"
-                      [disabled]="registerForm.invalid || isSaving()"
-                    >
-                      @if (isSaving()) {
-                        <i class="fa-solid fa-circle-notch fa-spin me-2"></i> Guardando...
-                      } @else {
-                        <i class="fa-solid fa-save me-2"></i> Guardar en Bitácora
-                      }
-                    </button>
-                  }
-                </div>
-              </form>
-            </div>
+              </div>
+            </form>
           </div>
+        </div>
       }
 
       <!-- Contenedor del Historial de Registros -->
       <div class="mt-4">
         <h6 class="text-secondary fw-bold border-bottom pb-2 mb-3">
-          <i class="fa-solid fa-clock-rotate-left me-2"></i> Historial de {{ recordNamePlural() | titlecase }}
+          <i class="fa-solid fa-clock-rotate-left me-2"></i> Historial de
+          {{ recordNamePlural() | titlecase }}
         </h6>
 
         @if (isLoading()) {
@@ -175,24 +210,35 @@
                     </td>
                     <td class="fw-bold text-dark">{{ reg.title }}</td>
                     <td class="small text-muted" title="{{ reg.description }}">
-                      <span class="text-truncate-custom">{{ reg.description }}</span>
+                      <span class="text-truncate-custom">{{
+                        reg.description
+                      }}</span>
                     </td>
                     <td class="text-end text-nowrap">
                       @if (parentStatus() === 'CLOSED') {
                         <!-- Botón Solo Lectura -->
-                        <button class="btn btn-sm btn-light border text-brand me-1" title="Ver Detalles"
-                                (click)="viewRecord(reg)">
+                        <button
+                          class="btn btn-sm btn-tbl-info me-1"
+                          title="Ver Detalles"
+                          (click)="viewRecord(reg)"
+                        >
                           <i class="fa-solid fa-eye"></i> Ver
                         </button>
                       } @else {
                         <!-- Botones de Edición y Borrado Activos -->
-                        <button class="btn btn-sm btn-light border text-brand me-1" title="Editar"
-                                (click)="editRecord(reg)">
+                        <button
+                          class="btn btn-sm btn-tbl-edit me-1"
+                          title="Editar"
+                          (click)="editRecord(reg)"
+                        >
                           <i class="fa-solid fa-pencil"></i>
                         </button>
-                        <button class="btn btn-sm btn-light border text-danger" title="Eliminar"
-                                (click)="deleteRecord(reg.id)">
-                          <i class="fa-solid fa-trash-can "></i>
+                        <button
+                          class="btn btn-sm btn-tbl-delete"
+                          title="Eliminar"
+                          (click)="deleteRecord(reg.id)"
+                        >
+                          <i class="fa-solid fa-trash-can"></i>
                         </button>
                       }
                     </td>
@@ -203,7 +249,9 @@
                       colspan="4"
                       class="text-center text-muted py-5 bg-light border-dashed"
                     >
-                      <i class="fa-regular fa-folder-open fs-2 mb-2 opacity-50 d-block"></i>
+                      <i
+                        class="fa-regular fa-folder-open fs-2 mb-2 opacity-50 d-block"
+                      ></i>
                       {{ config().emptyStateText }}
                     </td>
                   </tr>

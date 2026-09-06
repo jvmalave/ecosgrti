@@ -1,0 +1,564 @@
+<div class="container-fluid min-vh-100 bg-light p-0">
+  <div class="row min-vh-100 g-0">
+    <aside
+      class="col-md-3 col-lg-2 d-none d-md-flex flex-column p-4 sidebar-brand"
+    >
+      <div class="fs-3 mb-4 text-center brand-logo-text">
+        <img
+          src="assets/logo-cantv.png"
+          alt="cantv"
+          class="logo-cantv"
+          onerror="this.style.display='none'"
+        />
+        Sistema de Gestión de Requerimientos TI
+      </div>
+
+      <nav class="flex-grow-1 mt-2">
+        <ul class="nav flex-column gap-1">
+          <li class="nav-item">
+            <a href="#" class="nav-link active rounded-3 px-3 py-2">
+              <i class="fas fa-home"></i> Inicio
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link rounded-3 px-3 py-2">
+              <i class="fas fa-chart-pie"></i> Reportes
+            </a>
+          </li>
+
+          <!-- OPCIÓN CONFIGURACIÓN CON SUBMENÚ DESPLEGABLE -->
+          @if (isAdmin || isCoord) {
+            <li class="nav-item">
+              <a
+                class="nav-link rounded-3 px-3 py-2 text-white"
+                (click)="toggleConfigMenu()"
+                (keydown.enter)="toggleConfigMenu()"
+                tabindex="0"
+                style="cursor: pointer"
+              >
+                <div
+                  class="d-flex w-100 justify-content-between align-items-center"
+                >
+                  <span><i class="fas fa-cog me-2"></i> Configuración</span>
+                  <i
+                    class="fas fa-chevron-down transition-transform"
+                    [class.rotate-180]="isConfigMenuOpen()"
+                  ></i>
+                </div>
+              </a>
+
+              <!-- Submenú MDM (Se renderiza si isConfigMenuOpen es true) -->
+              @if (isConfigMenuOpen()) {
+                <ul
+                  class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition"
+                >
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white"
+                      (click)="openUnifiedPersonListModal()"
+                      (keydown.enter)="openUnifiedPersonListModal()"
+                      tabindex="0"
+                      style="cursor: pointer"
+                    >
+                      <i class="fas fa-id-card me-2"></i> Directorio de Fichas
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white"
+                      (click)="openOrgStructureModal()"
+                      (keydown.enter)="openOrgStructureModal()"
+                      tabindex="0"
+                      style="cursor: pointer"
+                    >
+                      <i class="fas fa-sitemap me-2"></i> Estructura
+                      Organizacional
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white"
+                      (click)="openProgressMatrixModal()"
+                      (keydown.enter)="openProgressMatrixModal()"
+                      tabindex="0"
+                      style="cursor: pointer"
+                    >
+                      <i class="fas fa-sliders-h me-2"></i> Matrices de Progreso
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white"
+                      (click)="openMilestoneConfigModal()"
+                      (keydown.enter)="openMilestoneConfigModal()"
+                      tabindex="0"
+                      style="cursor: pointer"
+                    >
+                      <i class="fas fa-list-check me-2"></i> Hitos Técnicos
+                      (MDM)
+                    </a>
+                  </li>
+                </ul>
+              }
+            </li>
+          }
+        </ul>
+      </nav>
+
+      <div class="mt-auto pt-4 border-top border-white border-opacity-25">
+        <button (click)="logout()" class="btn btn-logout-white w-100 py-2">
+          <i class="fas fa-sign-out-alt me-3"></i>Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <main class="col-md-9 col-lg-10 d-flex flex-column bg-light">
+      <header
+        class="bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center"
+      >
+        <h1 class="h5 mb-0 fw-bold text-secondary">Panel Principal</h1>
+
+        @if (user()) {
+          <div class="dropdown">
+            <!-- Elemento activador del menú controlado por Angular -->
+            <div
+              class="d-flex align-items-center gap-3 user-select-none"
+              role="button"
+              tabindex="0"
+              (click)="toggleDropdown()"
+            >
+              <div class="text-end d-none d-sm-block">
+                <p class="mb-0 fw-bold text-dark">{{ user()?.username }}</p>
+                <p class="mb-0 text-muted small text-uppercase">
+                  {{ getRoleDisplayName(user()?.roles?.[0]) }}
+                </p>
+              </div>
+              <div
+                class="brand-avatar text-white fw-bold d-flex align-items-center justify-content-center rounded-circle shadow-sm"
+              >
+                <!-- {{ user()?.username?.substring(0, 2) | uppercase }} -->
+                {{ getInitials(this.user()?.fullName) | uppercase }}
+              </div>
+            </div>
+
+            <!-- Menú Desplegable (se muestra si la señal es true) -->
+            <ul
+              class="dropdown-menu dropdown-menu-end shadow rounded-3 mt-2 border-0"
+              [class.show]="isDropdownOpen()"
+              style="position: absolute; right: 0; top: 100%"
+            >
+              <li
+                class="d-header text-uppercase d-flex align-items-center p-4 text-nowrap"
+              >
+                <div
+                  class="brand-avatar text-white fw-bold d-flex align-items-center justify-content-center rounded-circle shadow-sm me-3"
+                >
+                  {{ getInitials(this.user()?.fullName) | uppercase }}
+                </div>
+                <!-- <i class="fas fa-user me-2"></i>  -->
+                {{ user()?.fullName }}
+              </li>
+              <li>
+                <button
+                  class="dropdown-item py-3 d-flex align-items-center"
+                  (click)="cambiarContrasenaVoluntario()"
+                >
+                  <i class="fas fa-key text-muted me-3"></i>
+                  <span class="fw-medium">Cambiar Contraseña</span>
+                </button>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <button
+                  class="dropdown-item py-3 text-danger d-flex align-items-center"
+                  (click)="logoutDropdown()"
+                >
+                  <i class="fas fa-sign-out-alt me-3"></i>
+                  <span class="fw-medium">Cerrar Sesión</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        }
+      </header>
+
+      <section class="p-4 p-md-5">
+        <div class="row g-4">
+          <div class="col-md-8">
+            <div
+              class="card shadow-sm border-0 border-start border-success border-4 h-100"
+            >
+              <div class="card-body p-4">
+                <h2 class="h4 fw-bold text-dark">
+                  ¡Hola, {{ user()?.fullName }} gusto verte de nuevo !
+                </h2>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-3 text-muted" />
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <ul class="nav nav-pills gap-2">
+              <li class="nav-item">
+                <button
+                  class="nav-link fw-semibold rounded-pill px-4"
+                  [class.active]="context() === 'PROCESO'"
+                  [class.bg-outline-brand]="context() === 'PROCESO'"
+                  (click)="switchContext('PROCESO')"
+                >
+                  <i class="bi bi-gear-wide-connected me-2"></i>En Proceso
+                </button>
+              </li>
+              <li class="nav-item">
+                <button
+                  class="nav-link fw-semibold rounded-pill px-4"
+                  [class.active]="context() === 'HISTORICO'"
+                  [class.bg-secondary]="context() === 'HISTORICO'"
+                  (click)="switchContext('HISTORICO')"
+                >
+                  <i class="bi bi-archive-fill me-2"></i>Histórico (Finalizados)
+                </button>
+              </li>
+            </ul>
+
+            <!-- Buscador Reactivo -->
+            <div class="input-group w-25 pe-4">
+              <span class="input-group-text bg-light border-end-0 border-secondary shadow-none"
+                ><i class="fas fa-search text-muted"></i
+              ></span>
+              <input
+                type="text"
+                class="form-control border-start-0  border-secondary ps-0 shadow-none"
+                [formControl]="searchControl"
+                placeholder="Buscar por código RRTI..."
+              />
+            </div>
+          </div>
+
+          <!-- Botón para crear nuevo requerimiento -->
+          @if (isCoord) {
+            <div class="d-flex justify-content-end pe-5">
+              <button
+                type="button"
+                class="btn btn-success rounded-pill px-5 shadow-sm fw-semibold btn-tbl-success"
+                (click)="openCreateModal()"
+              >
+                <i class="bi bi-plus-circle me-2"></i>Nuevo Requerimiento
+              </button>
+            </div>
+          }
+
+          <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+            <div class="table-responsive">
+              <table
+                class="table table-lg table-hover align-middle mb-2"
+                style="line-height: 3"
+              >
+                <thead class="table-light text-muted text-uppercase">
+                  <tr>
+                    <th class="ps-4">RRTI</th>
+                    <th>Tipo</th>
+                    <th>Solicitante</th>
+                    <th>Unidad</th>
+                    <th>Fecha Creación</th>
+                    <th>Estatus</th>
+                    <th class="text-center pe-4">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @if (isLoading()) {
+                    <tr>
+                      <td colspan="7" class="text-center py-5">
+                        <div
+                          class="spinner-border text-brand"
+                          role="status"
+                        ></div>
+                        <p class="mt-2 text-muted small">
+                          Cargando datos del sistema...
+                        </p>
+                      </td>
+                    </tr>
+                  } @else if (requirements().length === 0) {
+                    <tr>
+                      <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                        No hay requerimientos en esta bandeja.
+                      </td>
+                    </tr>
+                  } @else {
+                    @for (req of requirements(); track req.id) {
+                      <tr>
+                        <td class="ps-4 fw-bold text-dark">#{{ req.rrti }}</td>
+                        <td>
+                          <span class="badge bg-light text-dark border">{{
+                            req.requirement_type
+                          }}</span>
+                        </td>
+                        <td class="text">
+                          {{ req.consultor_funcional }}
+                        </td>
+                        <td class="text">
+                          {{ req.unidad_solicitante }}
+                        </td>
+                        <td>{{ req.creation_date | date: 'dd/MM/yyyy' }}</td>
+                        <td>
+                          <span
+                            class="badge border px-3 py-1 text-uppercase fw-semibold {{
+                              req.status | reqStatus: 'class'
+                            }}"
+                            style="font-size: 0.8rem"
+                          >
+                            {{ req.status | reqStatus: 'label' }}
+                          </span>
+                        </td>
+                        <td class="align-middle text-center">
+                          <div
+                            class="d-flex align-items-center justify-content-center gap-3"
+                          >
+                            <!-- Ver Detalles -->
+                            <button
+                              class="btn btn-md btn-tbl-info rounded-pill px-3"
+                              (click)="openDetailModal(req.id)"
+                              title="Ver Detalles"
+                            >
+                              <i class="fa-solid fa-eye"></i>
+                            </button>
+
+                            <!-- Gestionar Estimación -->
+                            <button
+                              class="btn btn-md rounded-pill px-3"
+                              [ngClass]="
+                                canManageRequirement(req)
+                                  ? 'btn-tbl-validation'
+                                  : 'btn-tbl-inactive'
+                              "
+                              [disabled]="!canManageRequirement(req)"
+                              (click)="openEstimationModal(req)"
+                              title="Gestionar Estimación"
+                            >
+                              <i class="fa-solid fa-calendar"></i>
+                            </button>
+
+                            <!-- Gestionar Acuerdos -->
+                            <button
+                              class="btn btn-md rounded-pill px-3"
+                              [ngClass]="
+                                canManageRequirement(req) &&
+                                isAtfEnabled(req.status)
+                                  ? 'btn-tbl-planning'
+                                  : 'btn-tbl-inactive'
+                              "
+                              [disabled]="
+                                !canManageRequirement(req) ||
+                                !isAtfEnabled(req.status)
+                              "
+                              (click)="gestionarAcuerdos(req)"
+                              title="Gestionar Acuerdos"
+                            >
+                              <i class="fa-solid fa-handshake"></i>
+                            </button>
+
+                            <!-- Gestionar Requerimiento -->
+                            <button
+                              class="btn btn-md rounded-pill px-3"
+                              [ngClass]="
+                                canManageRequirement(req) &&
+                                isGrEnabled(req.status)
+                                  ? 'btn-tbl-construction'
+                                  : 'btn-tbl-inactive'
+                              "
+                              [disabled]="
+                                !canManageRequirement(req) ||
+                                !isGrEnabled(req.status)
+                              "
+                              (click)="openLifecycleOrchestrator(req)"
+                              title="Gestionar Requerimiento"
+                            >
+                              <i class="fa-solid fa-gear"></i>
+                            </button>
+
+                            <!-- Cierre / Visor de Acta -->
+                            @if (context() === 'HISTORICO' || isCoord) {
+                              <button
+                                class="btn btn-md rounded-pill px-3"
+                                [ngClass]="
+                                  req.status === 'RF' || isCloseEnabled(req)
+                                    ? 'btn-tbl-success'
+                                    : 'btn-tbl-inactive'
+                                "
+                                [disabled]="
+                                  req.status !== 'RF' && !isCloseEnabled(req)
+                                "
+                                [title]="
+                                  req.status === 'RF'
+                                    ? 'Ver Acta de Cierre'
+                                    : 'Cerrar Requerimiento'
+                                "
+                                (click)="openClosureModal(req)"
+                              >
+                                <i
+                                  class="fa-solid"
+                                  [ngClass]="
+                                    req.status === 'RF'
+                                      ? 'fa-eye'
+                                      : 'fa-clipboard-check'
+                                  "
+                                ></i>
+                              </button>
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div class="d-flex justify-content-evenly align-items-center my-3">
+              <button
+                class="btn btn-outline-secondary"
+                (click)="previousPage()"
+                [disabled]="currentOffset() === 0"
+              >
+                <i class="bi bi-chevron-left"></i> Anterior
+              </button>
+
+              <span class="text-muted small">
+                Mostrando desde el registro {{ currentOffset() + 1 }} al
+                {{ currentOffset() + requirements().length }}
+              </span>
+
+              <button
+                class="btn btn-outline-primary"
+                (click)="nextPage()"
+                [disabled]="!hasMore()"
+              >
+                Siguiente <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        @if (isDetailModalOpen()) {
+          <div
+            class="modal-backdrop fade show"
+            style="z-index: 1050 !important"
+          ></div>
+
+          <div
+            class="modal fade show"
+            tabindex="-1"
+            style="display: block; z-index: 1060 !important"
+          >
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+              <div class="modal-content border-0 shadow-lg">
+                <lib-requirement-modal
+                  [requirementId]="selectedRequirementId()"
+                  (modalClosed)="closeDetailModal(true)"
+                >
+                </lib-requirement-modal>
+              </div>
+            </div>
+          </div>
+        }
+        @if (isAtfListModalOpen()) {
+          <lib-atf-agreements-list-modal
+            [requirementId]="selectedReqForAtf()!"
+            [requirementCode]="selectedReqCodeForAtf()"
+            [isAtfOpen]="isSelectedReqAtfOpen()"
+            [currentManagementType]="selectedReqManagementType()"
+            (closeModal)="closeAtfListModal()"
+            (openCreateModal)="openAgreementCreate()"
+            (viewAgreementDetail)="openAgreementView($event)"
+            (typeUpdated)="onRequirementMutated($event)"
+            (atfPhaseClosed)="loadRequirements()"
+          >
+          </lib-atf-agreements-list-modal>
+        }
+
+        @if (isAtfModalOpen()) {
+          <lib-atf-agreements-modal
+            [requirementId]="selectedReqForAtf()!"
+            [initialMode]="atfModalMode()"
+            [agreementData]="selectedAgreementData()"
+            [isAtfOpen]="isSelectedReqAtfOpen()"
+            (closeModal)="closeAtfModal()"
+            (agreementSaved)="onAgreementSaved()"
+            [requirementCreationDate]="selectedReqCreationDate()"
+          >
+          </lib-atf-agreements-modal>
+        }
+        <!-- Modal de Estimación -->
+        @if (isEstimationModalOpen()) {
+          <lib-estimation-form
+            [requirementId]="selectedReqForAtf()!"
+            [requirementCode]="selectedReqCodeForAtf()"
+            [requirementCreationDate]="selectedReqCreationDate()"
+            [isPlanningClosed]="isSelectedReqPlanningClosed()"
+            (closeModal)="closeEstimationModal()"
+            (estimationSaved)="loadRequirements()"
+          >
+          </lib-estimation-form>
+        }
+
+        <!-- Modal de Creación de Requerimiento -->
+        @if (isCreateModalOpen()) {
+          <lib-requirement-create-modal
+            (closeModal)="closeCreateModal()"
+            (requirementCreated)="loadRequirements()"
+          >
+          </lib-requirement-create-modal>
+        }
+
+        <!-- ======================================================= -->
+        <!-- MODALES DEL MÓDULO DE CONFIGURACIÓN (MDM)               -->
+        <!-- ======================================================= -->
+
+        @if (activeConfigModal() === 'UNIFIED_PERSON') {
+          <lib-unified-person-modal (modalClosed)="closeConfigModal()">
+          </lib-unified-person-modal>
+        }
+
+        @if (showUnifiedPersonListModal()) {
+          <lib-unified-person-list-modal
+            (modalClosed)="closeUnifiedPersonListModal()"
+          >
+          </lib-unified-person-list-modal>
+        }
+
+        @if (showOrgStructureModal()) {
+          <lib-org-structure (modalClosed)="closeOrgStructureModal()">
+          </lib-org-structure>
+        }
+        @if (showProgressMatrixModal()) {
+          <lib-progress-matrix-config (closeModal)="closeProgressMatrixModal()">
+          </lib-progress-matrix-config>
+        }
+
+        @if (showMilestoneConfigModal()) {
+          <lib-milestone-config (closeModal)="closeMilestoneConfigModal()">
+          </lib-milestone-config>
+        }
+
+        @if (selectedReqForOrchestrator()) {
+          <lib-lifecycle-orchestrator-modal
+            [req]="selectedReqForOrchestrator()!"
+            (closeModal)="closeLifecycleOrchestrator()"
+            (requirementUpdated)="onRequirementPhaseUpdated($event)"
+          ></lib-lifecycle-orchestrator-modal>
+        }
+
+        <!-- ======================================================= -->
+        <!-- MODAL DE CIERRE HISTÓRICO (US37)                        -->
+        <!-- ======================================================= -->
+        @if (selectedReqForClosure()) {
+          <lib-requirement-closure-modal
+            [req]="selectedReqForClosure()!"
+            (closeModal)="closeClosureModal()"
+            (closureSuccess)="onRequirementClosed($event)"
+          ></lib-requirement-closure-modal>
+        }
+      </section>
+    </main>
+  </div>
+</div>

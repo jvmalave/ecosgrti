@@ -8,6 +8,8 @@ import { CerResultFormComponent } from './component/cer-result-form/cer-result-f
 import { CerRole, TicketGroup } from '../../data-access/models/cer-workflow.model';
 import { NotificationService,} from '../../data-access/services/notification.services';
 import { HttpErrorResponse } from '@angular/common/http';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { GlobalStatusModalComponent, StatusColumn } from '@ecosgrti/shared';
 
 
 @Component({
@@ -17,7 +19,8 @@ import { HttpErrorResponse } from '@angular/common/http';
     CommonModule, 
     FormsModule, 
     CerTicketFormComponent, 
-    CerResultFormComponent
+    CerResultFormComponent,
+    GlobalStatusModalComponent
   ], 
   templateUrl: './cer-roles.component.html',
   styleUrls: ['./cer-roles.component.scss']
@@ -41,6 +44,8 @@ export class CerRolesComponent implements OnInit {
   
   // Emite el payload de respuesta de Laravel para actualizar el Dashboard instantáneamente
   public phaseClosed = output<{req_id: string, phase_actual: string, progreso_global: number}>();
+
+  public frozenPhases = input<string[]>([]);
 
   // ==========================================
   // SIGNALS Y COMPUTED PARA EL MODAL DE TICKETS
@@ -84,22 +89,39 @@ export class CerRolesComponent implements OnInit {
     return groups;
   });
 
-  // ==========================================
-  // HARD GATE: QUÓRUM DE CIERRE GLOBAL
-  // ==========================================
-  // Detecta si la fase ya está cerrada (Cualquier fase distinta a CER-I implica que ya avanzó)
-  public isPhaseClosed = computed<boolean>(() => {
-    return this.reqPhase() !== 'CER-I';
-  });
   
+  // Detecta si la fase ya está cerrada (Inmutabilidad)
+  // =========================================================
+  // HARD GATE: QUÓRUM DE CIERRE GLOBAL (FASES PARALELAS)
+  // =========================================================
+  
+  // Detecta si la fase ya está cerrada leyendo la historia inmutable del backend
+  public isPhaseClosed = computed<boolean>(() => {
+    // Asegúrate de usar la señal o variable donde recibas el arreglo de fases congeladas
+    // Ej: ['ATF', 'DT', 'COR', 'PI']
+    const frozen = this.frozenPhases() || []; 
+    
+    // La fase está cerrada ÚNICAMENTE si existe en el historial inmutable
+    return frozen.includes('CER'); 
+  });
 
   public canClosePhase = computed<boolean>(() => {
-    const hasRoles = this.store.roles().length > 0;
-    const noPending = this.store.filteredPending().length === 0;
-    const noInProgress = this.store.filteredInProgress().length === 0;
-    // No permitir cerrar si YA está cerrada
-    return hasRoles && noPending && noInProgress && !this.isPhaseClosed();
+    const allRoles = this.store.roles();
+    
+    // Si no hay roles, es imposible cerrar
+    if (allRoles.length === 0) return false;
+
+    // RN 1: Absolutamente todos los roles de esta fase deben estar CERTIFICADOS
+    const allCertified = allRoles.every(r => r.status === 'CERTIFIED');
+
+    // RN 2: La fase anterior (PI) DEBE estar cerrada de forma real.
+    const frozen = this.frozenPhases() || [];
+    const isPiClosed = frozen.includes('PI');
+
+    // Se habilita el botón solo si todo está certificado, PI está en el historial (cerrada), y CER aún no se ha cerrado.
+    return allCertified && isPiClosed && !this.isPhaseClosed();
   });
+
 
   // ==========================================
   // SIGNALS PARA EL MODAL DE RESULTADOS
@@ -109,6 +131,58 @@ export class CerRolesComponent implements OnInit {
   public activeTicketId = signal<string>('');
   public activeTicketNumber = signal<string>('');
   public activeRoles = signal<CerRole[]>([]);
+
+
+// ==========================================
+// MODAL UNIVERSAL: ESTATUS DE CERTIFICACIÓN (CER)
+// ==========================================
+public showCerStatusModal = signal<boolean>(false);
+
+public statusColumnsData = computed<StatusColumn[]>(() => {
+  return [
+    {
+      title: 'Por Certificar',
+      icon: 'fa-solid fa-hourglass-half',
+      bgClass: 'bg-warning bg-opacity-25',
+      textClass: 'text-dark',
+      items: this.store.filteredPending().map(r => ({ 
+        id: r.id, 
+        name: r.requirement_role?.role_name || 'Rol sin nombre' 
+      })),
+      emptyMessage: 'No hay roles pendientes',
+      emptyIcon: 'fa-solid fa-check-double text-warning', 
+      itemIcon: 'fa-solid fa-circle text-warning fs-6'
+    },
+    {
+      title: 'En Proceso',
+      icon: 'fa-solid fa-ticket',
+      bgClass: 'bg-info bg-opacity-25',
+      textClass: 'text-dark',
+      // Extraemos del store base y filtramos para evadir la barra de búsqueda local
+      items: this.store.roles().filter(r => r.status === 'IN_PROGRESS').map(r => ({ 
+        id: r.id, 
+        name: r.requirement_role?.role_name || 'Rol sin nombre' 
+      })),
+      emptyMessage: 'Sin tickets en curso',
+      emptyIcon: 'fa-regular fa-folder-open text-info',
+      itemIcon: 'fa-solid fa-circle-notch fa-spin text-info'
+    },
+    {
+      title: 'Certificados',
+      icon: 'fa-solid fa-check-double',
+      bgClass: 'bg-success bg-opacity-25',
+      textClass: 'text-dark',
+      items: this.store.roles().filter(r => r.status === 'CERTIFIED').map(r => ({ 
+        id: r.id, 
+        name: r.requirement_role?.role_name || 'Rol sin nombre' 
+      })),
+      emptyMessage: 'Aún no hay roles certificados',
+      emptyIcon: 'fa-solid fa-lock text-success',
+      itemIcon: 'fa-solid fa-check text-success'
+    }
+  ];
+});
+
 
   ngOnInit(): void {
     this.initializeWorkflow();

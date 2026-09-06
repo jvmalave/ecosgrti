@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Domains\Core\Http\Controllers\RequirementController;
+use App\Domains\Core\Http\Controllers\RequirementClosureController;
 
 
 /*
@@ -10,7 +11,13 @@ use App\Domains\Core\Http\Controllers\RequirementController;
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('core')->middleware('auth:api')->group(function () {
+
+
+Route::prefix('core')->middleware(['auth:api', 'password.expired' ])->group(function () {
+
+
+    Route::get('/requirements/download-doc', [RequirementController::class, 'downloadDocument']);
+    
 
 /*
 |--------------------------------------------------------------------------
@@ -67,4 +74,24 @@ Route::prefix('core')->middleware('auth:api')->group(function () {
     Route::patch('/requirements/{id}/close-planning', [RequirementController::class, 'closePlanning']);
   });
 
+
+  
+
+
+  // ==========================================
+    // FASE CIERRE  (Finalizacion Ciclo de Vida del Requerimiento)-US37
+    // ==========================================
+
+    Route::middleware(['role:Admin,Coord'])->group(function () {
+    // Endpoint para generar el Acta Borrador (Etapa 1 del Cierre)
+      Route::post('/requirements/{requirement}/generate-closure-act', [RequirementClosureController::class, 'generateDraft']);
+      // Endpoint para generar el Acta de Cierre (Etapa 2 del Cierre)
+      Route::post('/requirements/{requirement}/finalize-closure', [RequirementClosureController::class, 'finalizeClosure']);
+
+    
+      });
+
+
 });
+
+
