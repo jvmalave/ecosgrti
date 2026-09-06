@@ -12,3 +12,4 @@ require __DIR__ . '/../app/Domains/Security/Routes/api.php';
 require __DIR__ . '/../app/Domains/Core/Routes/api.php';
 require __DIR__ . '/../app/Domains/Catalogs/Routes/api.php';
 require __DIR__ . '/../app/Domains/Workflow/Routes/api.php';
+require base_path('app/Domains/Reporting/Routes/api.php');
