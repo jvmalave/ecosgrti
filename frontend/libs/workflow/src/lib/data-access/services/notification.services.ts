@@ -201,6 +201,75 @@ export class NotificationService  {
     });
   }
 
+
+  /**
+   * Despliega un modal multicampo para capturar los filtros de la Bitácora de Auditoría.
+   */
+  async promptAuditLogFilters(): Promise<{ start_date: string, end_date: string, rrti: string, action: string } | null> {
+    const result = await Swal.fire({
+      title: 'Filtros de Auditoría',
+      html: `
+        <div class="text-start fs-6 px-2 mt-3">
+          <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Fecha Inicio (Requerido)</label>
+          <input id="swal-start-date" type="date" class="form-control mb-3 shadow-sm" required>
+
+          <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Fecha Fin (Requerido)</label>
+          <input id="swal-end-date" type="date" class="form-control mb-3 shadow-sm" required>
+
+          <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Código RRTI (Opcional)</label>
+          <input id="swal-rrti" type="text" class="form-control mb-3 shadow-sm" placeholder="Ej: 00041601">
+
+          <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Tipo de Evento (Opcional)</label>
+          <select id="swal-action" class="form-select shadow-sm">
+            <option value="">Todos los eventos (Historial completo)</option>
+            <option value="LOGIN_SUCCESS">Inicios de Sesión Exitosos</option>
+            <option value="LOGIN_FAIL">Intentos Fallidos de Sesión</option>
+            <option value="LOGOUT">Cierres de Sesión</option>
+            <option value="CREATE_REQUIREMENT">Creación de Requerimientos</option>
+            <option value="PASSWORD_CHANGE">Cambios de Contraseña</option>
+            <option value="CREATE_ATF_AGREEMENT">Acuerdos ATF</option>
+          </select>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: '<i class="fa-solid fa-file-pdf me-2"></i> Generar Bitácora',
+      cancelButtonText: 'Cancelar',
+      buttonsStyling: false,
+      customClass: {
+        confirmButton: 'btn btn-tbl-planning rounded-pill px-4 mx-2 fw-bold shadow-sm',
+        cancelButton: 'btn btn-tbl-close rounded-pill px-4 mx-2 fw-medium',
+        popup: 'rounded-4 border-top border-4 border-brand',
+        title: 'fs-4 text-dark fw-bold'
+      },
+      preConfirm: () => {
+        const startDate = (document.getElementById('swal-start-date') as HTMLInputElement).value;
+        const endDate = (document.getElementById('swal-end-date') as HTMLInputElement).value;
+        const rrti = (document.getElementById('swal-rrti') as HTMLInputElement).value;
+        const action = (document.getElementById('swal-action') as HTMLSelectElement).value;
+
+        if (!startDate || !endDate) {
+          Swal.showValidationMessage('Las fechas de inicio y fin son obligatorias.');
+          return false;
+        }
+
+        if (new Date(startDate) > new Date(endDate)) {
+          Swal.showValidationMessage('La fecha de inicio no puede ser posterior a la fecha de fin.');
+          return false;
+        }
+
+        return { 
+          start_date: startDate, 
+          end_date: endDate, 
+          rrti: rrti ? rrti.replace('#', '').trim() : '', 
+          action: action 
+        };
+      }
+    });
+
+    return result.isConfirmed ? result.value : null;
+  }
+
   public close(): void {
     Swal.close();
   }

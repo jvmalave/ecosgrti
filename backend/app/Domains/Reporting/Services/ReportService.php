@@ -68,4 +68,43 @@ class ReportService
             'coeDeliverables', 'ceeDeliverables'
         ])->where('rrti', $rrti)->firstOrFail();
     }
+
+    /**
+     * Consulta los registros de auditoría aplicando filtros dinámicos.
+     */
+    public function getFilteredAuditLogs(array $filters)
+    {
+        $requirementId = null;
+
+        // Si se envió un código RRTI, resolvemos su UUID en memoria
+        if (!empty($filters['rrti'])) {
+            $cleanRrti = trim(str_replace('#', '', $filters['rrti']));
+            $requirement = \App\Domains\Core\Models\Requirement::where('rrti', $cleanRrti)->first();
+            $requirementId = $requirement ? $requirement->id : '00000000-0000-0000-0000-000000000000';
+        }
+
+        return \App\Domains\Audit\Models\AuditLog::with(['user.person'])
+            ->when(!empty($filters['start_date']), function ($q) use ($filters) {
+                $q->whereDate('created_at', '>=', $filters['start_date']);
+            })
+            ->when(!empty($filters['end_date']), function ($q) use ($filters) {
+                $q->whereDate('created_at', '<=', $filters['end_date']);
+            })
+            ->when(!empty($filters['user_id']), function ($q) use ($filters) {
+                $q->where('user_id', $filters['user_id']);
+            })
+            ->when(!empty($filters['action']), function ($q) use ($filters) {
+                $q->where('action', $filters['action']);
+            })
+            ->when($requirementId, function ($q) use ($requirementId) {
+                // Filtro híbrido: busca en target_id o dentro del payload JSON
+                $q->where(function ($sub) use ($requirementId) {
+                    $sub->where('target_id', $requirementId)
+                        ->orWhere('payload->record_id', $requirementId)
+                        ->orWhere('payload->requirement_id', $requirementId);
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
 }

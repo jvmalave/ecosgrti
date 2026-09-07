@@ -7,6 +7,7 @@ namespace App\Domains\Reporting\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
+use Illuminate\Http\Request;
 use App\Domains\Reporting\Services\ReportService;
 
 class ReportController extends Controller
@@ -129,4 +130,30 @@ public function __construct(
         $filenamePrefix = $isClosed ? 'acta_cierre' : 'seguimiento';
         return $pdf->stream("{$filenamePrefix}_{$requirement->rrti}.pdf");
     }
+
+    public function generateAuditLog(Request $request): Response
+    {
+        $filters = $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+            'user_id'    => 'nullable|uuid',
+            'action'     => 'nullable|string',
+            'rrti'       => 'nullable|string',
+        ]);
+
+        $logs = $this->reportService->getFilteredAuditLogs($filters);
+
+        $pdf = Pdf::loadView('reporting::audit-log', [
+            'logs'         => $logs,
+            'filters'      => $filters,
+            'generated_at' => now()->format('d/m/Y H:i'),
+            'user'         => auth()->user(),
+        ])->setPaper('letter', 'landscape');
+
+        $timestamp = now()->timestamp;
+        return $pdf->stream("bitacora_auditoria_{$timestamp}.pdf");
+    }
+
+
+
 }

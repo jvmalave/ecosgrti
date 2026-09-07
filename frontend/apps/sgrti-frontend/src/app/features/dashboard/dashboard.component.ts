@@ -241,6 +241,8 @@ public logoutDropdown(): void {
     });
 }
 
+
+
   // Control Reactivo para el Buscador
   searchControl = new FormControl('');
   public selectedReqManagementType = computed(() => {
@@ -854,7 +856,7 @@ public isGrEnabled(status: string): boolean {
     });
   }
 
-
+// Gatilla el modal de reporte de seguimiento o acta de cierre para un requerimiento
   public async openReportModal(): Promise<void> {
     // 1. Solicitamos el RRTI usando tu servicio centralizado
     const rrti = await this.notificationService.promptTextInput(
@@ -884,6 +886,34 @@ public isGrEnabled(status: string): boolean {
           this.notificationService.showError(
             'Requerimiento No Encontrado',
             `No pudimos localizar un requerimiento con el código <strong>${cleanRrti}</strong>. Verifique e intente nuevamente.`
+          );
+        }
+      });
+    }
+  }
+
+ // Gatilla la descarga  del Reporte de Auditoría 
+
+  public async triggerAuditLogReport(): Promise<void> {
+    const filters = await this.notificationService.promptAuditLogFilters();
+
+    if (filters) {
+      this.notificationService.showLoading(
+        'Procesando Trazas', 
+        'Estructurando bitácora de auditoría. Este proceso puede tardar unos segundos.'
+      );
+
+      this.reportService.downloadAuditLog(filters).subscribe({
+        next: (blob: Blob) => {
+          const filename = `Bitacora_Auditoria_${filters.start_date}_al_${filters.end_date}.pdf`;
+          this.reportService.forceFileDownload(blob, filename);
+          this.notificationService.close(); // Cierra el loading exitosamente
+        },
+        error: (err) => {
+          console.error('Error generando bitácora:', err);
+          this.notificationService.showError(
+            'Error de Extracción',
+            'No se pudo generar la bitácora de auditoría. Verifique los parámetros o contacte a soporte.'
           );
         }
       });

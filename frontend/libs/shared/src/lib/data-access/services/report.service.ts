@@ -1,6 +1,7 @@
 import { Injectable, ProviderToken, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
+
 
 @Injectable({
   providedIn: 'root'
@@ -44,6 +45,25 @@ export class ReportService {
     });
   }
 
+
+  downloadAuditLog(filters: { start_date: string, end_date: string, rrti: string, action: string }): Observable<Blob> {
+    let params = new HttpParams()
+      .set('start_date', filters.start_date)
+      .set('end_date', filters.end_date);
+
+    if (filters.rrti) {
+      params = params.set('rrti', filters.rrti);
+    }
+    if (filters.action) {
+      params = params.set('action', filters.action);
+    }
+
+    return this.http.get(`${this.reportingApiUrl}/audit-log`, { 
+      params,
+      responseType: 'blob'
+    });
+  }
+
   /**
    * Utilidad maestra para forzar la descarga nativa de cualquier Blob en el navegador.
    * @param blob El flujo de datos binarios
@@ -71,4 +91,15 @@ export class ReportService {
       responseType: 'blob'
     });
   }
+
+  
+  // Dentro de tu servicio de reportes:
+
+  
+
+  
+
+
+
+
 }
