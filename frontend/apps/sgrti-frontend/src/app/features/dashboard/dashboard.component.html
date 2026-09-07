@@ -16,19 +16,80 @@
       <nav class="flex-grow-1 mt-2">
         <ul class="nav flex-column gap-1">
           <li class="nav-item">
-            <a href="#" class="nav-link active rounded-3 px-3 py-2">
+            <a href="" class="nav-link active rounded-3 px-3 py-2">
               <i class="fas fa-home"></i> Inicio
             </a>
           </li>
-          <li class="nav-item">
-            <a href="#" class="nav-link rounded-3 px-3 py-2">
-              <i class="fas fa-chart-pie"></i> Reportes
-            </a>
-          </li>
+          <!-- Menú Colapsable de Reportes -->
+          @if (isAdmin || isCoord) {
+            <!-- Menú Colapsable de Reportes (Vía Signals) -->
+            <li class="nav-item w-100">
+              <a
+                class="nav-link rounded-3 px-3 py-2 text-white"
+                (click)="toggleReportsMenu()"
+                (keydown.enter)="toggleReportsMenu()"
+                tabindex="0"
+                style="cursor: pointer"
+              >
+                <div
+                  class="d-flex w-100 justify-content-between align-items-center"
+                >
+                  <span><i class="fas fa-chart-pie me-2"></i> Reportes</span>
+                  <i
+                    class="fas fa-chevron-down transition-transform"
+                    [class.rotate-180]="isReportsMenuOpen()"
+                  ></i>
+                </div>
+              </a>
+
+              <!-- Submenú de Reportes -->
+              @if (isReportsMenuOpen()) {
+                <ul
+                  class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition"
+                  style="border-left: 1px solid rgba(255, 255, 255, 0.2)"
+                >
+                  <!-- Reporte 1: Directorio MDM -->
+                  <li class="nav-item">
+                    <a
+                      (click)="descargarDirectorioMdm()"
+                      (keydown.enter)="descargarDirectorioMdm()"
+                      tabindex="0"
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white"
+                      style="
+                        cursor: pointer;
+                        opacity: 0.8;
+                        transition: opacity 0.2s;
+                      "
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
+                    >
+                      <i
+                        class="fas fa-id-card me-2"
+                        style="font-size: 0.9em"
+                      ></i>
+                      Directorio MDM
+                    </a>
+                  </li>
+                  <!-- Documento de Seguimiento / Cierre -->
+                  <li class="nav-item">
+                    <a
+                      class="nav-link cursor-pointer"
+                      (click)="openReportModal()"
+                      (keydown.enter)="openReportModal()"
+                      tabindex="0"
+                    >
+                      <i class="fa-solid fa-file-signature me-2"></i> Documento
+                      de Seguimiento / Cierre
+                    </a>
+                  </li>
+                </ul>
+              }
+            </li>
+          }
 
           <!-- OPCIÓN CONFIGURACIÓN CON SUBMENÚ DESPLEGABLE -->
           @if (isAdmin || isCoord) {
-            <li class="nav-item">
+            <li class="nav-item w-100">
               <a
                 class="nav-link rounded-3 px-3 py-2 text-white"
                 (click)="toggleConfigMenu()"
@@ -51,6 +112,7 @@
               @if (isConfigMenuOpen()) {
                 <ul
                   class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition"
+                  style="border-left: 1px solid rgba(255, 255, 255, 0.2)"
                 >
                   <li class="nav-item">
                     <a
@@ -58,7 +120,13 @@
                       (click)="openUnifiedPersonListModal()"
                       (keydown.enter)="openUnifiedPersonListModal()"
                       tabindex="0"
-                      style="cursor: pointer"
+                      style="
+                        cursor: pointer;
+                        opacity: 0.8;
+                        transition: opacity 0.2s;
+                      "
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
                     >
                       <i class="fas fa-id-card me-2"></i> Directorio de Fichas
                     </a>
@@ -69,7 +137,13 @@
                       (click)="openOrgStructureModal()"
                       (keydown.enter)="openOrgStructureModal()"
                       tabindex="0"
-                      style="cursor: pointer"
+                      style="
+                        cursor: pointer;
+                        opacity: 0.8;
+                        transition: opacity 0.2s;
+                      "
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
                     >
                       <i class="fas fa-sitemap me-2"></i> Estructura
                       Organizacional
@@ -81,18 +155,31 @@
                       (click)="openProgressMatrixModal()"
                       (keydown.enter)="openProgressMatrixModal()"
                       tabindex="0"
-                      style="cursor: pointer"
+                      style="
+                        cursor: pointer;
+                        opacity: 0.8;
+                        transition: opacity 0.2s;
+                      "
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
                     >
                       <i class="fas fa-sliders-h me-2"></i> Matrices de Progreso
                     </a>
                   </li>
+
                   <li class="nav-item">
                     <a
                       class="nav-link rounded-3 px-3 py-2 fs-6 text-white"
                       (click)="openMilestoneConfigModal()"
                       (keydown.enter)="openMilestoneConfigModal()"
                       tabindex="0"
-                      style="cursor: pointer"
+                      style="
+                        cursor: pointer;
+                        opacity: 0.8;
+                        transition: opacity 0.2s;
+                      "
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
                     >
                       <i class="fas fa-list-check me-2"></i> Hitos Técnicos
                       (MDM)
@@ -105,11 +192,11 @@
         </ul>
       </nav>
 
-      <div class="mt-auto pt-4 border-top border-white border-opacity-25">
+      <!-- <div class="mt-auto pt-4 border-top border-white border-opacity-25">
         <button (click)="logout()" class="btn btn-logout-white w-100 py-2">
           <i class="fas fa-sign-out-alt me-3"></i>Cerrar Sesión
         </button>
-      </div>
+      </div> -->
     </aside>
 
     <main class="col-md-9 col-lg-10 d-flex flex-column bg-light">
@@ -184,6 +271,7 @@
 
       <section class="p-4 p-md-5">
         <div class="row g-4">
+          <!-- Saludo -->
           <div class="col-md-8">
             <div
               class="card shadow-sm border-0 border-start border-success border-4 h-100"
@@ -195,9 +283,8 @@
               </div>
             </div>
           </div>
-
           <hr class="my-3 text-muted" />
-
+          <!--Botón Proceso | Botón Histórico | Buscador -->
           <div class="d-flex justify-content-between align-items-center mb-2">
             <ul class="nav nav-pills gap-2">
               <li class="nav-item">
@@ -224,18 +311,18 @@
 
             <!-- Buscador Reactivo -->
             <div class="input-group w-25 pe-4">
-              <span class="input-group-text bg-light border-end-0 border-secondary shadow-none"
+              <span
+                class="input-group-text bg-light border-end-0 border-secondary shadow-none"
                 ><i class="fas fa-search text-muted"></i
               ></span>
               <input
                 type="text"
-                class="form-control border-start-0  border-secondary ps-0 shadow-none"
+                class="form-control border-start-0 border-secondary ps-0 shadow-none"
                 [formControl]="searchControl"
                 placeholder="Buscar por código RRTI..."
               />
             </div>
           </div>
-
           <!-- Botón para crear nuevo requerimiento -->
           @if (isCoord) {
             <div class="d-flex justify-content-end pe-5">
@@ -248,7 +335,6 @@
               </button>
             </div>
           }
-
           <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
             <div class="table-responsive">
               <table

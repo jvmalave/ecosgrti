@@ -123,7 +123,7 @@ class RequirementClosureService
             'cspeConsultants' => collect($requirement->cspeConsultants),
         ];
 
-        $pdf = Pdf::loadView('pdfs.closure-act', $data);
+        $pdf = Pdf::loadView('reporting::closure-act', $data);
 
         return base64_encode($pdf->output());
     }

@@ -11,7 +11,7 @@ import Swal from 'sweetalert2';
 
 // Imports de tus servicios e interfaces
 import { AuthService } from '@ecosgrti/security/data-access';
-import { PasswordChangeModalService } from '@ecosgrti/shared';
+import { PasswordChangeModalService, ReportService } from '@ecosgrti/shared';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import {
@@ -31,7 +31,8 @@ import {
         AtfAgreementsListModalComponent, 
         AtfAgreementDetail,
         LifecycleOrchestratorModalComponent,
-        WorkflowPhaseService    
+        WorkflowPhaseService,
+        NotificationService    
       } from '@ecosgrti/workflow';
 import { UnifiedPersonModalComponent, UnifiedPersonListModalComponent } from '@ecosgrti/security';
 import { OrgStructureComponent, ProgressMatrixConfigComponent, MilestoneConfigComponent  } from '@ecosgrti/catalogs';
@@ -75,6 +76,8 @@ export class DashboardComponent implements OnInit {
   public readonly workflowState = inject(WorkflowStateService);
   readonly phaseService = inject(WorkflowPhaseService);
   public readonly passwordChangeModalService = inject(PasswordChangeModalService);
+  private reportService = inject(ReportService);
+  private notificationService = inject(NotificationService);
 
   // ==========================================
   // 2. ESTADO REACTIVO (SIGNALS Y FORM CONTROLS)
@@ -126,6 +129,22 @@ export class DashboardComponent implements OnInit {
   // Señal para controlar la visibilidad del modal de matriz de progreso
   public showProgressMatrixModal = signal<boolean>(false);
 
+
+  // ==========================================
+  // SIGNALS PARA MÓDULO REPORTES
+  // ==========================================
+  public isReportsMenuOpen = signal<boolean>(false);
+
+  /**
+   * Alterna la visibilidad del submenú de reportes en el aside.
+   */
+  public toggleReportsMenu(): void {
+    this.isReportsMenuOpen.update(open => !open);
+  }
+
+
+
+
   // ==========================================
   // SIGNALS PARA MÓDULO DE CONFIGURACIÓN (MDM)
   // ==========================================
@@ -135,6 +154,7 @@ export class DashboardComponent implements OnInit {
   public activeConfigModal = signal<'NONE' | 'UNIFIED_PERSON'>('NONE');
 
   public showMilestoneConfigModal = signal<boolean>(false);
+
 
   
   /**
@@ -168,41 +188,6 @@ export class DashboardComponent implements OnInit {
     //console.log('2. [Padre] Evento recibido en el Dashboard. Destruyendo el modal...');
     this.activeConfigModal.set('NONE');
   }
-
-  //cambiar contraseña de forma voluntaria (sin que el sistema lo pida)
-//   public async cambiarContrasenaVoluntario(): Promise<void> {
-//   const data = await this.passwordChangeModalService.abrirModalCambioPassword();
-
-//   if (data) {
-//     Swal.fire({
-//       title: 'Actualizando credenciales...',
-//       allowOutsideClick: false,
-//       didOpen: () => { Swal.showLoading(); }
-//     });
-
-//     this.authService.changePassword(data).subscribe({
-//       next: (res) => {
-//         Swal.fire({
-//           title: '¡Bóveda Asegurada!',
-//           text: res.message,
-//           icon: 'success',
-//           customClass: { popup: 'rounded-4' },
-//           confirmButtonColor: '#0d6efd'
-//         });
-//       },
-//       error: (err: HttpErrorResponse) => {
-//         const errorMessage = err.error?.message || 'No se pudo actualizar la contraseña. Verifica tus datos.';
-//         Swal.fire({
-//           title: 'Error de Seguridad',
-//           text: errorMessage,
-//           icon: 'error',
-//           confirmButtonColor: '#0d6efd',
-//           customClass: { popup: 'rounded-4' }
-//         });
-//       }
-//     });
-//   }
-// }
 
 // Método para abrir/cerrar
 public toggleDropdown(): void {
@@ -805,7 +790,105 @@ public isGrEnabled(status: string): boolean {
     .map(name => name.charAt(0))
     .join('')
     .toUpperCase();
-}
+  }
+
+  /**
+   * Gatilla la descarga del reporte de prueba bloqueando la UI con SweetAlert
+   */
+  descargarReportePrueba(): void {
+    Swal.fire({
+      title: 'Generando Reporte',
+      text: 'Por favor espere mientras se compila el documento...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    this.reportService.downloadTestReport().subscribe({
+      next: (blob: Blob) => {
+        this.reportService.forceFileDownload(blob, 'reporte_conexion_ecosgrti.pdf');
+        Swal.close();
+      },
+      error: (error) => {
+        console.error('Error al generar el reporte:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error de Generación',
+          text: 'No se pudo compilar el reporte PDF. Consulte los registros del servidor.',
+          confirmButtonColor: '#0056b3'
+        });
+      }
+    });
+  }
+/**
+   * Gatilla la descarga del Directorio MDM bloqueando la UI con SweetAlert
+   */
+  descargarDirectorioMdm(): void {
+    Swal.fire({
+      title: 'Generando Directorio MDM',
+      text: 'Compilando el registro de fichas unificadas, por favor espere...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    this.reportService.downloadMdmDirectoryReport().subscribe({
+      next: (blob: Blob) => {
+        // Retardo artificial de 1 segundo para UX antes de descargar y cerrar el modal
+        setTimeout(() => {
+          this.reportService.forceFileDownload(blob, 'directorio_fichas_mdm_ecosgrti.pdf');
+          Swal.close();
+        }, 1000);
+      },
+      error: (error) => {
+        console.error('Error al generar el directorio MDM:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error de Generación',
+          text: 'No se pudo compilar el directorio. Consulte los registros del servidor.',
+          confirmButtonColor: '#0056b3'
+        });
+      }
+    });
+  }
+
+
+  public async openReportModal(): Promise<void> {
+    // 1. Solicitamos el RRTI usando tu servicio centralizado
+    const rrti = await this.notificationService.promptTextInput(
+      'Consultar Requerimiento',
+      'Ingrese el código de control (RRTI) para generar su documento de seguimiento o acta de cierre:',
+      'Ej: 00011114'
+    );
+
+    if (rrti) {
+      // 2. Mostramos el Loading corporativo
+      this.notificationService.showLoading(
+        'Buscando en la bóveda...', 
+        'Procesando la trazabilidad, por favor espere.'
+      );
+
+      const cleanRrti = rrti.replace('#', '').trim();
+
+      // 3. Ejecutamos la petición HTTP
+      this.reportService.downloadReportByRrti(cleanRrti).subscribe({
+        next: (blob: Blob) => {
+          this.reportService.forceFileDownload(blob, `Documento_RRTI_${cleanRrti}.pdf`);
+          this.notificationService.close();
+        },
+        error: (err) => {
+          console.error(err);
+          // 4. Mostramos el error con tu alerta corporativa existente
+          this.notificationService.showError(
+            'Requerimiento No Encontrado',
+            `No pudimos localizar un requerimiento con el código <strong>${cleanRrti}</strong>. Verifique e intente nuevamente.`
+          );
+        }
+      });
+    }
+  }
 
 }
 

@@ -9,6 +9,12 @@ Route::prefix('reports')->middleware(['auth:api'])->group(function () {
 
     Route::get('/test', [ReportController::class, 'generateTestReport']);
 
+    Route::get('/mdm-directory', [ReportController::class, 'generateMdmDirectory']);
+
+    Route::get('/closure-act/{id}', [ReportController::class, 'generateClosureAct']);
+
+    Route::get('/closure-act/rrti/{rrti}', [ReportController::class, 'generateClosureActByRrti']);
+
   });
     
 });

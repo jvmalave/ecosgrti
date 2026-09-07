@@ -3,4 +3,5 @@ export * from './lib/components/global-status-modal/global-status-modal.componen
 export * from './lib/ui/services/special-operation-modal.service';
 export * from './lib/ui/services/password-change-modal.service';
 export * from './lib/models/password-change.model';
+export * from './lib/data-access/services/report.service';
 

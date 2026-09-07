@@ -88,6 +88,8 @@ Route::prefix('core')->middleware(['auth:api', 'password.expired' ])->group(func
       // Endpoint para generar el Acta de Cierre (Etapa 2 del Cierre)
       Route::post('/requirements/{requirement}/finalize-closure', [RequirementClosureController::class, 'finalizeClosure']);
 
+      Route::get('/requirements/{requirement}/download-support', [RequirementClosureController::class, 'downloadSupport']);
+
     
       });
 

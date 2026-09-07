@@ -158,4 +158,51 @@ export class NotificationService  {
     return result.isConfirmed ? result.value : null;
   }
 
+  async promptTextInput(title: string, htmlText: string, placeholder: string): Promise<string | null> {
+    const result = await Swal.fire({
+      title: title,
+      html: htmlText,
+      icon: 'info', 
+      input: 'text',
+      inputPlaceholder: placeholder,
+      showCancelButton: true,
+      confirmButtonText: '<i class="fa-solid fa-file-pdf me-2"></i> Generar Documento',
+      cancelButtonText: 'Cancelar',
+      buttonsStyling: false,
+      customClass: {
+        // Inyectamos tus clases de Bootstrap y la clase corporativa
+        confirmButton: 'btn btn-tbl-info rounded-pill px-4 mx-2 fw-bold shadow-sm', 
+        cancelButton: 'btn btn-tbl-close rounded-pill px-4 mx-2 fw-medium',
+        popup: 'rounded-4 border-top border-4 border-brand',
+        title: 'fs-4 text-dark fw-bold'
+      },
+      inputValidator: (value) => {
+        if (!value || value.trim() === '') {
+          return 'Debe ingresar un número de requerimiento válido.';
+        }
+        return null;
+      }
+    });
+    return result.isConfirmed ? result.value : null;
+  }
+
+  public showLoading(title: string, message: string): void {
+    Swal.fire({
+      title: title,
+      html: message,
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+      customClass: {
+        popup: 'rounded-4 border-top border-4 border-brand',
+        title: 'fs-4 text-dark fw-bold'
+      }
+    });
+  }
+
+  public close(): void {
+    Swal.close();
+  }
+
 }

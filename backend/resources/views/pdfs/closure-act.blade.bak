@@ -144,22 +144,64 @@
             </ul>
         @endif
 
-        <div class="section-title">6. GESTIÓN DEL REQUERIMIENTO</div>
-        <p class="text-justify">
-
-            <!-- Párrafo exclusivo para el flujo de Roles -->
+        <!-- 6. GESTIÓN DEL REQUERIMIENTO (RECORRIDO TÉCNICO) -->
+        <div
+            style="background-color: #0056b3; color: white; padding: 4px 8px; font-size: 11px; font-weight: bold; margin-bottom: 10px;">
+            6. RECORRIDO Y APROBACIONES TÉCNICAS
+        </div>
+        <p style="font-size: 11px; color: #444; text-align: justify; margin-bottom: 15px;">
             @if (in_array($requirement->management_type, ['Roles', 'Mixto']))
-                Para cada rol intervenido, se completaron satisfactoriamente las etapas del ciclo de vida: <strong>Diseño
-                    Técnico, Construcción, Pruebas Integrales, Certificación, Pase a Producción y Asignación al Usuario
-                    final.</strong><br><br>
+                Para cada <strong>Rol intervenido</strong>, se completaron satisfactoriamente las etapas del ciclo de vida
+                exigidas por la normativa: Diseño Técnico, Construcción, Pruebas Integrales (PI), Certificación (Cer/Cee),
+                Pase a Producción (PAP) y Asignación al Usuario final.<br><br>
             @endif
 
-            <!-- Párrafo exclusivo para el flujo de Entregables -->
             @if (in_array($requirement->management_type, ['Entregables', 'Mixto']))
-                Para cada Entregable creado, se completaron satisfactoriamente las etapas del ciclo de vida:
-                <strong>Construcción y Certificación.</strong>
+                Para cada <strong>Entregable desarrollado</strong>, se completaron exhaustivamente las etapas de
+                Construcción técnica y Certificación, garantizando el cumplimiento de los estándares de la corporación.
             @endif
         </p>
+
+        <!-- Tabla de Auditoría: Historial de Fases -->
+        <div style="margin-bottom: 25px;">
+            <p style="font-size: 11px; font-weight: bold; color: #333; margin-bottom: 5px;">Trazabilidad de Ejecución (Audit
+                Trail):</p>
+
+            @if ($requirement->phaseHistories && $requirement->phaseHistories->count() > 0)
+                <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                    <thead style="background-color: #f4f7f6; color: #333;">
+                        <tr>
+                            <th style="padding: 6px; border: 1px solid #ddd; text-align: center; width: 10%;">N°</th>
+                            <th style="padding: 6px; border: 1px solid #ddd; text-align: left; width: 50%;">Fase / Hito
+                                Alcanzado</th>
+                            <th style="padding: 6px; border: 1px solid #ddd; text-align: center; width: 40%;">Sello de
+                                Tiempo (Cierre)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($requirement->phaseHistories as $history)
+                            <tr>
+                                <td style="padding: 6px; border: 1px solid #ddd; text-align: center;">
+                                    {{ $loop->iteration }}
+                                </td>
+                                <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold;">
+                                    {{-- Si tienes un diccionario en el modelo para traducir los códigos (ej. 'PI' -> 'Prueba Integral'), puedes usarlo aquí. Por defecto mostramos el código crudo. --}}
+                                    {{ strtoupper($history->phase_status_code ?? 'N/A') }}
+                                </td>
+                                <td style="padding: 6px; border: 1px solid #ddd; text-align: center;">
+                                    {{ $history->created_at ? \Carbon\Carbon::parse($history->created_at)->format('d/m/Y h:i A') : 'N/A' }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <div
+                    style="font-size: 10px; color: #777; font-style: italic; border: 1px solid #ddd; padding: 10px; background-color: #fafafa; text-align: center;">
+                    El registro histórico de fases aún no ha sido procesado o consolidado para este requerimiento.
+                </div>
+            @endif
+        </div>
 
         <div class="section-title">7. ACEPTACIÓN Y CIERRE</div>
         <p class="text-justify">
