@@ -83,6 +83,13 @@ $color-danger:   #ef4444;
   border: 1px solid $color-blue !important;
 }
 
+.badge-kpi{
+  background-color: rgba( #0056b3, 0.80) !important; 
+  color: $text-white !important;
+  font-weight: bold !important;
+  border: 1px solid rgba($color-blue, 0.80)!important;
+}
+
 
 
 

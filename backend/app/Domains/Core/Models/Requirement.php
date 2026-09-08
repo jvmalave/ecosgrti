@@ -12,6 +12,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Domains\Core\Models\ScheduleEstimation;
 use App\Domains\Workflow\Models\RequirementPhaseHistory;
 use App\Domains\Catalogs\Models\ProgressMatrix;
+use App\Domains\Workflow\Models\CerTicket;
+use App\Domains\Workflow\Models\PapOrder;
+use App\Domains\Workflow\Models\AuTicket;
+use App\Domains\Workflow\Models\CeeTicket;
 
 class Requirement extends Model
 {
@@ -30,7 +34,7 @@ class Requirement extends Model
 
   protected $with = ['progressMatrix'];
 
-  // 🟢 INYECCIÓN ESTRUCTURAL: Agregamos el atributo virtual al array JSON resultante
+  
   protected $appends = ['frozen_phases'];
 
   protected $fillable = [
@@ -165,9 +169,28 @@ class Requirement extends Model
      */
     public function roles()
     {
-        // Ajusta la ruta del modelo según cómo lo hayas nombrado en tu proyecto
-        // Ej: CorRole::class, RequirementRole::class, etc.
-        return $this->hasMany(\App\Domains\Workflow\Models\CorRole::class, 'requirement_id');
+        return $this->hasMany(\App\Domains\Workflow\Models\RequirementRole::class, 'requirement_id');
+    }
+
+    // ==========================================
+    // RELACIONES PARA TRAZABILIDAD DE FASES
+    // ==========================================
+    
+    public function dtRoles() { return $this->hasMany(\App\Domains\Workflow\Models\DtRole::class, 'requirement_id'); }
+    public function corRoles() { return $this->hasMany(\App\Domains\Workflow\Models\CorRole::class, 'requirement_id'); }
+    public function piRoles() { return $this->hasMany(\App\Domains\Workflow\Models\PiRole::class, 'requirement_id'); }
+    public function cerRoles() { return $this->hasMany(\App\Domains\Workflow\Models\CerRole::class, 'requirement_id'); }
+    public function papRoles() { return $this->hasMany(\App\Domains\Workflow\Models\PapRole::class, 'requirement_id'); }
+    public function auRoles() { return $this->hasMany(\App\Domains\Workflow\Models\AuRole::class, 'requirement_id'); }
+
+    public function coeDeliverables() 
+    { 
+        return $this->hasMany(\App\Domains\Workflow\Models\CoeDeliverable::class, 'req_id'); 
+    }
+    
+    public function ceeDeliverables() 
+    { 
+        return $this->hasMany(\App\Domains\Workflow\Models\CeeDeliverable::class, 'requirement_id'); 
     }
 
     /**
@@ -178,4 +201,38 @@ class Requirement extends Model
         // Ajusta la ruta del modelo de tu entregable
         return $this->hasMany(\App\Domains\Workflow\Models\Deliverable::class, 'requirement_id');
     }
+
+    /**
+     * Relación 1 a 1: Un requerimiento tiene un ticket de certificación de roles (CSAL).
+     */
+    public function cerTicket()
+    {
+        return $this->hasOne(CerTicket::class, 'requirement_id');
+    }
+
+    /**
+     * Relación 1 a 1: Un requerimiento tiene una orden de pase a producción.
+     */
+    public function papOrder()
+    {
+        return $this->hasOne(PapOrder::class, 'requirement_id');
+    }
+
+    /**
+     * Relación 1 a 1: Un requerimiento tiene un ticket de asignación de usuarios (CSAL).
+     */
+    public function auTicket()
+    {
+        return $this->hasOne(AuTicket::class, 'requirement_id');
+    }
+
+    /**
+     * Relación 1 a 1: Un requerimiento tiene un ticket de certificación de entregables (CEE).
+     */
+    public function ceeTicket()
+    {
+        return $this->hasOne(CeeTicket::class, 'requirement_id');
+    }
+
+    
 }

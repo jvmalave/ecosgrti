@@ -3,14 +3,13 @@
 namespace App\Domains\Audit\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\HasUuid; // El trait que creamos para la US02
-
+use App\Traits\HasUuid;
+use App\Domains\Security\Models\User; 
 
 class AuditLog extends Model
 {
     use HasUuid;
 
-    // Indicamos explícitamente el esquema y la tabla
     protected $table = 'audit.audit_logs';
 
     public $incrementing = false;
@@ -23,11 +22,26 @@ class AuditLog extends Model
         'ip_address',
         'user_agent',
         'payload',
-        'target_id'
+        'target_id',
     ];
 
-    
+    /**
+     * Mutaciones de atributos nativos.
+     */
+    protected function casts(): array
+    {
+        return [
+            'payload' => 'array',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
+    }
 
-    // Desactivamos timestamps si prefieres manejar solo 'created_at' 
-    // o déjalos si la migración los tiene.
+    /**
+     * Usuario que ejecutó la acción.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

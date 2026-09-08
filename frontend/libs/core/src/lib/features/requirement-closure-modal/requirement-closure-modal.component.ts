@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RequirementClosureService } from '../../data-access/services/requirement-closure.service';
 import { RequirementDashboard } from '../../data-access/models/requirement.model';
+import { ReportService } from '@ecosgrti/shared';
+import Swal from 'sweetalert2';
 
 
 
@@ -22,6 +24,7 @@ export class RequirementClosureModalComponent implements OnInit {
   private fb = inject(FormBuilder);
   private closureService = inject(RequirementClosureService);
   private sanitizer = inject(DomSanitizer);
+  private reportService = inject(ReportService);
 
   // ==========================================
   // ENTRADAS Y SALIDAS
@@ -147,13 +150,32 @@ export class RequirementClosureModalComponent implements OnInit {
 
 
   public downloadAct(): void {
-    // Aquí llamaremos al endpoint de Laravel que descarga el acta del disco 'private'
-    console.log('Descargando Acta desde:', this.req.closure_act_path);
+    Swal.fire({ title: 'Descargando Acta...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    // Reutilizamos el endpoint dual que construimos anteriormente
+    this.reportService.downloadRequirementReport(this.req.id).subscribe({
+      next: (blob: Blob) => {
+        this.reportService.forceFileDownload(blob, `acta_cierre_${this.req.rrti}.pdf`);
+        Swal.close();
+      },
+      error: () => Swal.fire('Error', 'No se pudo descargar el acta.', 'error')
+    });
   }
 
   public downloadSupport(): void {
-    // Aquí llamaremos al endpoint de Laravel que descarga el soporte del disco 'private'
-    console.log('Descargando Soporte desde:', this.req.notification_support_path);
+    Swal.fire({ title: 'Descargando Soporte...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    this.closureService.downloadSupport(this.req.id).subscribe({
+      next: (blob: Blob) => {
+        // Obtenemos la extensión original si es posible, o forzamos .pdf por defecto
+        const extension = this.req.notification_support_path?.split('.').pop() || 'pdf';
+        
+        // Reutilizamos el helper de tu ReportService para forzar la descarga en el navegador
+        this.reportService.forceFileDownload(blob, `soporte_notificacion_${this.req.rrti}.${extension}`);
+        Swal.close();
+      },
+      error: () => Swal.fire('Error', 'El archivo de soporte no se encuentra disponible en el servidor.', 'error')
+    });
   }
 
   // ==========================================
