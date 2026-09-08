@@ -11,7 +11,7 @@ import Swal from 'sweetalert2';
 
 // Imports de tus servicios e interfaces
 import { AuthService } from '@ecosgrti/security/data-access';
-import { PasswordChangeModalService, ReportService } from '@ecosgrti/shared';
+import { PasswordChangeModalService, ReportService, KpiModalComponent } from '@ecosgrti/shared';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import {
@@ -58,7 +58,8 @@ import { OrgStructureComponent, ProgressMatrixConfigComponent, MilestoneConfigCo
     MilestoneConfigComponent,
     LifecycleOrchestratorModalComponent,
     ReqStatusPipe,
-    RequirementClosureModalComponent
+    RequirementClosureModalComponent,
+    KpiModalComponent
   ], 
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -919,6 +920,118 @@ public isGrEnabled(status: string): boolean {
       });
     }
   }
+
+// Gatilla la descarga del Reporte de Gestión de CSPE
+  public triggerConsultantManagementReport(): void {
+    // 1. Bloqueamos la pantalla temporalmente mientras consultamos la BD
+    this.notificationService.showLoading('Sincronizando...', 'Obteniendo lista de consultores activos.');
+
+    // 2. Pedimos los consultores a la API
+    this.reportService.getCspeConsultantsList().subscribe({
+      next: async (consultants) => {
+        this.notificationService.close(); // Quitamos el loading
+
+        // 3. Pasamos los consultores al modal
+        const filters = await this.notificationService.promptConsultantManagementFilters(consultants);
+
+        if (filters) {
+          this.notificationService.showLoading('Estructurando Métricas', 'Consolidando la carga operativa...');
+
+          this.reportService.downloadConsultantManagement(filters).subscribe({
+            next: (blob: Blob) => {
+              const filename = `Gestion_CSPE_${new Date().getTime()}.pdf`;
+              this.reportService.forceFileDownload(blob, filename);
+              this.notificationService.close(); 
+            },
+            error: (err) => {
+              this.notificationService.showError('Error', 'No se pudo generar el documento.')
+              console.error('Error al generar el reporte:', err);
+            }
+          });
+        }
+      },
+      error: () => {
+        this.notificationService.showError('Error de Conexión', 'No se pudo cargar el diccionario de consultores.');
+      }
+    });
+  }
+
+  public async triggerProductionDeploymentsReport(): Promise<void> {
+    const filters = await this.notificationService.promptProductionDeploymentsFilters();
+
+    if (filters) {
+      this.notificationService.showLoading(
+        'Procesando Trazabilidad', 
+        'Consolidando el histórico de pases a producción y rollbacks...'
+      );
+
+      this.reportService.downloadProductionDeployments(filters).subscribe({
+        next: (blob: Blob) => {
+          const filename = `Pases_Produccion_${new Date().getTime()}.pdf`;
+          this.reportService.forceFileDownload(blob, filename);
+          this.notificationService.close(); 
+        },
+        error: (err) => {
+          console.error('Error generando histórico de pases:', err);
+          this.notificationService.showError(
+            'Error de Generación',
+            'No se pudo generar el documento. Verifique su conexión o intente con otros filtros.'
+          );
+        }
+      });
+    }
+  }
+
+  // Trigger para la Sábana Operativa (CSV)
+  public async triggerOperationalSheet(): Promise<void> {
+    const filters = await this.notificationService.promptReportDateFilter('Sábana Operativa (CSV)');
+
+    if (filters) {
+      this.notificationService.showLoading('Generando Sábana', 'Exportando datos masivos y fases operativas...');
+
+      this.reportService.downloadOperationalSheet(filters).subscribe({
+        next: (blob: Blob) => {
+          const filename = `Sabana_Operativa_${new Date().getTime()}.csv`;
+          this.reportService.forceFileDownload(blob, filename);
+          this.notificationService.close();
+        },
+        error: (err) => {
+          console.error('Error descargando sábana:', err);
+          this.notificationService.showError('Error', 'No se pudo generar el archivo CSV.');
+        }
+      });
+    }
+  }
+
+  // Trigger para el Resumen Ejecutivo (PDF)
+  public async triggerExecutiveSummary(): Promise<void> {
+    const filters = await this.notificationService.promptReportDateFilter('Resumen Ejecutivo (PDF)');
+
+    if (filters) {
+      this.notificationService.showLoading('Generando Resumen', 'Consolidando métricas e imágenes estadísticas...');
+
+      this.reportService.downloadExecutiveSummary(filters).subscribe({
+        next: (blob: Blob) => {
+          const filename = `Resumen_Ejecutivo_${new Date().getTime()}.pdf`;
+          this.reportService.forceFileDownload(blob, filename);
+          this.notificationService.close();
+        },
+        error: (err) => {
+          console.error('Error descargando resumen:', err);
+          this.notificationService.showError('Error', 'No se pudo generar el PDF ejecutivo.');
+        }
+      });
+    }
+  }
+
+  isKpiModalOpen = false;
+
+  openKpiModal() {
+    this.isKpiModalOpen = true;
+  }
+
+
+
 
 }
 

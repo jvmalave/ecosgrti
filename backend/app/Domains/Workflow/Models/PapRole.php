@@ -24,7 +24,7 @@ class PapRole extends Model
         'updated_by'
     ];
 
-    // 🟢 EL DETALLE VITAL: Casteo a array para que Angular pueda leer la línea de tiempo
+    // Casteo a array para que Angular pueda leer la línea de tiempo
     protected $casts = [
         'rejection_history' => 'array',
     ];

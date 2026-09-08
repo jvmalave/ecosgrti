@@ -1,6 +1,7 @@
 import { Injectable, ProviderToken, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
+import { OtdResponse, DeviationResponse, AgingResponse, KpiFilters } from '../../models/kpi-metrics.interface';
 
 
 @Injectable({
@@ -64,6 +65,43 @@ export class ReportService {
     });
   }
 
+  downloadConsultantManagement(filters: any): Observable<Blob> {
+    let params = new HttpParams();
+
+    if (filters.start_date && filters.end_date) {
+      params = params.set('start_date', filters.start_date).set('end_date', filters.end_date);
+    }
+    if (filters.rrti) params = params.set('rrti', filters.rrti);
+    if (filters.status_type) params = params.set('status_type', filters.status_type);
+    
+    // Inyectamos el ID y el Nombre
+    if (filters.consultant_id) params = params.set('consultant_id', filters.consultant_id);
+    if (filters.consultant_name) params = params.set('consultant_name', filters.consultant_name);
+
+    return this.http.get(`${this.reportingApiUrl}/consultant-management`, { params, responseType: 'blob' });
+  }
+
+  // 1. Método para obtener el diccionario
+  getCspeConsultantsList(): Observable<{id: string, name: string}[]> {
+    return this.http.get<{id: string, name: string}[]>(`${this.reportingApiUrl}/cspe-consultants`);
+  }
+
+  downloadProductionDeployments(filters: any): Observable<Blob> {
+    let params = new HttpParams();
+
+    if (filters.start_date && filters.end_date) {
+      params = params.set('start_date', filters.start_date).set('end_date', filters.end_date);
+    }
+    if (filters.rrti) {
+      params = params.set('rrti', filters.rrti);
+    }
+
+    return this.http.get(`${this.reportingApiUrl}/production-deployments`, {
+      params,
+      responseType: 'blob'
+    });
+  }
+
   /**
    * Utilidad maestra para forzar la descarga nativa de cualquier Blob en el navegador.
    * @param blob El flujo de datos binarios
@@ -92,8 +130,86 @@ export class ReportService {
     });
   }
 
+  // Descarga la Sábana Operativa en formato CSV/Excel
+  downloadOperationalSheet(filters: any): Observable<Blob> {
+    let params = new HttpParams();
+    if (filters.start_date) params = params.set('start_date', filters.start_date);
+    if (filters.end_date) params = params.set('end_date', filters.end_date);
+
+    return this.http.get(`${this.reportingApiUrl}/operational-sheet`, {
+      params,
+      responseType: 'blob'
+    });
+  }
+
+  // Descarga el Resumen Ejecutivo en PDF con gráficas
+  // downloadExecutiveSummary(filters: any): Observable<Blob> {
+  //   let params = new HttpParams();
+  //   if (filters.start_date) params = params.set('start_date', filters.start_date);
+  //   if (filters.end_date) params = params.set('end_date', filters.end_date);
+
+  //   return this.http.get(`${this.reportingApiUrl}/executive-summary`, {
+  //     params,
+  //     responseType: 'blob'
+  //   });
+  // }
+
+  /**
+   * Construye los HttpParams a partir de un objeto de filtros.
+   */
+  private buildParams(filters?: KpiFilters): HttpParams {
+    let params = new HttpParams();
+    if (filters?.start_date) {
+      params = params.set('start_date', filters.start_date);
+    }
+    if (filters?.end_date) {
+      params = params.set('end_date', filters.end_date);
+    }
+    return params;
+  }
+
+  /**
+   * Obtiene las métricas de Tasa de Entrega a Tiempo (OTD).
+   */
+  getOtdMetrics(filters?: KpiFilters): Observable<OtdResponse> {
+    return this.http.get<OtdResponse>(`${this.reportingApiUrl}/kpi/otd`, {
+      params: this.buildParams(filters)
+    });
+  }
+
+  /**
+   * Obtiene las estadísticas de desviación y alertas tempranas en tiempo real.
+   */
+  getDeviationAlerts(): Observable<DeviationResponse> {
+    // Este endpoint evalúa contra el reloj actual, no requiere parámetros de fecha
+    return this.http.get<DeviationResponse>(`${this.reportingApiUrl}/kpi/deviation`);
+  }
+
+  /**
+   * Obtiene el análisis de envejecimiento y detección de cuellos de botella.
+   */
+  getAgingMetrics(): Observable<AgingResponse> {
+    // Endpoint evaluado en tiempo real, sin filtros de fecha
+    return this.http.get<AgingResponse>(`${this.reportingApiUrl}/kpi/aging`);
+  }
+
+  /**
+   * Descarga el Resumen Ejecutivo Integral en formato PDF.
+   * Utiliza el tipo 'blob' para manejar correctamente el archivo binario.
+   */
+  downloadExecutiveSummary(filters?: KpiFilters): Observable<Blob> {
+    return this.http.get(`${this.reportingApiUrl}/executive-summary`, {
+      params: this.buildParams(filters),
+      responseType: 'blob' // CRÍTICO: Define la recepción de un archivo binario
+    });
+  }
+
   
-  // Dentro de tu servicio de reportes:
+
+  
+
+  
+  
 
   
 

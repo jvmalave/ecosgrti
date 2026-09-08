@@ -1,0 +1,119 @@
+@if (isVisible()) {
+  <!-- Overlay del Modal -->
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.5); z-index: 1050; backdrop-filter: blur(2px);">
+    
+    <!-- Contenedor Principal del Modal -->
+    <div class="bg-white rounded shadow-lg d-flex flex-column" style="max-width: 1200px; width: 95%; max-height: 90vh;">
+      
+      <!-- Cabecera Global con Gradiente Corporativo -->
+      <div class="modal-header rounded-top">
+        <h3><i class="fas fa-chart-pie me-2"></i> Panel Ejecutivo de Gestión</h3>
+        <button class="close-btn" (click)="closeModal()">&times;</button>
+      </div>
+
+      <!-- Cuerpo del Modal -->
+      <div class="modal-body p-4 overflow-auto">
+        
+        @if (isLoading()) {
+          <div class="text-center p-5 text-muted">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p>Sincronizando Inteligencia de Negocios...</p>
+          </div>
+        } @else {
+          
+          <!-- Botón de Descarga PDF con Gradiente Brand -->
+          <div class="d-flex justify-content-end mb-4">
+            <button class="btn btn-tbl-planning rounded-pill px-4 fw-semibold" (click)="downloadReport()">
+              <i class="fas fa-file-pdf me-2"></i> Descargar Reporte PDF
+            </button>
+          </div>
+
+          <!-- Cuadrícula de KPIs -->
+          <div class="row g-4 mb-5">
+            
+            <!-- Tarjeta OTD -->
+            <div class="col-md-4">
+              <div class="card h-100 border-0 shadow-sm" style="border-top: 4px solid #28a745 !important;">
+                <div class="card-body text-center">
+                  <h6 class="text-muted fw-bold mb-3">TASA OTD</h6>
+                  <h2 class="display-5 fw-bold text-success mb-0">{{ otdMetrics()?.otd_percentage }}%</h2>
+                  <div class="small text-muted mt-3">
+                    A Tiempo: {{ otdMetrics()?.on_time_count }} <span class="mx-1">|</span> Atrasado: {{ otdMetrics()?.late_count }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tarjeta Desviación -->
+            <div class="col-md-4">
+              <div class="card h-100 border-0 shadow-sm" style="border-top: 4px solid #dc3545 !important;">
+                <div class="card-body text-center">
+                  <h6 class="text-muted fw-bold mb-3">DESVIACIÓN PROMEDIO</h6>
+                  <h2 class="display-5 fw-bold text-danger mb-0">
+                    {{ deviationMetrics()?.deviation_stats?.global_average_delay_days }} <span class="fs-5">días</span>
+                  </h2>
+                  <div class="small text-muted mt-3">
+                    Fases Evaluadas: {{ deviationMetrics()?.deviation_stats?.total_phases_evaluated }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tarjeta Aging -->
+            <div class="col-md-4">
+              <div class="card h-100 border-0 shadow-sm border-brand" style="border-top: 4px solid #d500f9 !important;">
+                <div class="card-body text-center">
+                  <h6 class="text-muted fw-bold mb-3">VOLUMEN ACTIVO</h6>
+                  <h2 class="display-5 fw-bold text-brand mb-0">{{ agingMetrics()?.summary?.total_open_requirements }}</h2>
+                  <div class="small text-muted mt-3">
+                    Edad Media: {{ agingMetrics()?.summary?.average_global_age }} días
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Alertas Tempranas -->
+          <div class="alerts-section">
+            <h5 class="border-bottom pb-2 mb-3 text-blue fw-bold">Alertas de Desviación Críticas</h5>
+            
+            @if (deviationMetrics()?.active_alerts?.length) {
+              <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th>RRTI</th>
+                      <th>Fase Crítica</th>
+                      <th>Tipo</th>
+                      <th class="text-end">Atraso</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (alert of deviationMetrics()?.active_alerts; track alert.rrti + alert.phase) {
+                      <tr>
+                        <td class="fw-bold">{{ alert.rrti }}</td>
+                        <td><span class="badge badge-kpi px-3 py-2">{{ alert.phase }}</span></td>
+                        <td>
+                          <span class="text-danger fw-semibold">
+                            <i class="fas fa-exclamation-circle me-1"></i>
+                            {{ alert.type === 'START_DELAY' ? 'Rezagado al Iniciar' : 'Estancado al Cerrar' }}
+                          </span>
+                        </td>
+                        <td class="text-end fw-semibold text-danger">{{ alert.days_late }} días</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <div class="alert alert-success text-center mt-3" role="alert">
+                <i class="fas fa-check-circle me-2"></i> Operación óptima. No se detectan desviaciones de cronograma actuales.
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

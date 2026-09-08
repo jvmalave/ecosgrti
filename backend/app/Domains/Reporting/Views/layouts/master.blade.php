@@ -7,7 +7,7 @@
     <style>
         /* CSS Específico y seguro para DomPDF */
         @page {
-            margin: 120px 50px 80px 50px;
+            margin: 50px 50px 80px 50px;
         }
 
         body {
@@ -111,25 +111,30 @@
 
 <body>
 
-    <header>
-        <table class="header-table">
+    <!-- 1. El Banner Institucional arriba del todo -->
+    <div style="width: 100%; margin-bottom: 10px; border-bottom: 2px solid #0056b3; padding-bottom: 6px;">
+        <img src="{{ storage_path('app/public/banner-cantv.png') }}"
+            style="width: 100%; height: auto; max-height: 50px; display: block;" alt="Ministerio y CANTV">
+    </div>
+
+    <!-- 2. El Título del Sistema y Metadatos debajo del banner en orden estricto -->
+    <div style="width: 100%; margin-bottom: 15px;">
+        <table style="width: 100%; border-collapse: collapse;">
             <tr>
-                <td class="header-logo">
-                    <!-- TODO: Habilitaremos la imagen de CANTV luego de probar el renderizado -->
-                    <h2 style="margin:0; color:#0056b3;">CANTV</h2>
+                <td style="width: 70%; text-align: left; vertical-align: middle;">
+                    <h1 style="margin: 0; font-size: 13px; text-transform: uppercase;">Sistema de Gestión
+                        de Requerimientos TI</h1>
+                    <p style="margin: 2px 0 0 0; font-size: 11px; color: #555;">Coordinación Seguridad Portales y
+                        Escritorios (CSPE)</p>
                 </td>
-                <td class="header-title">
-                    <h1>Sistema de Gestión de Requerimientos TI</h1>
-                    <p>Coordinación Seguridad Portales y Escritorios (CSPE)</p>
-                </td>
-                <td class="header-meta">
+                <td style="width: 30%; text-align: right; vertical-align: middle; font-size: 8px; color: #555;">
                     Fecha: {{ date('d/m/Y') }}<br>
                     Hora: {{ date('H:i') }}<br>
                     Usuario: {{ auth()->user()->name ?? 'Sistema' }}
                 </td>
             </tr>
         </table>
-    </header>
+    </div>
 
     <footer>
         <table style="width: 100%;">

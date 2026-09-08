@@ -1,7 +1,6 @@
 <div class="container-fluid min-vh-100 bg-light p-0">
   <div class="row min-vh-100 g-0">
-    <aside
-      class="col-md-3 col-lg-2 d-none d-md-flex flex-column p-4 sidebar-brand"
+    <aside class="col-md-3 col-lg-2 d-none d-md-flex flex-column p-4 sidebar-brand"
     >
       <div class="fs-3 mb-4 text-center brand-logo-text">
         <img
@@ -21,7 +20,7 @@
             </a>
           </li>
           <!-- Menú Colapsable de Reportes -->
-          @if (isAdmin || isCoord) {
+          @if ( isCoord) {
             <!-- Menú Colapsable de Reportes (Vía Signals) -->
             <li class="nav-item w-100">
               <a
@@ -34,7 +33,7 @@
                 <div
                   class="d-flex w-100 justify-content-between align-items-center"
                 >
-                  <span><i class="fas fa-chart-pie me-2"></i> Reportes</span>
+                  <span><i class="fas fa-chart-pie me-2"></i> Reportes y KPI's</span>
                   <i
                     class="fas fa-chevron-down transition-transform"
                     [class.rotate-180]="isReportsMenuOpen()"
@@ -48,6 +47,14 @@
                   class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition"
                   style="border-left: 1px solid rgba(255, 255, 255, 0.2)"
                 >
+                  
+                  <!-- ENCABEZADO: ADMINISTRATIVOS -->
+                  <!-- <li class="nav-item px-3 pt-2 pb-1">
+                    <span class="text-uppercase fw-bold" style="font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 0.5px;">
+                      Administrativos y Cumplimiento
+                    </span>
+                  </li> -->
+
                   <!-- Reporte 1: Directorio MDM -->
                   <li class="nav-item">
                     <a
@@ -55,21 +62,30 @@
                       (keydown.enter)="descargarDirectorioMdm()"
                       tabindex="0"
                       class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
-                      style="
-                        cursor: pointer;
-                        opacity: 0.8;
-                        transition: opacity 0.2s;
-                      "
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
                       onmouseover="this.style.opacity='1'"
                       onmouseout="this.style.opacity='0.8'"
                     >
-                      <i
-                        class="fas fa-id-card me-2"
-                        style="font-size: 0.9em"
-                      ></i>
+                      <i class="fas fa-id-card me-2"></i>
                       Directorio MDM
                     </a>
-                  </li >
+                  </li>
+                  <!-- Bitácora de Auditoría -->
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="triggerAuditLogReport()"
+                      (keydown.enter)="triggerAuditLogReport()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
+                    >
+                  <!-- Consolidado de Gestión CSPE -->
+                      <i class="fa-solid fa-clipboard-list me-2"></i>
+                      Bitácora de Auditoría
+                    </a>
+                  </li>               
                   <!-- Documento de Seguimiento / Cierre -->
                   <li class="nav-item">
                     <a
@@ -77,38 +93,90 @@
                       (click)="openReportModal()"
                       (keydown.enter)="openReportModal()"
                       tabindex="0"
-                      style="
-                        cursor: pointer;
-                        opacity: 0.8;
-                        transition: opacity 0.2s;
-                      "
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
                       onmouseover="this.style.opacity='1'"
                       onmouseout="this.style.opacity='0.8'"
                     >
-                      <i class="fa-solid fa-file-signature me-2 "></i> Documento
-                      de Seguimiento
+                      <i class="fa-solid fa-file-signature me-2"></i> 
+                      Documento de Seguimiento
                     </a>
                   </li>
-                  <!-- Bitácora de Auditoría -->
+                  
+                  <!-- ENCABEZADO: OPERATIVOS -->
+                  <!-- <li class="nav-item px-3 pt-3 pb-1">
+                    <span class="text-uppercase fw-bold text-warning" style="font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 0.5px;">
+                      Operativos y Transaccionales
+                    </span>
+                  </li> -->
+                  <!-- Consolidado de Gestión CSPE -->
                   <li class="nav-item">
                     <a
                       class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
-                      style="cursor: pointer"
-                      (click)="triggerAuditLogReport()"
-                      (keydown.enter)="triggerAuditLogReport()"
+                      (click)="triggerConsultantManagementReport()"
+                      (keydown.enter)="triggerConsultantManagementReport()"
                       tabindex="0"
-                      style="
-                        cursor: pointer;
-                        opacity: 0.8;
-                        transition: opacity 0.2s;
-                      "
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
                       onmouseover="this.style.opacity='1'"
                       onmouseout="this.style.opacity='0.8'"
                     >
-                      <i class="fa-solid fa-clipboard-list me-2"></i>
-                      Bitácora de Auditoría
+                      <i class="fa-solid fa-users-gear me-2"></i>
+                      Gestión Consultor CSPE
                     </a>
                   </li>
+                  <!-- Histórico de Pases a Producción -->
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="triggerProductionDeploymentsReport()"
+                      (keydown.enter)="triggerProductionDeploymentsReport()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
+                    >
+                      <i class="fa-solid fa-server me-2"></i>
+                      Histórico PAP
+                    </a>
+                  </li>
+                  <!-- Sábana Operativa (CSV) -->
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="triggerOperationalSheet()"
+                      (keydown.enter)="triggerOperationalSheet()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                    >
+                      <i class="fa-solid fa-file-excel me-2"></i>
+                      Data Operativa
+                    </a>
+                  </li>
+                  <!-- Resumen Ejecutivo (PDF) -->
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="triggerExecutiveSummary()"
+                      (keydown.enter)="triggerExecutiveSummary()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                    >
+                      <i class="fa-solid fa-chart-area me-2"></i>
+                      Indicadores de Gestión KPIs
+                    </a>
+                  </li>
+                  <!-- Indicadores de Gestión KPIs  -->
+                  <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="openKpiModal()"
+                      (keydown.enter)="openKpiModal()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                    >
+                      <i class="fa-solid fa-chart-pie me-2"></i>
+                      Panel Ejecutivo de Gestión
+                    </a>
+                  </li>        
                 </ul>
               }
             </li>
@@ -139,7 +207,7 @@
                 <ul
                   class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition"
                   style="border-left: 1px solid rgba(255, 255, 255, 0.2)"
-                >
+                  >
                   <!-- Directorio de Fichas -->
                   <li class="nav-item">
                     <a
@@ -673,6 +741,14 @@
             (closureSuccess)="onRequirementClosed($event)"
           ></lib-requirement-closure-modal>
         }
+
+        <!--======================================================= -->
+        <!-- MODAL DE KPI -->
+        <!-- =======================================================  -->
+        <lib-kpi-modal 
+            [isVisible]="isKpiModalOpen" 
+            (closeModalEvent)="isKpiModalOpen = false">
+        </lib-kpi-modal>
       </section>
     </main>
   </div>
