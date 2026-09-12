@@ -12,7 +12,7 @@
         Requerimiento: {{ rrti() }}
       </span>
       <button
-        class="btn btn-sm btn-outline-brand rounded-pill fw-bold px-3 shadow-sm d-flex align-items-center"
+        class="btn btn-sm btn-tbl-info fw-semibold rounded-pill fw-bold px-3 shadow-sm d-flex align-items-center"
         (click)="showPapStatusModal.set(true)"
       >
         <i class="fa-solid fa-layer-group me-2"></i> Estatus Global
@@ -180,7 +180,7 @@
               </td>
               <td class="text-end pe-3 align-middle">
                 <button
-                  class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                  class="btn btn-sm btn-tbl-success fw-semibold rounded-pill px-3"
                   (click)="openResultModal(group.orderId, 'create')"
                 >
                   <i class="fa-solid fa-file-signature me-1"></i> Dictamen
@@ -233,7 +233,7 @@
               <td class="text-center">
                 <button
                   type="button"
-                  class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                  class="btn btn-sm btn-tbl-info fw-semibold rounded-pill px-3"
                   (click)="openSnapshot(order)"
                 >
                   <i class="fa-solid fa-camera me-1"></i> Ver Snapshot
@@ -257,7 +257,7 @@
       </div>
 
       <button
-        class="btn btn-brand rounded-pill px-4 fw-bold shadow-sm text-nowrap"
+        class="btn btn-tbl-planning rounded-pill px-4 fw-bold shadow-sm text-nowrap"
         [disabled]="!canClosePhase() || isSubmitting()"
         (click)="finalizePapPhase()"
       >
