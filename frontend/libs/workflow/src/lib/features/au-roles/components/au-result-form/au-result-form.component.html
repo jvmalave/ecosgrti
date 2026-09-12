@@ -1,19 +1,23 @@
 <div class="modal-overlay">
   <div class="modal-dialog-custom modal-xl">
     <!-- Cabecera -->
-    <div class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center">
+    <div class="modal-header text-white p-3 d-flex justify-content-between align-items-center">
       <h5 class="m-0 fw-bold">
         <i class="fa-solid fa-clipboard-check me-2"></i> 
         Dictamen CSAL {{ isViewMode() ? '(Snapshot)' : '' }}
       </h5>
+
       <button
-        type="button"
-        class="btn text-white fs-5 p-0 border-0 shadow-none"
-        (click)="closeModal.emit()"
-        [disabled]="isSubmitting()"
-      >
-        <i class="fa-solid fa-xmark"></i>
-      </button>
+          type="button"
+          class="close-btn"
+          (click)="closeModal.emit()"
+          [disabled]="isSubmitting()"
+          aria-label="Cerrar modal"
+        >
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
+
+      
     </div>
 
     <!-- Cuerpo del Formulario -->
@@ -69,7 +73,7 @@
           <div class="row text-start mb-4 px-3">
             <div class="col-6">
               <!-- <small class="text-muted text-uppercase fw-bold d-block mb-1">Documento Base</small> -->
-              <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-sm" (click)="openPdf('ticket')">
+              <button type="button" class="btn btn-tbl-info fw-semibold btn-sm rounded-pill px-3 shadow-sm" (click)="openPdf('ticket')">
                 <i class="fa-solid fa-file-pdf text-danger me-1"></i> Ver Solicitud
               </button>
             </div>
@@ -233,17 +237,17 @@
         <!-- Botonera Footer -->
         <div class="d-flex justify-content-end mt-4 gap-2">
           @if (isViewMode()) {
-            <button type="button" class="btn btn-outline-secondary rounded-pill fw-medium px-4" (click)="closeModal.emit()">
+            <button type="button" class="btn btn-tbl-close fw-semibold rounded-pill fw-medium px-4" (click)="closeModal.emit()">
               Cerrar
             </button>
-            <button type="button" class="btn btn-brand rounded-pill fw-bold px-4" (click)="openPdf('result')">
+            <button type="button" class="btn btn-tbl-info fw-semibold rounded-pill fw-bold px-4" (click)="openPdf('result')">
               <i class="fa-solid fa-file-pdf me-1"></i> Ver Dictamen PDF
             </button>
           } @else {
-            <button type="button" class="btn btn-outline-secondary rounded-pill fw-medium px-4" (click)="closeModal.emit()" [disabled]="isSubmitting()">
+            <button type="button" class="btn btn-tbl-close fw-semibold rounded-pill fw-medium px-4" (click)="closeModal.emit()" [disabled]="isSubmitting()">
               Cancelar
             </button>
-            <button type="submit" class="btn btn-brand rounded-pill fw-bold px-4" [disabled]="isSubmitting()">
+            <button type="submit" class="btn btn-tbl-success fw-semibold rounded-pill fw-bold px-4" [disabled]="isSubmitting()">
               @if (isSubmitting()) {
                 <span class="spinner-border spinner-border-sm me-2"></span> Procesando...
               } @else {

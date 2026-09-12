@@ -11,7 +11,7 @@
         Requerimiento: {{ rrti() }}
       </span>
       <button
-        class="btn btn-sm btn-outline-brand rounded-pill fw-bold px-3 shadow-sm d-flex align-items-center"
+        class="btn btn-sm btn-tbl-info  rounded-pill fw-semibold px-3 shadow-sm d-flex align-items-center"
         (click)="openRolesStatusModal()"
       >
         <i class="fa-solid fa-users-viewfinder me-1"></i> Estatus de Roles
@@ -84,7 +84,7 @@
         </h6>
 
         <button
-          class="btn btn-sm rounded-pill btn-outline-brand px-3 shadow-sm"
+          class="btn btn-sm rounded-pill btn-tbl-success fw-semibold px-3 shadow-sm"
           [disabled]="rolesToProcess().length === 0"
           (click)="openTicketModal()"
         >
@@ -183,7 +183,7 @@
               </td>
               <td class="text-end pe-3 align-middle">
                 <button
-                  class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                  class="btn btn-sm btn-tbl-success fw-semibold rounded-pill px-3"
                   (click)="
                     openResultModal(
                       group.ticketId,
@@ -239,7 +239,7 @@
               <td class="text-end pe-3">
                 <button
                   type="button"
-                  class="btn btn-sm btn-outline-brand rounded-pill px-3"
+                  class="btn btn-sm btn-tbl-info rounded-pill px-3"
                   (click)="
                     openResultModal(group.ticketId, group.ticketNumber, 'view')
                   "

@@ -5,13 +5,19 @@
   <div class="modal-dialog-custom">
     
     <!-- CABECERA CORPORATIVA -->
-    <div class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center">
+    <div class="modal-header text-white p-3 d-flex justify-content-between align-items-center">
       <h5 class="m-0 fw-bold">
         <i class="fa-solid fa-truck-fast me-2"></i> Registrar Orden de Transporte
       </h5>
-      <button type="button" class="btn text-white fs-5 p-0 border-0 shadow-none" (click)="closeModal()">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
+      <button
+          type="button"
+          class="close-btn"
+          (click)="closeModal()"
+          [disabled]="isSubmitting()"
+          aria-label="Cerrar modal"
+        >
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
     </div>
 
     <!-- CUERPO DEL MODAL -->
@@ -66,10 +72,10 @@
 
         <!-- BOTONERA DE ACCIÓN -->
         <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-          <button type="button" class="btn btn-light px-4 fw-medium text-secondary" (click)="closeModal()" [disabled]="isSubmitting()">
+          <button type="button" class="btn btn-tbl-close px-4 fw-semibold" (click)="closeModal()" [disabled]="isSubmitting()">
             Cancelar
           </button>
-          <button type="submit" class="btn btn-brand px-4 rounded-pill" [disabled]="isSubmitting()">
+          <button type="submit" class="btn btn-tbl-success fw-semibold px-4 rou nded-pill" [disabled]="isSubmitting()">
             @if (isSubmitting()) {
               <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span> Procesando...
             } @else {
