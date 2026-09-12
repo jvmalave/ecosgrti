@@ -53,6 +53,19 @@ public function __construct(
         return $pdf->stream('directorio_mdm_ecosgrti.pdf');
     }
     /**
+     * Retorna la data cruda para la vista en pantalla (Angular)
+     */
+    public function getMdmDirectoryData()
+    {
+        // Utilizamos el método que ya tienes blindado en tu ReportService
+        $data = $this->reportService->getMdmDirectoryData();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+    /**
      * Genera el Acta de Cierre en formato PDF para un requerimiento específico.
      * 
      * @param string $id Identificador UUID del requerimiento

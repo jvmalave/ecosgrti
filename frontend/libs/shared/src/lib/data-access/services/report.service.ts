@@ -36,6 +36,14 @@ export class ReportService {
   }
 
   /**
+   * Obtiene la data del Directorio MDM para renderizar en tabla
+   */
+  getMdmDirectoryData(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/mdm-directory/data`);
+  }
+
+
+  /**
    * Solicita al backend la generación del Acta de Cierre o Documento de Seguimiento.
    * 
    * @param id El UUID del requerimiento
@@ -141,18 +149,6 @@ export class ReportService {
       responseType: 'blob'
     });
   }
-
-  // Descarga el Resumen Ejecutivo en PDF con gráficas
-  // downloadExecutiveSummary(filters: any): Observable<Blob> {
-  //   let params = new HttpParams();
-  //   if (filters.start_date) params = params.set('start_date', filters.start_date);
-  //   if (filters.end_date) params = params.set('end_date', filters.end_date);
-
-  //   return this.http.get(`${this.reportingApiUrl}/executive-summary`, {
-  //     params,
-  //     responseType: 'blob'
-  //   });
-  // }
 
   /**
    * Construye los HttpParams a partir de un objeto de filtros.
