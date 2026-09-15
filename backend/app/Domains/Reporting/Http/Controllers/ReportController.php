@@ -149,6 +149,24 @@ public function __construct(
         return $pdf->stream("{$filenamePrefix}_{$requirement->rrti}.pdf");
     }
 
+    public function getTrackingDataByRrti(string $rrti)
+    {
+        try {
+            $requirement = $this->reportService->getRequirementClosureDataByRrti($rrti);
+            
+            return response()->json([
+                'success' => true,
+                'data'    => $requirement,
+                'is_closed' => ($requirement->status === 'RF')
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Requerimiento no encontrado'
+            ], 404);
+        }
+    }
+
 
   public function getAuditLogData(Request $request) {
         // Extracción explícita y forzada

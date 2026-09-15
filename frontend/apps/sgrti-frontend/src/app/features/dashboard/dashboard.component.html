@@ -90,8 +90,8 @@
                   <li class="nav-item">
                     <a
                       class="nav-link cursor-pointer rounded-3 px-3 py-2 fs-6 text-white custom-hover"
-                      (click)="openReportModal()"
-                      (keydown.enter)="openReportModal()"
+                      (click)="openTrakingModal()"
+                      (keydown.enter)="openTrakingModal()"
                       tabindex="0"
                       style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
                       onmouseover="this.style.opacity='1'"
@@ -746,6 +746,7 @@
             [isVisible]="isKpiModalOpen" 
             (closeModalEvent)="isKpiModalOpen = false">
         </lib-kpi-modal>
+
         <!--======================================================= -->
         <!-- MODAL  DE DIRECTORIO MDM -->
         <!-- =======================================================  -->
@@ -754,12 +755,21 @@
           (closeModalEvent)="isMdmModalOpen = false">
         </lib-mdm-directory-modal>
 
-
+        <!--======================================================= -->
+        <!-- MODAL  DE AUDITORIA -->
+        <!-- =======================================================  -->
         <lib-audit-log-modal
           [isVisible]="isAuditLogModalOpen" 
           (closeModalEvent)="isAuditLogModalOpen = false">
         </lib-audit-log-modal>
 
+        <!--======================================================= -->
+        <!-- MODAL  DE SEGUIMIENTO -->
+        <!-- =======================================================  -->
+        <lib-tracking-document-modal
+          [isVisible]="isTrackingModalOpen" 
+          (closeModalEvent)="isTrackingModalOpen = false">
+        </lib-tracking-document-modal>
       </section>
     </main>
   </div>

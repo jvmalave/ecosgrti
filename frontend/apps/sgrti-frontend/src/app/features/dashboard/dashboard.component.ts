@@ -16,7 +16,8 @@ import {
         ReportService, 
         KpiModalComponent,
         MdmDirectoryModalComponent,
-        AuditLogModalComponent
+        AuditLogModalComponent,
+        TrackingDocumentModalComponent
       } from '@ecosgrti/shared';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
@@ -67,7 +68,8 @@ import { OrgStructureComponent, ProgressMatrixConfigComponent, MilestoneConfigCo
     RequirementClosureModalComponent,
     KpiModalComponent,
     MdmDirectoryModalComponent,
-    AuditLogModalComponent
+    AuditLogModalComponent,
+    TrackingDocumentModalComponent
   ], 
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -1040,20 +1042,21 @@ public isGrEnabled(status: string): boolean {
 
   isMdmModalOpen = false;
 
-openMdmDirectoryModal() {
-  this.isMdmModalOpen = true;
-}
+  openMdmDirectoryModal() {
+    this.isMdmModalOpen = true;
+  }
 
-isAuditLogModalOpen = false;
+  isAuditLogModalOpen = false;
 
-openAuditLogModal() {
-  this.isAuditLogModalOpen = true;
-}
+  openAuditLogModal() {
+    this.isAuditLogModalOpen = true;
+  }
 
+  isTrackingModalOpen = false;
 
-
-
-
+  openTrakingModal(){
+    this.isTrackingModalOpen = true;
+  }
 
 }
 

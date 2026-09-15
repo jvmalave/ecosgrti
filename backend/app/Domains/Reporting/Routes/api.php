@@ -17,9 +17,9 @@ Route::prefix('reports')->middleware(['auth:api'])->group(function () {
 
     Route::get('/closure-act/rrti/{rrti}', [ReportController::class, 'generateClosureActByRrti']);
 
-    // Route::get('/audit-log', [ReportController::class, 'generateAuditLog']);
+    Route::get('/tracking-document/{rrti}', [ReportController::class, 'generateClosureActByRrti']);
 
-    // Route::get('/audit-log/data', [ReportController::class, 'getAuditLogData']); 
+    Route::get('/tracking-document/{rrti}/data', [ReportController::class, 'getTrackingDataByRrti']);
 
     Route::post('/audit-log/data', [ReportController::class, 'getAuditLogData']);
     

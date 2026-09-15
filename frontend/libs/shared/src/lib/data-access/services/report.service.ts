@@ -60,6 +60,24 @@ export class ReportService {
     });
   }
 
+  /**
+   * Solicita el documento de seguimiento o acta de cierre basado en el código RRTI.
+   * @param rrti Código de control del requerimiento.
+   */
+  downloadTrackingDocument(rrti: string): Observable<Blob> {
+    // Limpiamos el RRTI de caracteres especiales como el hashtag por seguridad
+    const cleanRrti = rrti.replace('#', '').trim();
+    
+    return this.http.get(`${this.reportingApiUrl}/tracking-document/${cleanRrti}`, {
+      responseType: 'blob'
+    });
+  }
+
+  getTrackingData(rrti: string): Observable<any> {
+    const cleanRrti = rrti.replace('#', '').trim();
+    return this.http.get<any>(`${this.reportingApiUrl}/tracking-document/${cleanRrti}/data`);
+  }
+
   getAuditLogData(filters: any): Observable<any> {
     // Petición POST enviando el objeto JSON en el body
     return this.http.post<any>(`${this.reportingApiUrl}/audit-log/data`, filters);
