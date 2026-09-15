@@ -18,12 +18,17 @@ class ReportService
      * 
      * @return Collection<int, User>
      */
-    public function getMdmDirectoryData(): Collection
+  
+    public function getMdmDirectoryData(array $filters = [])
     {
         return User::withTrashed()
             ->with(['person' => function ($query) {
                 $query->select('id', 'first_name', 'last_name', 'email');
             }])
+            ->when(!empty($filters['role']), function ($query) use ($filters) {
+                // Cast forzado a texto para evitar conflictos de operadores JSONB en PostgreSQL
+                $query->whereRaw("roles::text LIKE ?", ['%' . $filters['role'] . '%']);
+            })
             ->select('id', 'name', 'email', 'roles', 'deleted_at')
             ->orderBy('name', 'asc')
             ->get();
@@ -109,6 +114,8 @@ class ReportService
             ->orderBy('created_at', 'desc')
             ->get();
     }
+
+    
 
     /**
      * Genera el consolidado de gestión agrupado por consultor CSPE.

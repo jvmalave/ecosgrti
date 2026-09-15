@@ -4,6 +4,7 @@ import { Observable, Subject } from 'rxjs';
 import { OtdResponse, DeviationResponse, AgingResponse, KpiFilters } from '../../models/kpi-metrics.interface';
 
 
+
 @Injectable({
   providedIn: 'root'
 })
@@ -29,9 +30,16 @@ export class ReportService {
     });
   }
 
-  downloadMdmDirectoryReport(): Observable<Blob> {
-    return this.http.get(`${this.reportingApiUrl}/mdm-directory`, {
-      responseType: 'blob' // CRÍTICO: Mantenemos la intercepción binaria
+  downloadMdmDirectoryReport(role?: string): Observable<Blob> {
+    let queryParams = new HttpParams();
+    
+    // Si hay un rol, lo añadimos a los parámetros de la URL
+    if (role) {
+      queryParams = queryParams.set('role', role);
+    }
+    return this.http.get(`${this.reportingApiUrl}/mdm-directory/pdf`, {
+      params: queryParams,
+      responseType: 'blob'
     });
   }
 
@@ -39,10 +47,8 @@ export class ReportService {
    * Obtiene la data del Directorio MDM para renderizar en tabla
    */
   getMdmDirectoryData(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/mdm-directory/data`);
+    return this.http.get<any>(`${this.reportingApiUrl}/mdm-directory/data`);
   }
-
-
   /**
    * Solicita al backend la generación del Acta de Cierre o Documento de Seguimiento.
    * 
@@ -54,22 +60,15 @@ export class ReportService {
     });
   }
 
+  getAuditLogData(filters: any): Observable<any> {
+    // Petición POST enviando el objeto JSON en el body
+    return this.http.post<any>(`${this.reportingApiUrl}/audit-log/data`, filters);
+  }
 
-  downloadAuditLog(filters: { start_date: string, end_date: string, rrti: string, action: string }): Observable<Blob> {
-    let params = new HttpParams()
-      .set('start_date', filters.start_date)
-      .set('end_date', filters.end_date);
-
-    if (filters.rrti) {
-      params = params.set('rrti', filters.rrti);
-    }
-    if (filters.action) {
-      params = params.set('action', filters.action);
-    }
-
-    return this.http.get(`${this.reportingApiUrl}/audit-log`, { 
-      params,
-      responseType: 'blob'
+  downloadAuditLog(filters: any): Observable<Blob> {
+    // Petición POST apuntando a la nueva ruta /pdf
+    return this.http.post(`${this.reportingApiUrl}/audit-log/pdf`, filters, { 
+      responseType: 'blob' 
     });
   }
 

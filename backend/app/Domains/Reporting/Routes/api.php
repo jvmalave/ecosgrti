@@ -9,15 +9,21 @@ Route::prefix('reports')->middleware(['auth:api'])->group(function () {
 
     Route::get('/test', [ReportController::class, 'generateTestReport']);
 
-    Route::get('/mdm-directory', [ReportController::class, 'generateMdmDirectory']);
+    Route::get('/mdm-directory/data', [ReportController::class, 'getMdmDirectoryData']);
 
-    Route::get('/mdm-directory/pdf', [ReportController::class, 'downloadMdmDirectory']);
+    Route::get('/mdm-directory/pdf', [ReportController::class, 'generateMdmDirectory']);
 
     Route::get('/closure-act/{id}', [ReportController::class, 'generateClosureAct']);
 
     Route::get('/closure-act/rrti/{rrti}', [ReportController::class, 'generateClosureActByRrti']);
 
-    Route::get('/audit-log', [ReportController::class, 'generateAuditLog']);
+    // Route::get('/audit-log', [ReportController::class, 'generateAuditLog']);
+
+    // Route::get('/audit-log/data', [ReportController::class, 'getAuditLogData']); 
+
+    Route::post('/audit-log/data', [ReportController::class, 'getAuditLogData']);
+    
+    Route::post('/audit-log/pdf', [ReportController::class, 'generateAuditLog']);
 
     Route::get('/consultant-management', [ReportController::class, 'generateConsultantManagement']);
 

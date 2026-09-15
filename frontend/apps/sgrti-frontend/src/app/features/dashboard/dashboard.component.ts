@@ -11,7 +11,13 @@ import Swal from 'sweetalert2';
 
 // Imports de tus servicios e interfaces
 import { AuthService } from '@ecosgrti/security/data-access';
-import { PasswordChangeModalService, ReportService, KpiModalComponent } from '@ecosgrti/shared';
+import { 
+        PasswordChangeModalService, 
+        ReportService, 
+        KpiModalComponent,
+        MdmDirectoryModalComponent,
+        AuditLogModalComponent
+      } from '@ecosgrti/shared';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import {
@@ -59,7 +65,9 @@ import { OrgStructureComponent, ProgressMatrixConfigComponent, MilestoneConfigCo
     LifecycleOrchestratorModalComponent,
     ReqStatusPipe,
     RequirementClosureModalComponent,
-    KpiModalComponent
+    KpiModalComponent,
+    MdmDirectoryModalComponent,
+    AuditLogModalComponent
   ], 
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -1029,6 +1037,20 @@ public isGrEnabled(status: string): boolean {
   openKpiModal() {
     this.isKpiModalOpen = true;
   }
+
+  isMdmModalOpen = false;
+
+openMdmDirectoryModal() {
+  this.isMdmModalOpen = true;
+}
+
+isAuditLogModalOpen = false;
+
+openAuditLogModal() {
+  this.isAuditLogModalOpen = true;
+}
+
+
 
 
 

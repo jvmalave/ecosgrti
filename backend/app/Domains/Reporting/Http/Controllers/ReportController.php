@@ -9,8 +9,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Domains\Reporting\Services\ReportService;
 use App\Domains\Reporting\Services\KpiService;
+
 
 class ReportController extends Controller
 {
@@ -32,25 +34,25 @@ public function __construct(
         return $pdf->stream('reporte_prueba_ecosgrti.pdf');
     }
 
-    public function generateMdmDirectory(): Response
+    public function generateMdmDirectory(Request $request)
     {
-        // 1. Delegamos la extracción de datos al servicio
-        $users = $this->reportService->getMdmDirectoryData();
+        // Captura el parámetro 'role' si viene en la petición
+        $filters = ['role' => $request->query('role')];
+        
+        // El servicio ahora devolverá solo la data filtrada
+        $users = $this->reportService->getMdmDirectoryData($filters);
 
-        // 2. Diccionario de traducción visual para los roles
-        $roleMap = [
+          $roleMap = [
             'admin'    => 'Administrador',
             'Coord'    => 'Coordinador CSPE',
             'ConsCSPE' => 'Consultor CSPE',
             'Gerente'  => 'Gerente',
-            'Viewer'   => 'Viewer',
+            'Viewer'   => 'Lector',
         ];
-
-        // 3. Inyectamos la data y el diccionario en la vista Blade
+        
         $pdf = Pdf::loadView('reporting::mdm-directory', compact('users', 'roleMap'));
 
-        // 4. Retornamos el flujo binario
-        return $pdf->stream('directorio_mdm_ecosgrti.pdf');
+        return $pdf->download('Directorio_MDM_ecosgrt.pdf');
     }
     /**
      * Retorna la data cruda para la vista en pantalla (Angular)
@@ -62,7 +64,7 @@ public function __construct(
         
         return response()->json([
             'success' => true,
-            'data' => $data
+            'data' => $data, 
         ]);
     }
     /**
@@ -147,16 +149,34 @@ public function __construct(
         return $pdf->stream("{$filenamePrefix}_{$requirement->rrti}.pdf");
     }
 
-    public function generateAuditLog(Request $request): Response
-    {
-        $filters = $request->validate([
-            'start_date' => 'required|date',
-            'end_date'   => 'required|date|after_or_equal:start_date',
-            'user_id'    => 'nullable|uuid',
-            'action'     => 'nullable|string',
-            'rrti'       => 'nullable|string',
-        ]);
 
+  public function getAuditLogData(Request $request) {
+        // Extracción explícita y forzada
+        $filters = [
+            'start_date' => $request->input('start_date'),
+            'end_date'   => $request->input('end_date'),
+            'action'     => $request->input('action'),
+            'rrti'       => $request->input('rrti'),
+        ];
+        
+        $data = $this->reportService->getFilteredAuditLogs($filters);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $data
+        ]);
+    }
+
+    public function generateAuditLog(Request $request){
+        $filters = [
+            'start_date' => $request->input('start_date'),
+            'end_date'   => $request->input('end_date'),
+            'action'     => $request->input('action'),
+            'rrti'       => $request->input('rrti'),
+        ];
+
+        Log::info('Filtros recibidos en PDF:', $filters);
+        
         $logs = $this->reportService->getFilteredAuditLogs($filters);
 
         $pdf = Pdf::loadView('reporting::audit-log', [
@@ -169,7 +189,7 @@ public function __construct(
         $timestamp = now()->timestamp;
         return $pdf->stream("bitacora_auditoria_{$timestamp}.pdf");
     }
-
+    
     public function generateConsultantManagement(Request $request): Response
       {
           $filters = $request->validate([

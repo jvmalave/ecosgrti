@@ -58,8 +58,8 @@
                   <!-- Reporte 1: Directorio MDM -->
                   <li class="nav-item">
                     <a
-                      (click)="descargarDirectorioMdm()"
-                      (keydown.enter)="descargarDirectorioMdm()"
+                      (click)="openMdmDirectoryModal()"
+                      (keydown.enter)="openMdmDirectoryModal()"
                       tabindex="0"
                       class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
                       style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
@@ -74,8 +74,8 @@
                   <li class="nav-item">
                     <a
                       class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
-                      (click)="triggerAuditLogReport()"
-                      (keydown.enter)="triggerAuditLogReport()"
+                      (click)="openAuditLogModal()"
+                      (keydown.enter)="openAuditLogModal()"
                       tabindex="0"
                       style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
                       onmouseover="this.style.opacity='1'"
@@ -722,7 +722,6 @@
           <lib-milestone-config (closeModal)="closeMilestoneConfigModal()">
           </lib-milestone-config>
         }
-
         @if (selectedReqForOrchestrator()) {
           <lib-lifecycle-orchestrator-modal
             [req]="selectedReqForOrchestrator()!"
@@ -730,7 +729,6 @@
             (requirementUpdated)="onRequirementPhaseUpdated($event)"
           ></lib-lifecycle-orchestrator-modal>
         }
-
         <!-- ======================================================= -->
         <!-- MODAL DE CIERRE HISTÓRICO (US37)                        -->
         <!-- ======================================================= -->
@@ -741,7 +739,6 @@
             (closureSuccess)="onRequirementClosed($event)"
           ></lib-requirement-closure-modal>
         }
-
         <!--======================================================= -->
         <!-- MODAL DE KPI -->
         <!-- =======================================================  -->
@@ -749,6 +746,20 @@
             [isVisible]="isKpiModalOpen" 
             (closeModalEvent)="isKpiModalOpen = false">
         </lib-kpi-modal>
+        <!--======================================================= -->
+        <!-- MODAL  DE DIRECTORIO MDM -->
+        <!-- =======================================================  -->
+        <lib-mdm-directory-modal
+          [isVisible]="isMdmModalOpen" 
+          (closeModalEvent)="isMdmModalOpen = false">
+        </lib-mdm-directory-modal>
+
+
+        <lib-audit-log-modal
+          [isVisible]="isAuditLogModalOpen" 
+          (closeModalEvent)="isAuditLogModalOpen = false">
+        </lib-audit-log-modal>
+
       </section>
     </main>
   </div>

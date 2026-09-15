@@ -1,0 +1,93 @@
+@if (isVisible()) {
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.5); z-index: 1050; backdrop-filter: blur(2px);">
+    <div class="bg-white rounded shadow-lg d-flex flex-column" style="max-width: 1000px; width: 95%; max-height: 90vh;">
+      
+      <div class="modal-header rounded-top">
+        <h3><i class="fas fa-address-book me-2"></i> Directorio de Fichas Unificadas (MDM)</h3>
+        <button class="close-btn" (click)="closeModal()">&times;</button>
+      </div>
+
+      <div class="modal-body p-4 overflow-auto">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+          <div>
+            <p class="text-muted mb-0 small">Reporte administrativo de control de identidades, roles y accesos al sistema.</p>
+          </div>
+          
+          <!-- Controles de Filtro y Exportación -->
+          <div class="d-flex align-items-center">
+            <select class="form-select form-select-sm w-auto me-3 shadow-sm" (change)="onRoleChange($event)" [value]="selectedRole()">
+              <option value="">Todos los Roles</option>
+              <option value="admin">Administrador</option>
+              <option value="Coord">Coordinador CSPE</option>
+              <option value="ConsCSPE">Consultor CSPE</option>
+              <option value="Gerente">Gerente</option>
+              <option value="Viewer">Lector</option>
+            </select>
+
+            <button class="btn btn-tbl-planning rounded-pill px-4 shadow-sm fw-semibold" (click)="downloadPdf()" [disabled]="isGeneratingPdf() || isLoading()">
+              <i class="fas" [ngClass]="isGeneratingPdf() ? 'fa-spinner fa-spin' : 'fa-file-pdf'"></i> 
+              {{ isGeneratingPdf() ? ' Generando PDF...' : ' Descagar Reporte PDF' }}
+            </button>
+          </div>
+        </div>
+
+        @if (isLoading()) {
+          <div class="text-center p-5 text-muted">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p>Sincronizando identidades MDM...</p>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="text-muted small">FICHA ID</th>
+                  <th class="text-muted small">USUARIO</th>
+                  <th class="text-muted small">NOMBRES Y APELLIDOS</th>
+                  <th class="text-muted small">CORREO ELECTRÓNICO</th>
+                  <th class="text-muted small text-center">ROL ASIGNADO</th>
+                  <th class="text-muted small text-center">ESTATUS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Iteramos sobre los datos filtrados reactivamente -->
+                @for (user of filteredData(); track user.id) {
+                  <tr>
+                    <td class="text-muted text-uppercase small">{{ user.id | slice:0:8 }}</td>
+                    <td class="fw-bold">{{ user.name }}</td>
+                    <td>{{ user.person?.first_name || 'Sin perfil' }} {{ user.person?.last_name || '' }}</td>
+                    <td>{{ user.email }}</td>
+                    <td class="text-center">
+                      <!-- Aplicamos la traducción del diccionario -->
+                      <span class="badge badge-component px-3 py-2">
+                        {{ translateRole(user.roles ? user.roles[0] : '') }}
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      @if (user.deleted_at) {
+                        <span class="text-danger fw-semibold"><i class="fas fa-times-circle me-1"></i> Inactivo</span>
+                      } @else {
+                        <span class="text-success fw-semibold"><i class="fas fa-check-circle me-1"></i> Activo</span>
+                      }
+                    </td>
+                  </tr>
+                }
+                <!-- Mensaje cuando el filtro no arroja resultados -->
+                @if (filteredData().length === 0) {
+                  <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">
+                      No se encontraron identidades para el rol seleccionado.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="text-end text-muted small mt-3">
+            Total en vista: <strong>{{ filteredData().length }}</strong> de {{ directoryData().length }}
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
