@@ -11,19 +11,20 @@ class KpiService
         protected KpiReadRepository $kpiRepo
     ) {}
 
+    
     /**
      * Calcula la Tasa de Entrega a Tiempo (OTD) usando CQRS (Solo lectura).
      */
     public function calculateOTD($startDate = null, $endDate = null)
     {
-        // 1. Extraer datos reales (Cuándo se cerró AU-C en el sistema)
-        $auHistories = $this->kpiRepo->getClosedAuPhases($startDate, $endDate);
+        // 1. Extraer datos reales usando el nuevo método anclado al estatus 'RF'
+        $finalizedHistories = $this->kpiRepo->getFinalizedPhases($startDate, $endDate);
         
-        if ($auHistories->isEmpty()) {
+        if ($finalizedHistories->isEmpty()) {
             return $this->emptyOtdResult();
         }
 
-        $requirementIds = $auHistories->pluck('requirement_id')->unique()->toArray();
+        $requirementIds = $finalizedHistories->pluck('requirement_id')->unique()->toArray();
 
         // 2. Extraer datos planificados (Cuándo se estimó que terminaría la Implementación)
         $estimations = $this->kpiRepo->getImplementationEstimations($requirementIds);
@@ -33,7 +34,7 @@ class KpiService
         $evaluatedCount = 0;
 
         // 3. Cruce en memoria (Data Hydration ultra rápido)
-        foreach ($auHistories as $history) {
+        foreach ($finalizedHistories as $history) {
             $reqId = $history->requirement_id;
             
             $estimation = $estimations->firstWhere('requirement_id', $reqId);
@@ -43,7 +44,7 @@ class KpiService
             }
 
             $plannedEndDate = Carbon::parse($estimation->end_date)->startOfDay();
-            $actualEndDate  = Carbon::parse($history->transitioned_at)->startOfDay();
+            $actualEndDate  = Carbon::parse($history->transitioned_at)->startOfDay(); // Viene del registro 'RF'
 
             // 4. Comparación Matemática de Fechas
             if ($actualEndDate->lte($plannedEndDate)) {
@@ -66,7 +67,6 @@ class KpiService
             'total_evaluated' => $evaluatedCount
         ];
     }
-
     private function emptyOtdResult()
     {
         return [
@@ -76,25 +76,22 @@ class KpiService
             'total_evaluated' => 0
         ];
     }
-
     /**
-     * Calcula la Desviación de Cronograma cruzando IMPLEMENTACION vs (PAP-I y AU-C).
+     * Calcula la Desviación de Cronograma cruzando IMPLEMENTACION vs (PAP-I y RF).
      */
     public function calculateScheduleDeviation($startDate = null, $endDate = null)
     {
-        // 1. Población base: Requerimientos que cerraron Asignación a Usuario (AU-C)
-        $auHistories = $this->kpiRepo->getClosedAuPhases($startDate, $endDate);
+        // 1. Población base: Requerimientos que cerraron definitivamente (RF)
+        $finalizedHistories = $this->kpiRepo->getFinalizedPhases($startDate, $endDate);
 
-        if ($auHistories->isEmpty()) {
+        if ($finalizedHistories->isEmpty()) {
             return $this->emptyDeviationResult();
         }
 
-        $requirementIds = $auHistories->pluck('requirement_id')->unique()->toArray();
+        $requirementIds = $finalizedHistories->pluck('requirement_id')->unique()->toArray();
 
-        // 2. Extraer Planificación (start_date y end_date de IMPLEMENTACION)
+        // 2. Extraer Planificación y Fecha de Inicio Real (PAP-I)
         $estimations = $this->kpiRepo->getImplementationEstimations($requirementIds);
-
-        // 3. Extraer Inicios Reales (transitioned_at de PAP-I)
         $papHistories = $this->kpiRepo->getStartedPapPhases($requirementIds);
 
         $totalDeviationDays = 0;
@@ -103,8 +100,8 @@ class KpiService
         $onTrackCount = 0;
         $evaluatedCount = 0;
 
-        foreach ($auHistories as $auHistory) {
-            $reqId = $auHistory->requirement_id;
+        foreach ($finalizedHistories as $rfHistory) {
+            $reqId = $rfHistory->requirement_id;
 
             $estimation = $estimations->firstWhere('requirement_id', $reqId);
             $papHistory = $papHistories->firstWhere('requirement_id', $reqId);
@@ -121,12 +118,9 @@ class KpiService
 
             // Duración Real
             $actualStart = Carbon::parse($papHistory->transitioned_at)->startOfDay();
-            $actualEnd   = Carbon::parse($auHistory->transitioned_at)->startOfDay();
+            $actualEnd   = Carbon::parse($rfHistory->transitioned_at)->startOfDay(); // Fecha real del 'RF'
             $actualDuration = $actualStart->diffInDays($actualEnd);
 
-            // Cálculo de Desviación en Días (Real vs Planificado)
-            // Positivo = Tomó más días (Desviación negativa para el negocio / Atraso)
-            // Negativo = Tomó menos días (Eficiencia / Adelanto)
             $deviation = $actualDuration - $plannedDuration;
             $totalDeviationDays += $deviation;
 
@@ -164,11 +158,6 @@ class KpiService
             'total_evaluated'        => 0
         ];
     }
-
-
-    /**
-     * Calcula la Desviación de Cronograma y genera Alertas Tempranas.
-     */
     /**
      * Calcula la Desviación de Cronograma (KPI Gerencial) y genera Alertas Tempranas.
      */
@@ -188,7 +177,7 @@ class KpiService
             'CONSTRUCCION'   => ['start' => 'CO-I',  'end' => 'CO-C'],
             'PRUEBAS'        => ['start' => 'PI-I',  'end' => 'PI-C'],
             'CERTIFICACION'  => ['start' => 'CER-I', 'end' => 'CER-C'],
-            'IMPLEMENTACION' => ['start' => 'PAP-I', 'end' => 'AU-C'],
+            'IMPLEMENTACION' => ['start' => 'PAP-I', 'end' => 'RF'], 
         ];
 
         $today = Carbon::now()->startOfDay();
@@ -305,7 +294,6 @@ class KpiService
             ]
         ];
     }
-
     /**
      * Calcula las Métricas de Envejecimiento (Aging) para requerimientos activos[cite: 1].
      */
@@ -396,6 +384,22 @@ class KpiService
                 'aging_buckets' => $agingBuckets,
                 'critical_requirements' => collect($criticalAgingList)->sortByDesc('global_days_open')->values()->all()
             ]
+        ];
+    }
+
+    /**
+     * Calcula el volumen de componentes (roles y entregables) finalizados.
+     * Utilizado para métricas globales e históricas de esfuerzo.
+     */
+    public function calculateClosedComponentsMetrics($startDate = null, $endDate = null)
+    {
+        $rolesCount = $this->kpiRepo->getClosedRolesCount($startDate, $endDate);
+        $deliverablesCount = $this->kpiRepo->getClosedDeliverablesCount($startDate, $endDate);
+
+        return [
+            'roles'        => $rolesCount,
+            'deliverables' => $deliverablesCount,
+            'total'        => $rolesCount + $deliverablesCount
         ];
     }
 

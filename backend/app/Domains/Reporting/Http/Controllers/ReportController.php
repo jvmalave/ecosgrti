@@ -12,13 +12,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Domains\Reporting\Services\ReportService;
 use App\Domains\Reporting\Services\KpiService;
+use App\Domains\Security\Services\CspeWorkloadService;
 
 
 class ReportController extends Controller
 {
-public function __construct(
+    public function __construct(
         private readonly ReportService $reportService,
-        private readonly KpiService $kpiService
+        private readonly KpiService $kpiService,
+        private readonly CspeWorkloadService $cspeWorkloadService
     ) {}
 
 
@@ -33,6 +35,7 @@ public function __construct(
         // Renderizamos y enviamos el PDF como un flujo binario (stream)
         return $pdf->stream('reporte_prueba_ecosgrti.pdf');
     }
+
 
     public function generateMdmDirectory(Request $request)
     {
@@ -208,29 +211,73 @@ public function __construct(
         return $pdf->stream("bitacora_auditoria_{$timestamp}.pdf");
     }
     
-    public function generateConsultantManagement(Request $request): Response
-      {
-          $filters = $request->validate([
-              'start_date'      => 'nullable|date',
-              'end_date'        => 'nullable|date|after_or_equal:start_date',
-              'rrti'            => 'nullable|string',
-              'status_type'     => 'nullable|string',
-              'consultant_id'   => 'nullable|string', 
-              'consultant_name' => 'nullable|string', 
-          ]);
+  public function generateConsultantManagement(Request $request)
+    {
+        $filters = $request->validate([
+            'start_date'      => 'nullable|date',
+            'end_date'        => 'nullable|date|after_or_equal:start_date',
+            'rrti'            => 'nullable|string',
+            'consultant_id'   => 'nullable|string', 
+            'format'          => 'nullable|in:pdf,csv' // Validamos el formato
+        ]);
 
-          $consultantsData = $this->reportService->getConsultantManagement($filters);
+        $consultantsData = $this->reportService->getConsultantManagement($filters);
+        $format = $filters['format'] ?? 'pdf';
 
-          $pdf = Pdf::loadView('reporting::consultant-management', [
-              'consultants'  => $consultantsData,
-              'filters'      => $filters,
-              'generated_at' => now()->format('d/m/Y H:i'),
-              'user'         => auth()->user()
-          ])->setPaper('letter', 'portrait');
+        // LÓGICA DE EXPORTACIÓN CSV
+        if ($format === 'csv') {
+            $fileName = 'historico_gestion_cspe_' . now()->format('Ymd_His') . '.csv';
+            
+            $headers = [
+                "Content-type"        => "text/csv; charset=UTF-8",
+                "Content-Disposition" => "attachment; filename=$fileName",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
 
-          return $pdf->stream('consolidado_gestion_' . now()->timestamp . '.pdf');
+            $callback = function () use ($consultantsData) {
+                $file = fopen('php://output', 'w');
+                // Añadimos BOM para que Excel lea los acentos correctamente
+                fputs($file, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF))); 
+                
+                // Cabeceras del CSV
+                fputcsv($file, ['Consultor CSPE', 'Número (RRTI)', 'Descripción', 'Estatus', 'Fecha Inicio Atención', 'Fecha PAP', 'Fecha Fin Atención']);
+
+                foreach ($consultantsData as $consultant) {
+                    $processRequirements = function($reqs, $estatusName) use ($file, $consultant) {
+                        foreach ($reqs as $req) {
+                            fputcsv($file, [
+                                $consultant['full_name'],
+                                $req->rrti,
+                                $req->description,
+                                $estatusName,
+                                $req->fecha_inicio_atencion ? \Carbon\Carbon::parse($req->fecha_inicio_atencion)->format('d/m/Y') : '---',
+                                $req->fecha_pap ? \Carbon\Carbon::parse($req->fecha_pap)->format('d/m/Y') : '---',
+                                $req->completion_date ? \Carbon\Carbon::parse($req->completion_date)->format('d/m/Y') : '---'
+                            ]);
+                        }
+                    };
+
+                    $processRequirements($consultant['cerrados'], 'Cerrado');
+                    $processRequirements($consultant['en_proceso'], 'En Progreso');
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+
+        // LÓGICA DE EXPORTACIÓN PDF (Por defecto)
+        $pdf = Pdf::loadView('reporting::consultant-management', [
+            'consultants'  => $consultantsData,
+            'filters'      => $filters,
+            'generated_at' => now()->format('d/m/Y H:i'),
+            'user'         => auth()->user()
+        ])->setPaper('letter', 'landscape'); // Lo pasamos a horizontal para que quepan las columnas
+
+        return $pdf->stream('historico_gestion_cspe_' . now()->timestamp . '.pdf');
     }
-
     /**
      * Retorna la lista de consultores CSPE para poblar los selects en el frontend.
      */
@@ -240,7 +287,125 @@ public function __construct(
 
         return response()->json($consultants);
     }
+    /**
+     * Retorna la matriz de capacidad de los consultores CSPE.
+     */
+    public function getWorkload(Request $request)
+    {
+        $horizon = $request->query('horizon', 'current_week');
+        
+        // El método nativo boolean() de Laravel evalúa 'true', '1', 'on' automáticamente a true
+        // y elimina el error de tipado estricto en tu editor.
+        $includeBacklog = $request->boolean('include_backlog');
+        
+        $data = $this->cspeWorkloadService->getConsultantsWorkload($horizon, $includeBacklog);
+        
+        return response()->json([
+            'success' => true,
+            'data'    => $data
+        ]);
+    }
+    /**
+     * Genera el Histórico de la Gestión de consultores CSPE.
+     */
+    public function generateConsolidatedGeneral(Request $request)
+    {
+        $filters = $request->validate([
+            'start_date'      => 'nullable|date',
+            'end_date'        => 'nullable|date|after_or_equal:start_date',
+            'rrti'            => 'nullable|string',
+            'consultant_id'   => 'nullable|string', 
+            'format'          => 'nullable|in:pdf,csv'
+        ]);
 
+        $data = $this->reportService->getConsolidatedGeneral($filters);
+        $format = $filters['format'] ?? 'pdf';
+
+        // --- LÓGICA INTELIGENTE DEL PERÍODO ---
+        $periodText = 'Histórico completo (Sin filtros de fecha aplicados)';
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $start = \Carbon\Carbon::parse($filters['start_date']);
+            $end = \Carbon\Carbon::parse($filters['end_date']);
+            
+            // Diccionario de meses para evitar problemas de idioma en el servidor
+            $meses = [1 => 'Agosto', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'];
+
+            // ¿Es mes completo? (Inicia el día 1 y termina el último día del mes)
+            if ($start->copy()->startOfMonth()->isSameDay($start) && $end->copy()->endOfMonth()->isSameDay($end)) {
+                if ($start->isSameMonth($end) && $start->isSameYear($end)) {
+                    $periodText = $meses[$start->month] . ' ' . $start->year; // Ej: Agosto 2026
+                } 
+                // ¿Es año completo? (Inicia el 1 Ene y termina el 31 Dic)
+                elseif ($start->copy()->startOfYear()->isSameDay($start) && $end->copy()->endOfYear()->isSameDay($end)) {
+                    $periodText = 'Año ' . $start->year; // Ej: Año 2026
+                } else {
+                    $periodText = $start->format('d/m/Y') . ' al ' . $end->format('d/m/Y');
+                }
+            } else {
+                $periodText = $start->format('d/m/Y') . ' al ' . $end->format('d/m/Y');
+            }
+        }
+
+        // --- EXPORTACIÓN CSV ---
+        if ($format === 'csv') {
+            $fileName = 'historico_consolidado_' . now()->format('Ymd_His') . '.csv';
+            $headers = [
+                "Content-type"        => "text/csv; charset=UTF-8",
+                "Content-Disposition" => "attachment; filename=$fileName",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+
+            $callback = function () use ($data) {
+                $file = fopen('php://output', 'w');
+                fputs($file, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF))); 
+                fputcsv($file, ['Número RRTI', 'Descripción', 'Estatus', 'Consultor(es) Asignado(s)', 'Fecha Inicio Atención', 'Fecha PAP', 'Fecha Fin Atención']);
+
+                $processRows = function($reqs, $estatusName) use ($file) {
+                    foreach ($reqs as $req) {
+                        fputcsv($file, [
+                            $req->rrti,
+                            $req->description,
+                            $estatusName,
+                            $req->nombres_consultores,
+                            $req->fecha_inicio_atencion ? \Carbon\Carbon::parse($req->fecha_inicio_atencion)->format('d/m/Y') : '---',
+                            $req->fecha_pap ? \Carbon\Carbon::parse($req->fecha_pap)->format('d/m/Y') : '---',
+                            $req->completion_date ? \Carbon\Carbon::parse($req->completion_date)->format('d/m/Y') : '---'
+                        ]);
+                    }
+                };
+
+                $processRows($data['cerrados'], 'Cerrado');
+                $processRows($data['en_proceso'], 'En Progreso');
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+
+        // --- EXPORTACIÓN PDF ---
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reporting::consolidated-general', [
+            'data'         => $data,
+            'periodText'   => $periodText,
+            'generated_at' => now()->format('d/m/Y H:i'),
+            'user'         => auth()->user()
+        ])->setPaper('letter', 'landscape'); 
+
+        return $pdf->stream('historico_consolidado_' . now()->timestamp . '.pdf');
+    }
+    /**
+     * Retorna el histórico de requerimientos de un consultor específico.
+     */
+    public function getConsultantHistory($id)
+    {
+        $data = $this->cspeWorkloadService->getConsultantHistory($id);
+        
+        return response()->json([
+            'success' => true,
+            'data'    => $data
+        ]);
+    }
     public function generateProductionDeployments(Request $request): Response
     {
         $filters = $request->validate([
@@ -260,8 +425,24 @@ public function __construct(
 
         return $pdf->stream('pases_produccion_' . now()->timestamp . '.pdf');
     }
+    /**
+     * Retorna la data cruda del histórico PAP para la consulta por pantalla.
+     */
+    public function getProductionDeploymentsData(Request $request): JsonResponse
+    {
+        $filters = $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date'   => 'nullable|date|after_or_equal:start_date',
+            'rrti'       => 'nullable|string',
+        ]);
 
+        $deploymentsData = $this->reportService->getProductionDeployments($filters);
 
+        return response()->json([
+            'success' => true,
+            'data'    => $deploymentsData
+        ]);
+    }
     public function downloadOperationalSheet(Request $request)
     {
         $filters = $request->validate([
@@ -321,7 +502,6 @@ public function __construct(
 
         return response()->stream($callback, 200, $headers);
     }
-
     /**
      * Genera un gráfico vía QuickChart y lo retorna en formato Base64 puro.
      * Evita que DomPDF realice peticiones HTTP externas que puedan colgar el servidor.
@@ -339,7 +519,6 @@ public function __construct(
 
         return null;
     }
-
     public function generateExecutiveSummary(Request $request)
     {
         $filters = $request->validate([
@@ -476,7 +655,6 @@ public function __construct(
 
         return $pdf->stream('Resumen_Ejecutivo_Integral_' . now()->timestamp . '.pdf');
     }
-
     public function getOtdMetrics(Request $request)
     {
         $filters = $request->validate([
@@ -494,20 +672,41 @@ public function __construct(
             'data'    => $otdData
         ]);
     }
+    public function getOperationalMetrics(Request $request)
+    {
+        $filters = $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date'   => 'nullable|date|after_or_equal:start_date',
+        ]);
+        // 1. Extrae las métricas operativas (Volumetría de reqs)
+        $metrics = $this->reportService->getOperationalExecutiveSummary($filters);
+        // 2. Extrae el conteo de componentes intervenidos (Roles y Entregables)
+        // Pasamos las fechas; si son null, calculará el histórico global automáticamente.
+        $components = $this->kpiService->calculateClosedComponentsMetrics(
+            $filters['start_date'] ?? null,
+            $filters['end_date'] ?? null
+        );
+        // 3. Fusiona los componentes dentro de la respuesta de métricas
+        $metrics['components'] = $components;
 
-
+        return response()->json([
+            'success' => true,
+            'data'    => $metrics
+        ]);
+    }
+    public function getDeviationMetrics()
+    {
+        $result = $this->kpiService->calculateScheduleDeviationAndAlerts();
+        return response()->json($result);
+    }
     public function getDeviationAlerts(Request $request)
     {
         $result = $this->kpiService->calculateScheduleDeviationAndAlerts();
         return response()->json($result);
     }
-
     public function getAgingMetrics(Request $request)
     {
         $result = $this->kpiService->calculateAgingMetrics();
         return response()->json($result);
     }
-
-
-
 }

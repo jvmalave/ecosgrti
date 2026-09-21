@@ -65,187 +65,162 @@
               Catálogos de la Organización
             </h5>
             <hr class="opacity-25" />
-            <div class="row">
+            <div class="row g-4">
               <!-- COLUMNA 1: SOCIEDADES -->
               <div class="col-md-4">
-                <h6 class="text-secondary fw-bold">
-                  Sociedades ({{ societiesMaster().length }})
+                <h6 class="text-secondary fw-bold mb-3">
+                  <i class="fas fa-building me-1"></i> Sociedades ({{ societiesMaster().length }})
                 </h6>
-                <ul class="list-group">
+                <ul class="list-group shadow-sm">
                   @for (soc of societiesMaster(); track soc.id) {
                     <li
                       class="list-group-item d-flex justify-content-between align-items-center"
+                      style="cursor: pointer; transition: all 0.2s;"
+                      [ngClass]="{'border-start border-2 border-primary bg-light': soc.id === activeSocietyId()}"
+                      (click)="selectSocietyForView(soc.id)"
+                      (keydown.enter)="selectSocietyForView(soc.id)"
+                      (keydown.space)="selectSocietyForView(soc.id); $event.preventDefault()"
+                      [title]="soc.name"
+                      tabindex="0"
+                      role="button"
                     >
                       <div>
-                        <span
-                          class="d-block fw-semibold"
-                          [class.text-muted]="!soc.is_active"
-                          >{{ soc.name }}</span
-                        >
-                        <small class="text-muted">{{
-                          soc.acronym || 'N/A'
-                        }}</small>
+                        <span class="d-block fw-semibold" [class.text-muted]="!soc.is_active">
+                          {{ soc.name }}
+                        </span>
+                        <small class="text-muted">{{ soc.acronym || 'N/A' }}</small>
                       </div>
                       <div class="d-flex align-items-center gap-2">
-                        <span
-                          class="badge rounded-pill"
-                          [ngClass]="
-                            soc.is_active
-                              ? 'bg-success opacity-45,'
-                              : 'bg-danger opacity-45'
-                          "
-                        >
-                          {{ soc.is_active ? 'Activo' : 'Inactivo' }}
-                        </span>
                         <button
                           class="btn btn-sm px-2 btn-tbl-edit"
-                          (click)="openSocietyModal(soc)"
+                          (click)="openSocietyModal(soc); $event.stopPropagation()"
                           title="Editar"
                         >
                           <i class="fas fa-edit"></i>
                         </button>
                         <button
                           class="btn btn-sm px-2 btn-tbl-delete"
-                          [ngClass]="
-                            soc.is_active ? 'text-danger' : 'text-success'
-                          "
-                          (click)="
-                            toggleStatus(
-                              'societies',
-                              soc.id,
-                              soc.is_active,
-                              soc.name
-                            )
-                          "
+                          [ngClass]="soc.is_active ? 'text-danger' : 'text-success'"
+                          (click)="toggleStatus('societies', soc.id, soc.is_active, soc.name); $event.stopPropagation()"
                           [title]="soc.is_active ? 'Desactivar' : 'Activar'"
                         >
-                          <i
-                            class="fas"
-                            [ngClass]="
-                              soc.is_active ? 'fa-power-off' : 'fa-check-circle'
-                            "
-                          ></i>
+                          <i class="fas" [ngClass]="soc.is_active ? 'fa-power-off' : 'fa-check-circle'"></i>
                         </button>
                       </div>
                     </li>
                   }
                 </ul>
               </div>
+
               <!-- COLUMNA 2: SISTEMAS -->
               <div class="col-md-4">
-                <h6 class="text-secondary fw-bold">
-                  Sistemas ({{ systemsMaster().length }})
-                </h6>
-                <ul class="list-group">
-                  @for (sys of systemsMaster(); track sys.id) {
-                    <li
-                      class="list-group-item d-flex justify-content-between align-items-center"
-                    >
-                      <span
-                        class="fw-semibold"
-                        [class.text-muted]="!sys.is_active"
-                        >{{ sys.name }}</span
-                      >
-                      <div class="d-flex align-items-center gap-2">
-                        <span
-                          class="badge rounded-pill"
-                          [ngClass]="sys.is_active ? 'bg-success opacity-45' : 'bg-danger opacity-45'"
-                        >
-                          {{ sys.is_active ? 'Activo' : 'Inactivo' }}
-                        </span>
-                        <button
-                          class="btn btn-sm btn-tbl-edit px-2"
-                          (click)="openSystemModal(sys)"
-                          title="Editar"
-                        >
-                          <i class="fas fa-edit"></i>
-                        </button>
-                        <button
-                          class="btn btn-sm btn-tbl-delete px-2"
-                          [ngClass]="
-                            sys.is_active ? 'text-danger' : 'text-success'
-                          "
-                          (click)="
-                            toggleStatus(
-                              'systems',
-                              sys.id,
-                              sys.is_active,
-                              sys.name
-                            )
-                          "
-                          [title]="sys.is_active ? 'Desactivar' : 'Activar'"
-                        >
-                          <i
-                            class="fas"
-                            [ngClass]="
-                              sys.is_active ? 'fa-power-off' : 'fa-check-circle'
-                            "
-                          ></i>
-                        </button>
-                      </div>
-                    </li>
+                <h6 class="text-secondary fw-bold mb-3">
+                  <i class="fas fa-desktop me-1"></i> Sistemas 
+                  @if (activeSocietyId()) {
+                    <span class="badge bg-primary rounded-pill ms-1">{{ displayedSystems().length }}</span>
                   }
-                </ul>
+                </h6>
+                
+                @if (!activeSocietyId()) {
+                  <div class="alert alert-light text-center border text-muted">
+                    <i class="fas fa-hand-pointer fs-4 mb-2 d-block"></i>
+                    Seleccione una sociedad para ver sus sistemas asociados.
+                  </div>
+                } @else if (displayedSystems().length === 0) {
+                  <div class="alert alert-light text-center border text-muted">
+                    No hay sistemas registrados para esta sociedad.
+                  </div>
+                } @else {
+                  <ul class="list-group shadow-sm">
+                    @for (sys of displayedSystems(); track sys.id) {
+                      <li
+                        class="list-group-item d-flex justify-content-between align-items-center"
+                        style="cursor: pointer; transition: all 0.2s;"
+                        tabindex="0"
+                        role="button"
+                        [ngClass]="{'border-start border-2 border-primary bg-light': sys.id === activeSystemId()}"
+                        (click)="selectSystemForView(sys.id)"
+                        (keydown.enter)="selectSystemForView(sys.id)"
+                        (keydown.space)="selectSystemForView(sys.id); $event.preventDefault()"
+                      >
+                        <span class="fw-semibold" [class.text-muted]="!sys.is_active">
+                          {{ sys.name }}
+                        </span>
+                        <div class="d-flex align-items-center gap-2">
+                          <button
+                            class="btn btn-sm btn-tbl-edit px-2"
+                            (click)="openSystemModal(sys); $event.stopPropagation()"
+                            title="Editar"
+                            type="button"
+                          >
+                            <i class="fas fa-edit"></i>
+                          </button>
+                          <button
+                            class="btn btn-sm btn-tbl-delete px-2"
+                            [ngClass]="sys.is_active ? 'text-danger' : 'text-success'"
+                            (click)="toggleStatus('systems', sys.id, sys.is_active, sys.name); $event.stopPropagation()"
+                            [title]="sys.is_active ? 'Desactivar' : 'Activar'"
+                            type="button"
+                          >
+                            <i class="fas" [ngClass]="sys.is_active ? 'fa-power-off' : 'fa-check-circle'"></i>
+                          </button>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                }
               </div>
+
               <!-- COLUMNA 3: UNIDADES SOLICITANTES -->
               <div class="col-md-4">
-                <h6 class="text-secondary fw-bold">
-                  Unidades Solicitantes ({{ unitsMaster().length }})
-                </h6>
-                <ul class="list-group">
-                  @for (unit of unitsMaster(); track unit.id) {
-                    <li
-                      class="list-group-item d-flex justify-content-between align-items-center"
-                    >
-                      <span
-                        class="fw-semibold"
-                        [class.text-muted]="!unit.is_active"
-                        >{{ unit.name }}</span
-                      >
-                      <div class="d-flex align-items-center gap-2">
-                        <span
-                          class="badge rounded-pill"
-                          [ngClass]="
-                            unit.is_active ? 'bg-success opacity-45' : 'bg-danger opacity-45'
-                          "
-                        >
-                          {{ unit.is_active ? 'Activo' : 'Inactivo' }}
-                        </span>
-                        <button
-                          class="btn btn-sm btn-tbl-edit px-2"
-                          (click)="openUnitModal(unit)"
-                          title="Editar"
-                        >
-                          <i class="fas fa-edit"></i>
-                        </button>
-                        <button
-                          class="btn btn-sm btn-tbl-delete px-2"
-                          [ngClass]="
-                            unit.is_active ? 'text-danger' : 'text-success'
-                          "
-                          (click)="
-                            toggleStatus(
-                              'requesting-units',
-                              unit.id,
-                              unit.is_active,
-                              unit.name
-                            )
-                          "
-                          [title]="unit.is_active ? 'Desactivar' : 'Activar'"
-                        >
-                          <i
-                            class="fas"
-                            [ngClass]="
-                              unit.is_active
-                                ? 'fa-power-off'
-                                : 'fa-check-circle'
-                            "
-                          ></i>
-                        </button>
-                      </div>
-                    </li>
+                <h6 class="text-secondary fw-bold mb-3">
+                  <i class="fas fa-users me-1"></i> Unidades Solicitantes
+                  @if (activeSystemId()) {
+                    <span class="badge bg-primary rounded-pill ms-1">{{ displayedUnits().length }}</span>
                   }
-                </ul>
+                </h6>
+                
+                @if (!activeSocietyId()) {
+                  <div class="alert alert-light text-center border text-muted">
+                    Esperando selección de sociedad...
+                  </div>
+                } @else if (!activeSystemId()) {
+                  <div class="alert alert-light text-center border text-muted">
+                    <i class="fas fa-hand-pointer fs-4 mb-2 d-block"></i>
+                    Seleccione un sistema para ver sus unidades.
+                  </div>
+                } @else if (displayedUnits().length === 0) {
+                  <div class="alert alert-light text-center border text-muted">
+                    No hay unidades registradas para este sistema.
+                  </div>
+                } @else {
+                  <ul class="list-group shadow-sm">
+                    @for (unit of displayedUnits(); track unit.id) {
+                      <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold" [class.text-muted]="!unit.is_active">
+                          {{ unit.name }}
+                        </span>
+                        <div class="d-flex align-items-center gap-2">
+                          <button
+                            class="btn btn-sm btn-tbl-edit px-2"
+                            (click)="openUnitModal(unit)"
+                            title="Editar"
+                          >
+                            <i class="fas fa-edit"></i>
+                          </button>
+                          <button
+                            class="btn btn-sm btn-tbl-delete px-2"
+                            [ngClass]="unit.is_active ? 'text-danger' : 'text-success'"
+                            (click)="toggleStatus('requesting-units', unit.id, unit.is_active, unit.name)"
+                            [title]="unit.is_active ? 'Desactivar' : 'Activar'"
+                          >
+                            <i class="fas" [ngClass]="unit.is_active ? 'fa-power-off' : 'fa-check-circle'"></i>
+                          </button>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                }
               </div>
             </div>
           </div>

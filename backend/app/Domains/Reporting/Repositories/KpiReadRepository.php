@@ -8,14 +8,14 @@ use Carbon\Carbon;
 class KpiReadRepository
 {
     /**
-     * Obtiene el historial de los cierres reales de la fase AU-C.
-     * KPI: OTD (On Time Delivery)
+     * Obtiene el historial de los cierres definitivos reales (RF).
+     * KPI: OTD (On Time Delivery) y Desviación - Única Fuente de la Verdad
      */
-    public function getClosedAuPhases($startDate = null, $endDate = null)
+    public function getFinalizedPhases($startDate = null, $endDate = null)
     {
         $query = DB::table('workflow.requirement_phase_history as rph')
             ->join('core.requirements as r', 'rph.requirement_id', '=', 'r.id')
-            ->where('rph.phase_status_code', 'AU-C')
+            ->where('rph.phase_status_code', 'RF') // <-- Buscamos el hito inmutable RF
             ->whereNull('r.deleted_at')
             ->select('rph.requirement_id', DB::raw('MAX(rph.transitioned_at) as transitioned_at'))
             ->groupBy('rph.requirement_id');
@@ -29,7 +29,6 @@ class KpiReadRepository
 
         return $query->get();
     }
-
     /**
      * Obtiene las fechas planificadas (Inicio y Fin) cruzando con las estimaciones.
      * Blindaje: Se une con requirements para ignorar estimaciones de requerimientos borrados.
@@ -45,7 +44,6 @@ class KpiReadRepository
             ->select('se.requirement_id', 'ep.start_date', 'ep.end_date')
             ->get();
     }
-
     /**
      * Obtiene el historial de los inicios reales de la fase PAP-I.
      */
@@ -60,7 +58,6 @@ class KpiReadRepository
             ->groupBy('rph.requirement_id')
             ->get();
     }
-
     /**
      * Obtiene todas las fases estimadas de los requerimientos que no están cerrados.
      * KPI: Desviación de Cronograma y Alertas
@@ -71,11 +68,10 @@ class KpiReadRepository
             ->join('core.schedule_estimations as se', 'ep.schedule_estimation_id', '=', 'se.id')
             ->join('core.requirements as r', 'se.requirement_id', '=', 'r.id')
             ->whereNull('r.deleted_at')
-            ->whereNotIn('r.status', ['RF', 'AU-C', 'Cancelado', 'DET'])
+            ->whereNotIn('r.status', ['RF', 'Cancelado', 'DET'])
             ->select('se.requirement_id', 'r.rrti', 'ep.phase_name', 'ep.start_date', 'ep.end_date')
             ->get();
     }
-
     /**
      * Obtiene el historial completo de estados para un grupo de requerimientos.
      * Blindaje: Previene duplicados por retrocesos (bucles de fase) tomando la última fecha.
@@ -90,7 +86,6 @@ class KpiReadRepository
             ->groupBy('rph.requirement_id', 'rph.phase_status_code')
             ->get();
     }
-
     /**
      * Obtiene todos los requerimientos que siguen en proceso (abiertos).
      * KPI: Envejecimiento (Aging)
@@ -99,8 +94,58 @@ class KpiReadRepository
     {
         return DB::table('core.requirements')
             ->whereNull('deleted_at')
-            ->whereNotIn('status', ['RF', 'AU-C', 'Cancelado', 'DET'])
+            ->whereNotIn('status', ['RF', 'Cancelado', 'DET'])
             ->select('id', 'rrti', 'status', 'creation_date')
             ->get();
+    }
+    /**
+     * Obtiene la cantidad de roles pertenecientes a requerimientos finalizados,
+     * basándose en el historial inmutable de transiciones (RF).
+     */
+    public function getClosedRolesCount($startDate = null, $endDate = null)
+    {
+        $query = DB::table('workflow.requirements_roles as r')
+            ->join('core.requirements as req', 'r.requirement_id', '=', 'req.id')
+            ->join('workflow.requirement_phase_history as rph', function($join) {
+                $join->on('req.id', '=', 'rph.requirement_id')
+                    ->where('rph.phase_status_code', '=', 'RF');
+            })
+            ->where('req.status', 'RF')
+            ->whereNull('req.deleted_at')
+            ->whereNull('r.deleted_at');
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('rph.transitioned_at', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay()
+            ]);
+        }
+
+        return $query->count();
+    }
+    /**
+     * Obtiene la cantidad de entregables pertenecientes a requerimientos finalizados,
+     * basándose en el historial inmutable de transiciones (RF).
+     */
+    public function getClosedDeliverablesCount($startDate = null, $endDate = null)
+    {
+        $query = DB::table('workflow.deliverables as d')
+            ->join('core.requirements as req', 'd.requirement_id', '=', 'req.id')
+            ->join('workflow.requirement_phase_history as rph', function($join) {
+                $join->on('req.id', '=', 'rph.requirement_id')
+                    ->where('rph.phase_status_code', '=', 'RF');
+            })
+            ->where('req.status', 'RF')
+            ->whereNull('req.deleted_at')
+            ->whereNull('d.deleted_at');
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('rph.transitioned_at', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay()
+            ]);
+        }
+
+        return $query->count();
     }
 }

@@ -1,0 +1,68 @@
+@if (isVisible()) {
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.6); z-index: 1040; backdrop-filter: blur(4px);">
+    <div class="bg-white shadow-lg d-flex flex-column" style="max-width: 900px; width: 95%; max-height: 90vh; border-radius: 0.75rem; overflow: hidden;">
+      
+      <!-- Cabecera Corporativa -->
+      <div class="modal-header border-0 px-4 py-3 text-white">
+        <h5 class="modal-title m-0 fw-bold d-flex align-items-center gap-2">
+          <i class="fas fa-cogs"></i> Panel de Configuración del Sistema
+        </h5>
+        <button
+        class="close-btn"
+        type="button"
+        (click)="closeModal()"
+        title="Cerrar modal"
+        aria-label="Close"
+      >
+        <i class="fa-solid fa-circle-xmark me-2"></i>
+      </button>
+      </div>
+
+      <div class="modal-body p-5 overflow-auto">
+        
+        <div class="path-container text-start">
+          <h6 class="text-muted mb-4 text-uppercase fw-semibold fs-6">
+            <i class="fa-solid fa-sliders-h me-2 text-brand"></i> Parámetros Maestros
+          </h6>
+
+          <div class="phase-grid">
+            
+            <!-- Directorio de Fichas (Info -> Azul Profundo) -->
+            <button class="phase-btn btn-phase-info" (click)="selectConfig('fichas')">
+              <div class="icon-wrapper">
+                <i class="fa-solid fa-id-card"></i>
+              </div>
+              <span class="btn-label">Directorio<br />de Fichas</span>
+            </button>
+
+            <!-- Estructura Organizacional (Planificación -> Azul Zafiro) -->
+            <button class="phase-btn btn-phase-planning" (click)="selectConfig('estructura')">
+              <div class="icon-wrapper">
+                <i class="fa-solid fa-sitemap"></i>
+              </div>
+              <span class="btn-label">Estructura<br />Organizacional</span>
+            </button>
+
+            <!-- Matrices de Progreso (Validación -> Naranja) -->
+            <button class="phase-btn btn-phase-validation" (click)="selectConfig('matrices')">
+              <div class="icon-wrapper">
+                <i class="fa-solid fa-chart-gantt"></i>
+              </div>
+              <span class="btn-label">Matrices de<br />Progreso</span>
+            </button>
+
+            <!-- Hitos Técnicos (Éxito -> Verde) -->
+            <button class="phase-btn btn-phase-success" (click)="selectConfig('hitos')">
+              <div class="icon-wrapper">
+                <i class="fa-solid fa-list-check"></i>
+              </div>
+              <span class="btn-label">Hitos Técnicos<br />(MDM)</span>
+            </button>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

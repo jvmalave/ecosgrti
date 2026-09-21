@@ -1,0 +1,91 @@
+@if (isVisible()) {
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color:  rgba(0, 0, 0, 0.65); z-index: 1050; backdrop-filter: blur(6px);">
+    <div class="bg-white shadow-lg d-flex flex-column" style="max-width: 600px; width: 95%; border-radius: 0.75rem; overflow: hidden;">
+      
+      <!-- Cabecera Corporativa -->
+      <div class="modal-header border-0 px-4 py-3 text-white" style="background: linear-gradient(90deg, #1a237e 0%, #aa00ff 100%);">
+        <h5 class="modal-title m-0 fw-bold d-flex align-items-center gap-2">
+          <i class="fas fa-file-contract"></i> 
+          {{ reportType() === 'consolidated' ? 'Consolidado General CSPE' : 'Histórico por Consultor CSPE' }}
+        </h5>
+        <button
+        class="close-btn"
+        type="button"
+        (click)="closeModal()"
+        title="Cerrar modal"
+        aria-label="Close"
+      >
+        <i class="fa-solid fa-circle-xmark me-2"></i>
+      </button>
+      </div>
+
+      <!-- Cuerpo del Formulario -->
+      <div class="modal-body p-4 bg-light">
+        <div class="text-center mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 70px; height: 70px;">
+            <i class="fas fa-search fs-2"></i>
+          </div>
+          <h6 class="fw-bold text-dark mb-1">Parámetros del Reporte</h6>
+          <p class="text-muted small mb-0">Seleccione los filtros para estructurar la consulta operativa.</p>
+        </div>
+
+        <div class="row g-3">
+          <!-- Fechas -->
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-secondary small mb-1">Fecha Inicio</label>
+            <input type="date" class="form-control shadow-sm" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-secondary small mb-1">Fecha Fin</label>
+            <input type="date" class="form-control shadow-sm" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)">
+          </div>
+
+          <!-- Consultor -->
+          <div class="col-12">
+            <label class="form-label fw-bold text-secondary small mb-1">Consultor Asignado</label>
+            <select class="form-select shadow-sm" [ngModel]="consultantId()" (ngModelChange)="consultantId.set($event)">
+              <option value="">Todos los Consultores</option>
+              @for (c of consultants(); track c.id) {
+                <option [value]="c.id">{{ c.name }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- RRTI -->
+          <div class="col-12">
+            <label class="form-label fw-bold text-secondary small mb-1">Filtro por Código RRTI</label>
+            <input type="text" class="form-control shadow-sm" placeholder="Ej: 00041601" [ngModel]="rrti()" (ngModelChange)="rrti.set($event)">
+          </div>
+
+          <!-- Estado y Formato -->
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-secondary small mb-1">Estado Operativo</label>
+            <select class="form-select shadow-sm" [ngModel]="statusType()" (ngModelChange)="statusType.set($event)">
+              <option value="">Todos los Estados</option>
+              <option value="active">Solo Activos (En Proceso)</option>
+              <option value="completed">Solo Completados (Cerrados)</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-primary small mb-1">Formato Exportación</label>
+            <select class="form-select shadow-sm border-primary" [ngModel]="format()" (ngModelChange)="format.set($event)">
+              <option value="pdf">Documento PDF</option>
+              <option value="csv">Sábana de Datos (CSV)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie del Modal -->
+      <div class="modal-footer bg-white border-top-0 d-flex justify-content-center gap-2 pb-4">
+        <button type="button" class="btn btn-tbl-close rounded-pill px-4 fw-semibold border shadow-sm" (click)="closeModal()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-tbl-planning rounded-pill px-4 fw-semibold shadow-sm" (click)="onSubmit()">
+          <i class="fas fa-download me-2"></i> Generar Reporte
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

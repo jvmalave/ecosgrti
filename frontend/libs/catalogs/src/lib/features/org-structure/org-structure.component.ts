@@ -32,6 +32,39 @@ export class OrgStructureComponent implements OnInit {
   isLoading = signal<boolean>(false);
   selectedSocietyId = signal<string | null>(null);
 
+
+  // ==========================================
+  // NAVEGACIÓN VISUAL (Master-Detail)
+  // ==========================================
+  activeSocietyId = signal<string | null>(null);
+  activeSystemId = signal<string | null>(null);
+
+  // Filtra los sistemas basados en la sociedad seleccionada
+  displayedSystems = computed(() => {
+    const socId = this.activeSocietyId();
+    if (!socId) return [];
+    return this.systemsMaster().filter(sys => sys.society_id === socId);
+  });
+
+  // Filtra las unidades basadas en el sistema seleccionado
+  displayedUnits = computed(() => {
+    const sysId = this.activeSystemId();
+    if (!sysId) return [];
+    return this.unitsMaster().filter(unit => unit.system_id === sysId);
+  });
+
+  // Métodos para manejar los clics en la interfaz
+  selectSocietyForView(id: string): void {
+    if (this.activeSocietyId() !== id) {
+      this.activeSocietyId.set(id);
+      this.activeSystemId.set(null); // Resetea el tercer nivel al cambiar el primero
+    }
+  }
+
+  selectSystemForView(id: string): void {
+    this.activeSystemId.set(id);
+  }
+
   // ==========================================
   // CONTROL DE MODALES Y EDICIÓN
   // ==========================================
@@ -85,6 +118,11 @@ export class OrgStructureComponent implements OnInit {
             this.societiesMaster.set(response.data.societies || []);
             this.systemsMaster.set(response.data.systems || []);
             this.unitsMaster.set(response.data.requesting_units || []);
+            
+            // Auto-seleccionar la primera sociedad si hay datos y no hay ninguna seleccionada
+            if (this.societiesMaster().length > 0 && !this.activeSocietyId()) {
+              this.selectSocietyForView(this.societiesMaster()[0].id);
+            }
           }
           this.isLoading.set(false);
         },

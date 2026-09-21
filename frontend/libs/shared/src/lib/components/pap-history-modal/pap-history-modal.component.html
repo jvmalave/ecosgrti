@@ -1,0 +1,161 @@
+@if (isVisible()) {
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.6); z-index: 1050; backdrop-filter: blur(6px);">
+    <div class="bg-white shadow-lg d-flex flex-column" style="max-width: 1200px; width: 95%; max-height: 90vh; border-radius: 0.75rem; overflow: hidden;">
+      
+      <!-- Cabecera -->
+      <div class="modal-header border-0 px-4 py-3 text-white">
+        <h5 class="modal-title m-0 fw-bold d-flex align-items-center gap-2">
+          <i class="fas fa-server"></i> Consulta Histórica: Pases a Producción
+        </h5>
+        <button
+        class="close-btn"
+        type="button"
+        (click)="closeModal()"
+        title="Cerrar modal"
+        aria-label="Close"
+      >
+        <i class="fa-solid fa-circle-xmark me-2"></i>
+      </button>
+      </div>
+
+      <!-- Barra de Filtros (Estilo Dashboard) -->
+      <div class="bg-light border-bottom p-3">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label fw-bold text-secondary small mb-1">Fecha Inicio</label>
+            <input type="date" class="form-control form-control-sm shadow-sm" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold text-secondary small mb-1">Fecha Fin</label>
+            <input type="date" class="form-control form-control-sm shadow-sm" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold text-secondary small mb-1">Código RRTI</label>
+            <input type="text" class="form-control form-control-sm shadow-sm" placeholder="Ej: 00011114" [ngModel]="rrti()" (ngModelChange)="rrti.set($event)">
+          </div>
+          <div class="col-md-3 d-flex gap-2">
+            <button class="btn btn-sm btn-tbl-planning w-100 fw-bold shadow-sm fw-semibold" (click)="fetchData()">
+              <i class="fas fa-search me-1"></i> Consultar
+            </button>
+            <button class="btn btn-sm btn-tbl-close w-100 fw-bold shadow-sm fw-semibold" [disabled]="deployments().length === 0" (click)="exportToPdf()" title="Exportar resultado a PDF">
+              <i class="fas fa-file-pdf me-1"></i> PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cuerpo de la Tabla -->
+      <!-- Cuerpo de la Tabla -->
+      <div class="modal-body p-0 overflow-auto" style="background-color: #f8f9fa;">
+        
+        @if (isLoading()) {
+          <div class="text-center p-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="text-muted mt-3 fw-medium">Extrayendo historial de despliegues y rollbacks...</p>
+          </div>
+        } @else if (hasSearched() && deployments().length === 0) {
+          <div class="text-center p-5">
+            <i class="fas fa-inbox fs-1 text-muted mb-3 opacity-50"></i>
+            <p class="text-muted fw-medium fs-5">No se encontraron registros de pases a producción con los filtros indicados.</p>
+          </div>
+        } @else if (deployments().length > 0) {
+          <!-- AUMENTO DE FUENTE BASE: de 11px a 13px -->
+          <table class="table table-hover table-bordered align-middle mb-0" style="font-size: 13px;">
+            <thead class="table-light text-secondary">
+              <tr>
+                <th style="width: 13%;" class="ps-3 py-3">RRTI / FECHA PAP</th>
+                <th style="width: 25%;" class="py-3">DESCRIPCIÓN</th>
+                <th style="width: 27%;" class="py-3">EVOLUCIÓN DE ROLES</th>
+                <th style="width: 35%;" class="py-3">HISTORIAL DE RECHAZOS</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (deployment of deployments(); track deployment.rrti) {
+                <tr class="bg-white">
+                  <!-- COLUMNA 1: RRTI -->
+                  <td class="ps-3 py-3">
+                    <strong class="text-primary fs-5">{{ deployment.rrti }}</strong><br>
+                    <!-- Subida de 9px a 11.5px -->
+                    <span class="text-muted" style="font-size: 11.5px;">Estatus: <strong>{{ deployment.current_status }}</strong></span><br><br>
+                    <strong style="font-size: 12px;">Cierre PAP:</strong><br>
+                    <span class="text-muted" style="font-size: 12px;">{{ deployment.pap_c_date ? (deployment.pap_c_date | date:'dd/MM/yyyy') : 'Sin cierre (PAP-C)' }}</span>
+                  </td>
+                  
+                  <!-- COLUMNA 2: DESCRIPCIÓN -->
+                  <td class="py-3 pe-3 text-secondary fw-medium">
+                    {{ deployment.description }}
+                  </td>
+                  
+                  <!-- COLUMNA 3: EVOLUCIÓN DE ROLES -->
+                  <td class="py-3">
+                    @if (deployment.is_fully_deployed) {
+                      <span class="badge bg-success mb-3 px-2 py-1 fs-6 shadow-sm">¡Despliegue Completo! ({{ deployment.roles_in_prod }}/{{ deployment.total_roles }})</span>
+                    } @else {
+                      <span class="badge bg-warning text-dark mb-3 px-2 py-1" style="font-size: 13px;">En Proceso ({{ deployment.roles_in_prod }}/{{ deployment.total_roles }} en Prod)</span>
+                    }
+
+                    @if (deployment.roles_details.length > 0) {
+                      <ul class="list-unstyled ms-1 mb-0" style="font-size: 14px;">
+                        @for (role of deployment.roles_details; track role.role_name) {
+                          <li class="mb-3 border-bottom pb-2">
+                            <strong class="text-dark">{{ role.role_name }}:</strong>
+                            <br>
+                            @if (role.current_status === 'IN_PRODUCTION') {
+                              <span class="text-success fw-bold ms-1">Producción</span>
+                            } @else {
+                              <span class="text-danger fw-bold ms-1">{{ role.current_status }}</span>
+                            }
+                            <!-- Subida de 9px a 11px -->
+                            <span class="text-muted ms-1" style="font-size: 11px;">(Intentos: {{ role.attempts }})</span>
+                            
+                            @if (role.order_number) {
+                              <!-- Subida de 9px a 11.5px -->
+                              <div class="text-primary mt-1 fw-medium" style="font-size: 12.5px;">
+                                <i class="fas fa-truck-fast"></i> Orden: <strong>{{ role.order_number }}</strong>
+                                <span class="text-muted ms-1">({{ role.order_date | date:'dd/MM/yyyy' }})</span>
+                              </div>
+                            }
+                          </li>
+                        }
+                      </ul>
+                    } @else {
+                      <span class="text-muted fst-italic">Sin roles técnicos registrados.</span>
+                    }
+                  </td>
+                  
+                  <!-- COLUMNA 4: HISTORIAL DE RECHAZOS -->
+                  <td class="py-3 pe-3">
+                    @if (deployment.rollbacks.length > 0) {
+                      @for (rollback of deployment.rollbacks; track $index) {
+                        <!-- Aumento de padding interior -->
+                        <div class="bg-danger bg-opacity-10 border-start border-danger border-3 p-3 mb-2 rounded-end">
+                          <!-- Subida general de 10px a 12px y 13px -->
+                          <strong class="text-danger" style="font-size: 13px;">[Ord: {{ rollback.order_number || 'N/A' }}]</strong>
+                          <span class="fw-bold text-dark" style="font-size: 13.5px;"> Rol: {{ rollback.role_name || 'N/A' }}</span><br>
+                          
+                          <div class="mt-1 mb-2 text-dark" style="font-size: 13.5px;">
+                            <em>Motivo:</em> {{ rollback.reason || 'Sin justificación registrada' }}
+                          </div>
+                          
+                          <!-- Subida de 9px a 11px -->
+                          <div class="text-muted d-flex justify-content-between mt-2 pt-1 border-top border-danger border-opacity-25" style="font-size: 11px;">
+                            <span><i class="fas fa-user-times"></i> Rechazado por: <strong>{{ rollback.rejected_by || 'Sistema' }}</strong></span>
+                            <span class="fw-medium">{{ rollback.rejected_at ? (rollback.rejected_at | date:'dd/MM/yyyy HH:mm') : '' }}</span>
+                          </div>
+                        </div>
+                      }
+                    } @else {
+                      <div class="d-flex align-items-center text-success fw-medium fs-6 mt-2">
+                        <i class="fas fa-check-circle fs-5 me-2"></i> Despliegue limpio, sin rechazos.
+                      </div>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  </div>
+}

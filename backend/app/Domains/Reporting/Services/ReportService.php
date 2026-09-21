@@ -114,32 +114,32 @@ class ReportService
             ->orderBy('created_at', 'desc')
             ->get();
     }
-
-    
-
     /**
      * Genera el consolidado de gestión agrupado por consultor CSPE.
      */
     public function getConsultantManagement(array $filters)
     {
         $activeStatuses = ['RC', 'ES-R', 'ATF-I', 'DT-I', 'COR-I', 'COE-I', 'PI-I', 'CER-I', 'CEE-I', 'PAP-I', 'AU-I', 'ATF-C', 'DT-C', 'COR-C', 'COE-C', 'PI-C', 'CER-C', 'CEE-C', 'PAP-C', 'AU-C'];
-        $completedStatuses = ['RF'];
-        $stoppedStatuses = ['DET', 'CAN'];
+        $completedStatuses = ['RF']; // RF = Requerimiento Finalizado / Cerrado
 
+        // Construimos la consulta con sub-selects para buscar las fechas exactas en el historial
         $requirements = DB::table('core.cspe_consultant_requirement as pivot')
             ->join('core.requirements as r', 'pivot.requirement_id', '=', 'r.id')
-            ->whereNull('r.deleted_at') // Prevención de SoftDeletes
-            ->select('pivot.cspe_consultant_id', 'r.rrti', 'r.status', 'r.progress_percentage')
+            ->whereNull('r.deleted_at')
+            ->select(
+                'pivot.cspe_consultant_id', 
+                'r.rrti', 
+                'r.description',
+                'r.status', 
+                'r.completion_date',
+                // Fecha de Inicio de Atención (Primer registro de ATF-I)
+                DB::raw("(SELECT created_at FROM workflow.requirement_phase_history WHERE requirement_id = r.id AND phase_status_code = 'ATF-I' ORDER BY created_at ASC LIMIT 1) as fecha_inicio_atencion"),
+                // Fecha PAP (Último registro de PAP-C)
+                DB::raw("(SELECT created_at FROM workflow.requirement_phase_history WHERE requirement_id = r.id AND phase_status_code = 'PAP-C' ORDER BY created_at DESC LIMIT 1) as fecha_pap")
+            )
             ->when(!empty($filters['start_date']), fn($q) => $q->whereDate('r.created_at', '>=', $filters['start_date']))
             ->when(!empty($filters['end_date']), fn($q) => $q->whereDate('r.created_at', '<=', $filters['end_date']))
             ->when(!empty($filters['rrti']), fn($q) => $q->where('r.rrti', 'like', '%' . trim(str_replace('#', '', $filters['rrti'])) . '%'))
-            ->when(!empty($filters['status_type']), function($q) use ($filters, $activeStatuses, $completedStatuses) {
-                if ($filters['status_type'] === 'active') {
-                    $q->whereIn('r.status', $activeStatuses);
-                } elseif ($filters['status_type'] === 'completed') {
-                    $q->whereIn('r.status', $completedStatuses);
-                }
-            })
             ->when(!empty($filters['consultant_id']), fn($q) => $q->where('pivot.cspe_consultant_id', $filters['consultant_id']))
             ->get();
 
@@ -148,7 +148,6 @@ class ReportService
         }
 
         $cspeConsultantIds = $requirements->pluck('cspe_consultant_id')->unique()->toArray();
-
         $consultantsIdentity = CspeConsultant::with('person')
             ->whereIn('id', $cspeConsultantIds)
             ->get()
@@ -161,28 +160,24 @@ class ReportService
             $consultant = $consultantsIdentity->get($consultantId);
             $person = $consultant ? $consultant->person : null;
 
-            $activeReqs = $reqs->filter(fn($r) => in_array($r->status, $activeStatuses))->values();
-            $completedReqs = $reqs->filter(fn($r) => in_array($r->status, $completedStatuses))->values();
-            $stoppedReqs = $reqs->filter(fn($r) => in_array($r->status, $stoppedStatuses))->values();
+            // Filtramos y transformamos los datos para la vista
+            $cerrados = $reqs->filter(fn($r) => in_array($r->status, $completedStatuses))->values();
+            $enProceso = $reqs->filter(fn($r) => in_array($r->status, $activeStatuses))->values();
 
             $result[] = [
-                'consultant_id'     => $consultantId,
-                'first_name'        => $person ? $person->first_name : 'Consultor',
-                'last_name'         => $person ? $person->last_name : 'Desconocido',
-                'total_asignados'   => $reqs->count(),
-                'req_en_proceso'    => $activeReqs->count(),
-                'req_completados'   => $completedReqs->count(),
-                'req_detenidos'     => $stoppedReqs->count(),
-                'active_details'    => $activeReqs,
-                'completed_details' => $completedReqs,
+                'consultant_id'  => $consultantId,
+                'full_name'      => $person ? $person->first_name . ' ' . $person->last_name : 'Consultor Desconocido',
+                'cerrados'       => $cerrados,
+                'en_proceso'     => $enProceso,
+                'total_asignados'=> $reqs->count()
             ];
         }
 
-        usort($result, fn($a, $b) => $b['total_asignados'] <=> $a['total_asignados']);
+        // Ordenamos alfabéticamente por nombre de consultor
+        usort($result, fn($a, $b) => strcmp($a['full_name'], $b['full_name']));
 
         return collect($result);
     }
-
     /**
      * Retorna el diccionario de consultores CSPE formateado para selectores.
      */
@@ -196,6 +191,52 @@ class ReportService
                     'name' => trim(($consultant->person->first_name ?? '') . ' ' . ($consultant->person->last_name ?? ''))
                 ];
             });
+    }
+
+    public function getConsolidatedGeneral(array $filters)
+    {
+        $activeStatuses = ['RC', 'ES-R', 'ATF-I', 'DT-I', 'COR-I', 'COE-I', 'PI-I', 'CER-I', 'CEE-I', 'PAP-I', 'AU-I', 'ATF-C', 'DT-C', 'COR-C', 'COE-C', 'PI-C', 'CER-C', 'CEE-C', 'PAP-C', 'AU-C'];
+        $completedStatuses = ['RF'];
+
+        // Consultamos directo al modelo de Requerimientos
+        $query = Requirement::with(['cspeConsultants.person'])
+            ->select(
+                'core.requirements.id', 'rrti', 'description', 'status', 'completion_date', 'created_at',
+                DB::raw("(SELECT created_at FROM workflow.requirement_phase_history WHERE requirement_id = core.requirements.id AND phase_status_code = 'ATF-I' ORDER BY created_at ASC LIMIT 1) as fecha_inicio_atencion"),
+                DB::raw("(SELECT created_at FROM workflow.requirement_phase_history WHERE requirement_id = core.requirements.id AND phase_status_code = 'PAP-C' ORDER BY created_at DESC LIMIT 1) as fecha_pap")
+            );
+
+        // Filtros
+        if (!empty($filters['start_date'])) {
+            $query->whereDate('created_at', '>=', $filters['start_date']);
+        }
+        if (!empty($filters['end_date'])) {
+            $query->whereDate('created_at', '<=', $filters['end_date']);
+        }
+        if (!empty($filters['rrti'])) {
+            $query->where('rrti', 'like', '%' . trim(str_replace('#', '', $filters['rrti'])) . '%');
+        }
+        if (!empty($filters['consultant_id'])) {
+            // Buscamos requerimientos que tengan asignado a este consultor en la tabla pivote
+            $query->whereHas('cspeConsultants', function($q) use ($filters) {
+                $q->where('security.cspe_consultants.id', $filters['consultant_id']);
+            });
+        }
+
+        $requirements = $query->orderBy('created_at', 'desc')->get();
+
+        // Mapeamos a los consultores en un solo string separado por comas
+        $requirements->each(function ($req) {
+            $req->nombres_consultores = $req->cspeConsultants->map(function ($c) {
+                return trim(($c->person->first_name ?? '') . ' ' . ($c->person->last_name ?? ''));
+            })->filter()->implode(', ') ?: 'Sin asignar';
+        });
+
+        // Devolvemos los dos grupos separados
+        return [
+            'cerrados'   => $requirements->filter(fn($r) => in_array($r->status, $completedStatuses))->values(),
+            'en_proceso' => $requirements->filter(fn($r) => in_array($r->status, $activeStatuses))->values(),
+        ];
     }
 
     /**
@@ -434,22 +475,35 @@ class ReportService
      */
     public function getOperationalExecutiveSummary(array $filters): array
     {
-        $query = DB::table('core.requirements')
+        // 1. DEMANDA: Requerimientos ingresados (creados) en el período
+        $queryCreated = DB::table('core.requirements')
             ->whereNull('deleted_at')
             ->when(!empty($filters['start_date']), fn($q) => $q->whereDate('creation_date', '>=', $filters['start_date']))
             ->when(!empty($filters['end_date']), fn($q) => $q->whereDate('creation_date', '<=', $filters['end_date']));
 
-        $total = (clone $query)->count();
-        $completed = (clone $query)->whereIn('status', ['RF', 'AU-C'])->count();
-        $inProgress = (clone $query)->whereNotIn('status', ['RF', 'AU-C'])->count();
+        $total = $queryCreated->count();
 
-        $byType = (clone $query)
+        // 2. Requerimientos completados (cerrados) en el período
+        $queryClosed = DB::table('workflow.requirement_phase_history as rph')
+            ->join('core.requirements as r', 'rph.requirement_id', '=', 'r.id')
+            ->whereNull('r.deleted_at')
+            ->where('rph.phase_status_code', 'RF') // Hito exacto de pase a producción
+            ->when(!empty($filters['start_date']), fn($q) => $q->whereDate('rph.transitioned_at', '>=', $filters['start_date']))
+            ->when(!empty($filters['end_date']), fn($q) => $q->whereDate('rph.transitioned_at', '<=', $filters['end_date']));
+
+        // Usamos distinct para contar RRTIs únicos que pasaron a RF en ese lapso
+        $completed = $queryClosed->distinct('rph.requirement_id')->count('rph.requirement_id');
+
+        // 3. DATOS DE DISTRIBUCIÓN (Se mantienen anclados a la consulta base)
+        $inProgress = (clone $queryCreated)->whereNotIn('status', ['RF'])->count();
+
+        $byType = (clone $queryCreated)
             ->select('requirement_type', DB::raw('count(*) as total'))
             ->groupBy('requirement_type')
             ->pluck('total', 'requirement_type')
             ->toArray();
 
-        $rawStatus = (clone $query)
+        $rawStatus = (clone $queryCreated)
             ->select('status', DB::raw('count(*) as total'))
             ->groupBy('status')
             ->get();
@@ -461,10 +515,11 @@ class ReportService
         }
 
         return [
-            'total_requirements' => $total,
-            'completed_count'    => $completed,
+            'total_requirements' => $total, // Ingresos puros
+            'completed_count'    => $completed, // Salidas puras (Pases a Producción)
             'in_progress_count'  => $inProgress,
-            'efficiency_rate'    => $total > 0 ? round(($completed / $total) * 100, 1) : 0,
+            // Tasa de reemplazo/eficiencia de flujo: puede ser > 100% si cierran más de los que entran
+            'efficiency_rate'    => $total > 0 ? round(($completed / $total) * 100, 1) : 0, 
             'by_type'            => $byType,
             'by_status'          => $byStatus,
         ];

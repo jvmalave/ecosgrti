@@ -12,7 +12,6 @@ use App\Domains\Core\Http\Controllers\RequirementClosureController;
 */
 
 
-
 Route::prefix('core')->middleware(['auth:api', 'password.expired' ])->group(function () {
 
 
@@ -95,5 +94,8 @@ Route::prefix('core')->middleware(['auth:api', 'password.expired' ])->group(func
 
 
 });
+
+
+
 
 

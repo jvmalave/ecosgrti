@@ -45,4 +45,6 @@ class ScheduleEstimation extends Model
     {
         return $this->hasMany(EstimatedPhase::class, 'schedule_estimation_id', 'id');
     }
+
+    
 }

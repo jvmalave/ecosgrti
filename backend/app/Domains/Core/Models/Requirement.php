@@ -144,7 +144,7 @@ class Requirement extends Model
   {
     return $this->hasOne(ScheduleEstimation::class, 'requirement_id');
   }
-
+  
   public function phaseHistories()
   {
     return $this->hasMany(RequirementPhaseHistory::class, 'requirement_id');
@@ -234,5 +234,4 @@ class Requirement extends Model
         return $this->hasOne(CeeTicket::class, 'requirement_id');
     }
 
-    
 }

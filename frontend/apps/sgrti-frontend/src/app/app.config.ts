@@ -15,6 +15,7 @@ import {
   provideClientHydration,
   withEventReplay,
 } from '@angular/platform-browser';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts'
 
 
 export const appConfig: ApplicationConfig = {
@@ -28,6 +29,7 @@ export const appConfig: ApplicationConfig = {
       withFetch(),
       withInterceptors([authInterceptor])
     ),
+    provideCharts(withDefaultRegisterables()),
     provideHttpClient(withInterceptors([httpErrorInterceptor])),
     { provide: AUTH_API_URL, useValue: environment.authApiUrl },
     { provide: 'GLOBAL_API_URL', useValue: environment.apiUrl },

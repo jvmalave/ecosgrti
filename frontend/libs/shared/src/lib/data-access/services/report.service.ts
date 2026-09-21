@@ -90,18 +90,17 @@ export class ReportService {
     });
   }
 
-  downloadConsultantManagement(filters: any): Observable<Blob> {
+  downloadConsultantManagement(filters: any, format: 'pdf' | 'csv' = 'pdf'): Observable<Blob> {
     let params = new HttpParams();
 
     if (filters.start_date && filters.end_date) {
       params = params.set('start_date', filters.start_date).set('end_date', filters.end_date);
     }
     if (filters.rrti) params = params.set('rrti', filters.rrti);
-    if (filters.status_type) params = params.set('status_type', filters.status_type);
-    
-    // Inyectamos el ID y el Nombre
     if (filters.consultant_id) params = params.set('consultant_id', filters.consultant_id);
-    if (filters.consultant_name) params = params.set('consultant_name', filters.consultant_name);
+    
+    // Anexamos el formato seleccionado
+    params = params.set('format', format);
 
     return this.http.get(`${this.reportingApiUrl}/consultant-management`, { params, responseType: 'blob' });
   }
@@ -110,6 +109,46 @@ export class ReportService {
   getCspeConsultantsList(): Observable<{id: string, name: string}[]> {
     return this.http.get<{id: string, name: string}[]>(`${this.reportingApiUrl}/cspe-consultants`);
   }
+
+/**
+   * Obtiene la matriz de capacidad semanal o proyectada de los consultores CSPE.
+   * @param horizon Periodo de tiempo a evaluar (current_week, 15_days, 30_days, 60_days)
+   */
+  getConsultantsWorkload(horizon: string = 'current_week', includeBacklog: boolean = false): Observable<any> {
+    return this.http.get<any>(`${this.reportingApiUrl}/cspe/workload`, {
+      params: { 
+        horizon,
+        include_backlog: includeBacklog
+      }
+    });
+  }
+
+  /**
+   * Obtiene el historial de requerimientos asignados a un consultor.
+   * @param consultantId El identificador UUID del consultor.
+   */
+  getConsultantHistory(consultantId: string): Observable<any> {
+    return this.http.get<any>(`${this.reportingApiUrl}/cspe/${consultantId}/history`);
+  }
+
+  downloadConsolidatedGeneral(filters: any, format: 'pdf' | 'csv' = 'pdf'): Observable<Blob> {
+    let params = new HttpParams();
+
+    if (filters.start_date && filters.end_date) {
+      params = params.set('start_date', filters.start_date).set('end_date', filters.end_date);
+    }
+    if (filters.rrti) params = params.set('rrti', filters.rrti);
+    if (filters.consultant_id) params = params.set('consultant_id', filters.consultant_id);
+    
+    // Inyectamos el formato solicitado
+    params = params.set('format', format);
+
+    return this.http.get(`${this.reportingApiUrl}/cspe/consolidated-general`, { 
+      params, 
+      responseType: 'blob' 
+    });
+  }
+
 
   downloadProductionDeployments(filters: any): Observable<Blob> {
     let params = new HttpParams();
@@ -125,6 +164,17 @@ export class ReportService {
       params,
       responseType: 'blob'
     });
+  }
+
+  // Obtiene los datos JSON para la vista en pantalla
+  getProductionDeploymentsData(filters: any): Observable<any> {
+    let params = new HttpParams();
+
+    if (filters.start_date) params = params.set('start_date', filters.start_date);
+    if (filters.end_date) params = params.set('end_date', filters.end_date);
+    if (filters.rrti) params = params.set('rrti', filters.rrti);
+
+    return this.http.get<any>(`${this.reportingApiUrl}/production-deployments/data`, { params });
   }
 
   /**
@@ -190,6 +240,18 @@ export class ReportService {
     });
   }
 
+  // Obtiene volumetría y estatus
+  getOperationalMetrics(filters?: KpiFilters): Observable<any> {
+    return this.http.get<any>(`${this.reportingApiUrl}/kpi/operational`, {
+      params: this.buildParams(filters)
+    });
+  }
+
+  // Obtiene desviaciones y alertas tempranas
+  getDeviationMetrics(): Observable<any> {
+    return this.http.get<any>(`${this.reportingApiUrl}/kpi/deviations`);
+  }
+
   /**
    * Obtiene las estadísticas de desviación y alertas tempranas en tiempo real.
    */
@@ -197,7 +259,6 @@ export class ReportService {
     // Este endpoint evalúa contra el reloj actual, no requiere parámetros de fecha
     return this.http.get<DeviationResponse>(`${this.reportingApiUrl}/kpi/deviation`);
   }
-
   /**
    * Obtiene el análisis de envejecimiento y detección de cuellos de botella.
    */
@@ -217,17 +278,30 @@ export class ReportService {
     });
   }
 
-  
+  /**
+   * 
+   * @param query 
+   * @returns 
+   */
+  searchComponentTraceability(query: string): Observable<any> {
+      const params = new HttpParams().set('query', query);
+      return this.http.get(`${this.reportingApiUrl}/traceability/search`, { params });
+  }
 
-  
+  downloadSupportFile(filePath: string): Observable<Blob> {
+    const params = new HttpParams().set('file_path', filePath);
+    
+    return this.http.get(`${this.reportingApiUrl}/traceability/download-support`, {
+      params,
+      responseType: 'blob'
+    });
+  }
 
-  
-  
-
-  
-
-  
-
+  exportComponentPdf(payload: any): Observable<Blob> {
+    return this.http.post(`${this.reportingApiUrl}/traceability/component-pdf`, payload, {
+      responseType: 'blob'
+    });
+  }
 
 
 

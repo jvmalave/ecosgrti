@@ -66,6 +66,22 @@ export class NotificationService {
     });
   }
 
+  public showInfo(title: string, message: string): void {
+    Swal.fire({
+      title: title,
+      html: message,
+      icon: 'info',
+      confirmButtonText: 'Entendido',
+      buttonsStyling: false,
+      customClass: {
+        confirmButton:
+          'btn btn-tbl-close rounded-pill px-5 py-2 fw-bold shadow-sm',
+        popup: 'rounded-4 border-top border-4 border-brand',
+        title: 'fs-4 text-dark fw-bold',
+      },
+    });
+  }
+
   async confirm(
     title: string,
     htmlContent: string,
@@ -326,8 +342,9 @@ export class NotificationService {
     status_type: string;
     consultant_id: string;
     consultant_name: string;
+    format: 'pdf' | 'csv'; // NUEVO: tipado del formato
   } | null> {
-    // Construimos las opciones del Select iterando la base de datos
+    
     let consultantOptions = '<option value="">Todos los Consultores</option>';
     consultants.forEach((c) => {
       consultantOptions += `<option value="${c.id}">${c.name}</option>`;
@@ -356,17 +373,28 @@ export class NotificationService {
           <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Filtro por Código RRTI</label>
           <input id="swal-rrti" type="text" class="form-control mb-3 shadow-sm" placeholder="Ej: 00041601">
 
-          <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Estado Operativo</label>
-          <select id="swal-status" class="form-select shadow-sm">
-            <option value="">Todos los Estados</option>
-            <option value="active">Solo Requerimientos Activos (En Proceso)</option>
-            <option value="completed">Solo Requerimientos Completados</option>
-          </select>
+          <div class="row">
+            <div class="col-6">
+                <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Estado Operativo</label>
+                <select id="swal-status" class="form-select shadow-sm">
+                  <option value="">Todos</option>
+                  <option value="active">Activos</option>
+                  <option value="completed">Completados</option>
+                </select>
+            </div>
+            <div class="col-6">
+                <label class="form-label fw-bold text-primary" style="font-size: 13px;">Formato Exportación</label>
+                <select id="swal-format" class="form-select shadow-sm border-primary">
+                  <option value="pdf">Documento PDF</option>
+                  <option value="csv">Sábana de Datos (CSV)</option>
+                </select>
+            </div>
+          </div>
         </div>
       `,
       focusConfirm: false,
       showCancelButton: true,
-      confirmButtonText: '<i class="fa-solid fa-file-pdf me-2"></i> Procesar Reporte',
+      confirmButtonText: '<i class="fas fa-download me-2"></i> Generar Reporte', // Ícono más genérico
       cancelButtonText: 'Cancelar',
       customClass: {
         confirmButton: 'btn btn-tbl-planning rounded-pill px-4 mx-2 fw-bold shadow-sm',
@@ -380,10 +408,11 @@ export class NotificationService {
         const rrti = (document.getElementById('swal-rrti') as HTMLInputElement).value;
         const statusType = (document.getElementById('swal-status') as HTMLSelectElement).value;
         
-        // Capturamos el select del consultor
+        // Capturamos el formato
+        const format = (document.getElementById('swal-format') as HTMLSelectElement).value as 'pdf' | 'csv';
+        
         const consultantSelect = document.getElementById('swal-consultant') as HTMLSelectElement;
         const consultantId = consultantSelect.value;
-        // Obtenemos el texto visible (nombre) para enviarlo al PDF
         const consultantName = consultantId ? consultantSelect.options[consultantSelect.selectedIndex].text : '';
 
         if ((startDate && !endDate) || (!startDate && endDate)) {
@@ -394,7 +423,8 @@ export class NotificationService {
         return { 
             start_date: startDate, end_date: endDate,
             rrti: rrti.trim(), status_type: statusType,
-            consultant_id: consultantId, consultant_name: consultantName
+            consultant_id: consultantId, consultant_name: consultantName,
+            format: format // Lo añadimos al objeto de retorno
         };
       }
     });
@@ -515,8 +545,6 @@ export class NotificationService {
 
     return result.isConfirmed ? result.value : null;
   }
-
-  
 
   public close(): void {
     Swal.close();

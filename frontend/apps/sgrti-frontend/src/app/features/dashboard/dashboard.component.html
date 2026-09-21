@@ -19,176 +19,31 @@
               <i class="fas fa-home"></i> Inicio
             </a>
           </li>
-          <!-- Menú Colapsable de Reportes -->
-          @if ( isCoord) {
-            <!-- Menú Colapsable de Reportes (Vía Signals) -->
-            <li class="nav-item w-100">
+          <!-- OPCIÓN REPORTE  -->
+          @if (isCoord) {
+            <li class="nav-item w-100 mt-3">
               <a
                 class="nav-link rounded-3 px-3 py-2 text-white"
-                (click)="toggleReportsMenu()"
-                (keydown.enter)="toggleReportsMenu()"
+                (click)="openReportOrchestratorModal()"
+                (keydown.enter)="openReportOrchestratorModal()"
                 tabindex="0"
                 style="cursor: pointer"
               >
                 <div
                   class="d-flex w-100 justify-content-between align-items-center"
                 >
-                  <span><i class="fas fa-chart-pie me-2"></i> Reportes y KPI's</span>
-                  <i
-                    class="fas fa-chevron-down transition-transform"
-                    [class.rotate-180]="isReportsMenuOpen()"
-                  ></i>
+                  <span><i class="fas fa-chart-pie me-2"></i> Centro de Reportes</span>
                 </div>
               </a>
-
-              <!-- Submenú de Reportes -->
-              @if (isReportsMenuOpen()) {
-                <ul
-                  class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition"
-                  style="border-left: 1px solid rgba(255, 255, 255, 0.2)"
-                >
-                  
-                  <!-- ENCABEZADO: ADMINISTRATIVOS -->
-                  <!-- <li class="nav-item px-3 pt-2 pb-1">
-                    <span class="text-uppercase fw-bold" style="font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 0.5px;">
-                      Administrativos y Cumplimiento
-                    </span>
-                  </li> -->
-
-                  <!-- Reporte 1: Directorio MDM -->
-                  <li class="nav-item">
-                    <a
-                      (click)="openMdmDirectoryModal()"
-                      (keydown.enter)="openMdmDirectoryModal()"
-                      tabindex="0"
-                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
-                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
-                      onmouseover="this.style.opacity='1'"
-                      onmouseout="this.style.opacity='0.8'"
-                    >
-                      <i class="fas fa-id-card me-2"></i>
-                      Directorio MDM
-                    </a>
-                  </li>
-                  <!-- Bitácora de Auditoría -->
-                  <li class="nav-item">
-                    <a
-                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
-                      (click)="openAuditLogModal()"
-                      (keydown.enter)="openAuditLogModal()"
-                      tabindex="0"
-                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
-                      onmouseover="this.style.opacity='1'"
-                      onmouseout="this.style.opacity='0.8'"
-                    >
-                  <!-- Consolidado de Gestión CSPE -->
-                      <i class="fa-solid fa-clipboard-list me-2"></i>
-                      Bitácora de Auditoría
-                    </a>
-                  </li>               
-                  <!-- Documento de Seguimiento / Cierre -->
-                  <li class="nav-item">
-                    <a
-                      class="nav-link cursor-pointer rounded-3 px-3 py-2 fs-6 text-white custom-hover"
-                      (click)="openTrakingModal()"
-                      (keydown.enter)="openTrakingModal()"
-                      tabindex="0"
-                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
-                      onmouseover="this.style.opacity='1'"
-                      onmouseout="this.style.opacity='0.8'"
-                    >
-                      <i class="fa-solid fa-file-signature me-2"></i> 
-                      Documento de Seguimiento
-                    </a>
-                  </li>
-                  
-                  <!-- ENCABEZADO: OPERATIVOS -->
-                  <!-- <li class="nav-item px-3 pt-3 pb-1">
-                    <span class="text-uppercase fw-bold text-warning" style="font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 0.5px;">
-                      Operativos y Transaccionales
-                    </span>
-                  </li> -->
-                  <!-- Consolidado de Gestión CSPE -->
-                  <li class="nav-item">
-                    <a
-                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
-                      (click)="triggerConsultantManagementReport()"
-                      (keydown.enter)="triggerConsultantManagementReport()"
-                      tabindex="0"
-                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
-                      onmouseover="this.style.opacity='1'"
-                      onmouseout="this.style.opacity='0.8'"
-                    >
-                      <i class="fa-solid fa-users-gear me-2"></i>
-                      Gestión Consultor CSPE
-                    </a>
-                  </li>
-                  <!-- Histórico de Pases a Producción -->
-                  <li class="nav-item">
-                    <a
-                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
-                      (click)="triggerProductionDeploymentsReport()"
-                      (keydown.enter)="triggerProductionDeploymentsReport()"
-                      tabindex="0"
-                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
-                      onmouseover="this.style.opacity='1'"
-                      onmouseout="this.style.opacity='0.8'"
-                    >
-                      <i class="fa-solid fa-server me-2"></i>
-                      Histórico PAP
-                    </a>
-                  </li>
-                  <!-- Sábana Operativa (CSV) -->
-                  <li class="nav-item">
-                    <a
-                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
-                      (click)="triggerOperationalSheet()"
-                      (keydown.enter)="triggerOperationalSheet()"
-                      tabindex="0"
-                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
-                    >
-                      <i class="fa-solid fa-file-excel me-2"></i>
-                      Data Operativa
-                    </a>
-                  </li>
-                  <!-- Resumen Ejecutivo (PDF) -->
-                  <li class="nav-item">
-                    <a
-                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
-                      (click)="triggerExecutiveSummary()"
-                      (keydown.enter)="triggerExecutiveSummary()"
-                      tabindex="0"
-                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
-                    >
-                      <i class="fa-solid fa-chart-area me-2"></i>
-                      Indicadores de Gestión KPIs
-                    </a>
-                  </li>
-                  <!-- Indicadores de Gestión KPIs  -->
-                  <li class="nav-item">
-                    <a
-                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
-                      (click)="openKpiModal()"
-                      (keydown.enter)="openKpiModal()"
-                      tabindex="0"
-                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
-                    >
-                      <i class="fa-solid fa-chart-pie me-2"></i>
-                      Panel Ejecutivo de Gestión
-                    </a>
-                  </li>        
-                </ul>
-              }
             </li>
           }
-
-          <!-- OPCIÓN CONFIGURACIÓN CON SUBMENÚ DESPLEGABLE -->
+          <!-- OPCIÓN CONFIGURACIÓN  -->
           @if (isAdmin || isCoord) {
-            <li class="nav-item w-100">
+            <li class="nav-item w-100 mt-3">
               <a
                 class="nav-link rounded-3 px-3 py-2 text-white"
-                (click)="toggleConfigMenu()"
-                (keydown.enter)="toggleConfigMenu()"
+                (click)="openConfigOrchestratorModal()"
+                (keydown.enter)="openConfigOrchestratorModal()"
                 tabindex="0"
                 style="cursor: pointer"
               >
@@ -196,20 +51,20 @@
                   class="d-flex w-100 justify-content-between align-items-center"
                 >
                   <span><i class="fas fa-cog me-2"></i> Configuración</span>
-                  <i
+                  <!-- <i
                     class="fas fa-chevron-down transition-transform"
                     [class.rotate-180]="isConfigMenuOpen()"
-                  ></i>
+                  ></i> -->
                 </div>
               </a>
               <!-- Submenú MDM (Se renderiza si isConfigMenuOpen es true) -->
-              @if (isConfigMenuOpen()) {
-                <ul
+              <!-- @if (isConfigMenuOpen()) { -->
+                <!-- <ul
                   class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition"
                   style="border-left: 1px solid rgba(255, 255, 255, 0.2)"
-                  >
+                  > -->
                   <!-- Directorio de Fichas -->
-                  <li class="nav-item">
+                  <!-- <li class="nav-item">
                     <a
                       class="nav-link rounded-3 px-3 py-2 fs-6 text-white"
                       (click)="openUnifiedPersonListModal()"
@@ -225,9 +80,9 @@
                     >
                       <i class="fas fa-id-card me-2"></i> Directorio de Fichas
                     </a>
-                  </li>
+                  </li> -->
                   <!-- Estructura Organizacional -->
-                  <li class="nav-item">
+                  <!-- <li class="nav-item">
                     <a
                       class="nav-link rounded-3 px-3 py-2 fs-6 text-white"
                       (click)="openOrgStructureModal()"
@@ -244,9 +99,9 @@
                       <i class="fas fa-sitemap me-2"></i> Estructura
                       Organizacional
                     </a>
-                  </li>
+                  </li> -->
                   <!-- Matrices de Progreso -->
-                  <li class="nav-item">
+                  <!-- <li class="nav-item">
                     <a
                       class="nav-link rounded-3 px-3 py-2 fs-6 text-white"
                       (click)="openProgressMatrixModal()"
@@ -262,9 +117,9 @@
                     >
                       <i class="fas fa-sliders-h me-2"></i> Matrices de Progreso
                     </a>
-                  </li>
+                  </li> -->
                   <!-- Hitos Técnicos -->
-                  <li class="nav-item">
+                  <!-- <li class="nav-item">
                     <a
                       class="nav-link rounded-3 px-3 py-2 fs-6 text-white"
                       (click)="openMilestoneConfigModal()"
@@ -281,11 +136,204 @@
                       <i class="fas fa-list-check me-2"></i> Hitos Técnicos
                       (MDM)
                     </a>
-                  </li>
-                </ul>
-              }
+                  </li> -->
+                <!-- </ul>
+              } -->
             </li>
           }
+
+          <!-- Menú Colapsable de Reportes -->
+          <!-- @if ( isCoord) { -->
+            <!-- Menú Colapsable de Reportes (Vía Signals) -->
+            <!-- <li class="nav-item w-100">
+              <a
+                class="nav-link rounded-3 px-3 py-2 text-white"
+                (click)="toggleReportsMenu()"
+                (keydown.enter)="toggleReportsMenu()"
+                tabindex="0"
+                style="cursor: pointer"
+              >
+                <div
+                  class="d-flex w-100 justify-content-between align-items-center"
+                >
+                  <span><i class="fas fa-chart-pie me-2"></i> Reportes y KPI's</span>
+                  <i
+                    class="fas fa-chevron-down transition-transform"
+                    [class.rotate-180]="isReportsMenuOpen()"
+                  ></i>
+                </div>
+              </a> -->
+
+              <!-- Submenú de Reportes -->
+              <!-- @if (isReportsMenuOpen()) {
+                <ul
+                  class="nav flex-column ms-3 mt-1 mb-2 gap-1 submenu-transition"
+                  style="border-left: 1px solid rgba(255, 255, 255, 0.2)"
+                > -->
+                  
+                  <!-- ENCABEZADO: ADMINISTRATIVOS -->
+                  <!-- <li class="nav-item px-3 pt-2 pb-1">
+                    <span class="text-uppercase fw-bold" style="font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 0.5px;">
+                      Administrativos y Cumplimiento
+                    </span>
+                  </li> -->
+
+                  <!-- Reporte 1: Directorio MDM -->
+                  <!-- <li class="nav-item">
+                    <a
+                      (click)="openMdmDirectoryModal()"
+                      (keydown.enter)="openMdmDirectoryModal()"
+                      tabindex="0"
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
+                    >
+                      <i class="fas fa-id-card me-2"></i>
+                      Directorio MDM
+                    </a>
+                  </li> -->
+                  <!-- Bitácora de Auditoría -->
+                  <!-- <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="openAuditLogModal()"
+                      (keydown.enter)="openAuditLogModal()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
+                    > -->
+                  <!-- Consolidado de Gestión CSPE -->
+                      <!-- <i class="fa-solid fa-clipboard-list me-2"></i>
+                      Bitácora de Auditoría
+                    </a>
+                  </li>                -->
+                  <!-- Documento de Seguimiento / Cierre -->
+                  <!-- <li class="nav-item">
+                    <a
+                      class="nav-link cursor-pointer rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="openTrakingModal()"
+                      (keydown.enter)="openTrakingModal()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
+                    >
+                      <i class="fa-solid fa-file-signature me-2"></i> 
+                      Documento de Seguimiento
+                    </a>
+                  </li> -->
+                  
+                  <!-- ENCABEZADO: OPERATIVOS -->
+                  <!-- <li class="nav-item px-3 pt-3 pb-1">
+                    <span class="text-uppercase fw-bold text-warning" style="font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 0.5px;">
+                      Operativos y Transaccionales
+                    </span>
+                  </li> -->
+                  <!-- Consolidado de Gestión CSPE -->
+                  <!-- <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="openCspeWorkloadModal()"
+                      (keydown.enter)="openCspeWorkloadModal()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
+                    >
+                      <i class="fa-solid fa-users-gear me-2"></i>
+                      Carga Consultor CSPE
+                    </a>
+                  </li> -->
+                  <!-- <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="triggerConsultantManagementReport()"
+                      (keydown.enter)="triggerConsultantManagementReport()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
+                    >
+                      <i class="fa-solid fa-users-gear me-2"></i>
+                      Histórico por Consultor CSPE
+                    </a>
+                  </li> -->
+
+                  <!-- <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="triggerConsolidatedGeneralReport()"
+                      (keydown.enter)="triggerConsolidatedGeneralReport()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
+                    >
+                      <i class="fas fa-folder-open me-2"></i> 
+                      Consolidado General CSPE
+                    </a>
+                  </li> -->
+                  <!-- Histórico de Pases a Producción -->
+                  <!-- <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="triggerProductionDeploymentsReport()"
+                      (keydown.enter)="triggerProductionDeploymentsReport()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.8'"
+                    >
+                      <i class="fa-solid fa-server me-2"></i>
+                      Histórico PAP
+                    </a>
+                  </li> -->
+                  <!-- Sábana Operativa (CSV) -->
+                  <!-- <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="triggerOperationalSheet()"
+                      (keydown.enter)="triggerOperationalSheet()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                    >
+                      <i class="fa-solid fa-file-excel me-2"></i>
+                      Data Operativa
+                    </a>
+                  </li> -->
+                  <!-- Resumen Ejecutivo (PDF) -->
+                  <!-- <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="triggerExecutiveSummary()"
+                      (keydown.enter)="triggerExecutiveSummary()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                    >
+                      <i class="fa-solid fa-chart-area me-2"></i>
+                      Indicadores de Gestión KPIs
+                    </a>
+                  </li> -->
+                  <!-- Indicadores de Gestión KPIs  -->
+                  <!-- <li class="nav-item">
+                    <a
+                      class="nav-link rounded-3 px-3 py-2 fs-6 text-white custom-hover"
+                      (click)="openKpiModal()"
+                      (keydown.enter)="openKpiModal()"
+                      tabindex="0"
+                      style="cursor: pointer; opacity: 0.8; transition: opacity 0.2s;"
+                    >
+                      <i class="fa-solid fa-chart-pie me-2"></i>
+                      Panel Ejecutivo de Gestión
+                    </a>
+                  </li>        
+                </ul> -->
+              <!-- }
+            </li> -->
+          <!-- } -->
+
         </ul>
       </nav>
 
@@ -401,7 +449,7 @@
                   [class.bg-secondary]="context() === 'HISTORICO'"
                   (click)="switchContext('HISTORICO')"
                 >
-                  <i class="bi bi-archive-fill me-2"></i>Histórico (Finalizados)
+                  <i class="bi bi-archive-fill me-2"></i>Histórico (Cerrados)
                 </button>
               </li>
             </ul>
@@ -742,9 +790,9 @@
         <!--======================================================= -->
         <!-- MODAL DE KPI -->
         <!-- =======================================================  -->
-        <lib-kpi-modal 
-            [isVisible]="isKpiModalOpen" 
-            (closeModalEvent)="isKpiModalOpen = false">
+        <lib-kpi-modal
+          [isVisible]="isKpiModalOpen"
+          (closeModalEvent)="isKpiModalOpen = false">
         </lib-kpi-modal>
 
         <!--======================================================= -->
@@ -770,6 +818,76 @@
           [isVisible]="isTrackingModalOpen" 
           (closeModalEvent)="isTrackingModalOpen = false">
         </lib-tracking-document-modal>
+
+        <!--======================================================= -->
+        <!-- MODAL DE CARGA DE TRABAJO DE COSULTORES CSPE -->
+        <!-- =======================================================  -->
+        <lib-cspe-workload-modal
+          [isVisible]="isCspeWorkloadModalOpen" 
+          (closeModalEvent)="isCspeWorkloadModalOpen = false">
+        </lib-cspe-workload-modal>
+
+        <!--======================================================= -->
+        <!-- MODAl DE ORCHESTRATOR DE REPORTES Y CONSULTAS -->
+        <!-- =======================================================  -->
+        <lib-report-orchestrator-modal
+          [isVisible]="isReportOrchestratorModalOpen" 
+          (closeModalEvent)="isReportOrchestratorModalOpen = false"
+          (triggerAction)="handleReportAction($event)">
+        </lib-report-orchestrator-modal>
+
+        <!--======================================================= -->
+        <!-- MODAl DE FILTROS DE REPORTES Y CONSULTAS -->
+        <!-- =======================================================  -->
+        <lib-report-filter-modal
+          [isVisible]="isReportFilterModalOpen"
+          [reportType]="activeReportType"
+          [consultants]="activeConsultantsList"
+          (closeModalEvent)="isReportFilterModalOpen = false"
+          (generateReportEvent)="processReportGeneration($event)">
+        </lib-report-filter-modal>
+
+        <!--======================================================= -->
+        <!-- MODAl DEL ORQUESTADOR DE CONFIGURACIONES -->
+        <!-- =======================================================  -->
+        <lib-config-orchestrator-modal
+          [isVisible]="isConfigOrchestratorOpen"
+          (closeModalEvent)="isConfigOrchestratorOpen = false"
+          (triggerAction)="handleConfigAction($event)">
+        </lib-config-orchestrator-modal>
+
+        <!--======================================================= -->
+        <!-- MODAl DE HISTÓRICO DE PAP -->
+        <!-- =======================================================  -->
+        <lib-pap-history-modal
+          [isVisible]="isPapHistoryModalOpen"
+          (closeModalEvent)="isPapHistoryModalOpen = false">
+        </lib-pap-history-modal>
+
+        <!--======================================================= -->
+        <!-- MODAl DE DIRECTORIO MDM -->
+        <!-- =======================================================  -->
+        <lib-mdm-directory-modal
+          [isVisible]="isMdmDirectoryModalOpen"
+          (closeModalEvent)="isMdmDirectoryModalOpen = false">
+        </lib-mdm-directory-modal>
+
+        <!--======================================================= -->
+        <!-- Modal: Sábana Operativa (CSV) -->
+        <!-- =======================================================  -->
+        <lib-operational-data-modal
+          [isVisible]="isOperationalDataModalOpen"
+          (closeModalEvent)="isOperationalDataModalOpen = false">
+        </lib-operational-data-modal>
+
+        <!--======================================================= -->
+        <!-- Modal: Búsqueda y Trazabilidad de Componentes (End-to-End) -->
+        <!-- =======================================================  -->
+        <lib-traceability-modal
+          [isVisible]="isTraceabilityModalOpen"
+          (closeModalEvent)="isTraceabilityModalOpen = false">
+        </lib-traceability-modal>
+
       </section>
     </main>
   </div>
