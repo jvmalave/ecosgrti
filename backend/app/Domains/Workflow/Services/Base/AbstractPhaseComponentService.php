@@ -22,10 +22,10 @@ abstract class AbstractPhaseComponentService
         protected readonly ProgressCalculationService $progressService
     ) {}
 
-    abstract protected function getComponentModel(): string; 
-    abstract protected function getCacheKeyPrefix(): string; 
-    abstract protected function getPhaseCode(): string;      
-    abstract protected function getPhaseInitCode(): string;  
+    abstract protected function getComponentModel(): string;
+    abstract protected function getCacheKeyPrefix(): string;
+    abstract protected function getPhaseCode(): string;
+    abstract protected function getPhaseInitCode(): string;
 
     /**
      * GESTIONAR CICLO DE VIDA DEL COMPONENTE (CERRAR/REABRIR)

@@ -33,7 +33,6 @@ class ReportService
             ->orderBy('name', 'asc')
             ->get();
     }
-
     /**
      * Extrae toda la data relacional necesaria para emitir un Acta de Cierre.
      * 
@@ -55,7 +54,6 @@ class ReportService
             'coeDeliverables', 'ceeDeliverables'
         ])->findOrFail($requirementId);
     }
-
     /**
      * Extrae toda la data relacional necesaria para emitir un Acta de Cierre por RRTI.
      * 
@@ -331,49 +329,51 @@ class ReportService
         return false;
     }
 
+
     private function buildRolesProgress(
           \Illuminate\Support\Collection $reqBaseRoles, 
           \Illuminate\Support\Collection $rolesLog, 
           \Illuminate\Support\Collection $orders
-    ):array {
-        $details = [];
-        foreach ($reqBaseRoles as $baseRole) {
-            $roleHistory = $rolesLog->where('requirement_role_id', $baseRole->id);
-            $lastAttempt = $roleHistory->first();
+        ):array 
+    {
+      $details = [];
+      foreach ($reqBaseRoles as $baseRole) {
+        $roleHistory = $rolesLog->where('requirement_role_id', $baseRole->id);
+        $lastAttempt = $roleHistory->first();
+        
+        $orderInfo = null;
+        $orderDate = null;
+        $attempts  = 0;
+        
+        if ($lastAttempt) {
+            $attempts = 1; 
             
-            $orderInfo = null;
-            $orderDate = null;
-            $attempts  = 0;
-            
-            if ($lastAttempt) {
-                $attempts = 1; 
-                
-                if (!empty($lastAttempt->rejection_history)) {
-                    $historyData = json_decode($lastAttempt->rejection_history, true);
-                    if (is_array($historyData)) {
-                        $attempts += count($historyData);
-                    }
-                }
-                
-                if ($lastAttempt->order_id) {
-                    $order = $orders->firstWhere('id', $lastAttempt->order_id);
-                    if ($order) {
-                        $orderInfo = $order->order_number;
-                        $orderDate = $order->date;
-                    }
+            if (!empty($lastAttempt->rejection_history)) {
+                $historyData = json_decode($lastAttempt->rejection_history, true);
+                if (is_array($historyData)) {
+                    $attempts += count($historyData);
                 }
             }
             
-            $details[] = [
-                'role_name'      => $baseRole->role_name,
-                'current_status' => $lastAttempt->status ?? 'SIN PROCESAR',
-                'attempts'       => $attempts,
-                'order_number'   => $orderInfo,
-                'order_date'     => $orderDate
-            ];
+            if ($lastAttempt->order_id) {
+                $order = $orders->firstWhere('id', $lastAttempt->order_id);
+                if ($order) {
+                    $orderInfo = $order->order_number;
+                    $orderDate = $order->date;
+                }
+            }
         }
-        return $details;
-    }
+        
+        $details[] = [
+            'role_name'      => $baseRole->role_name,
+            'current_status' => $lastAttempt->status ?? 'SIN PROCESAR',
+            'attempts'       => $attempts,
+            'order_number'   => $orderInfo,
+            'order_date'     => $orderDate
+        ];
+      }
+    return $details;
+  }
 
     private function extractDecodedRollbacks(\Illuminate\Support\Collection $rolesLog, \Illuminate\Support\Collection $reqBaseRoles): \Illuminate\Support\Collection
     {

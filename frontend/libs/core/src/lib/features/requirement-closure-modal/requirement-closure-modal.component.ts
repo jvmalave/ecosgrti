@@ -148,30 +148,66 @@ export class RequirementClosureModalComponent implements OnInit {
     this.draftPdfUrl.set(null);
   }
 
-
-  public downloadAct(): void {
-    Swal.fire({ title: 'Descargando Acta...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  /**
+   * Abre el documento (PDF) en una nueva pestaña.
+   */
+  private openPreview(blob: Blob): void {
+    const fileURL = URL.createObjectURL(blob);
+    window.open(fileURL, '_blank');
     
-    // Reutilizamos el endpoint dual que construimos anteriormente
+    // Liberamos memoria tras un retardo prudencial (opcional pero recomendado)
+    setTimeout(() => URL.revokeObjectURL(fileURL), 10000);
+  }
+
+
+  // public downloadAct(): void {
+  //   Swal.fire({ title: 'Descargando Acta...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+  //   // Reutilizamos el endpoint dual que construimos anteriormente
+  //   this.reportService.downloadRequirementReport(this.req.id).subscribe({
+  //     next: (blob: Blob) => {
+  //       this.reportService.forceFileDownload(blob, `acta_cierre_${this.req.rrti}.pdf`);
+  //       Swal.close();
+  //     },
+  //     error: () => Swal.fire('Error', 'No se pudo descargar el acta.', 'error')
+  //   });
+  // }
+
+  // public downloadSupport(): void {
+  //   Swal.fire({ title: 'Descargando Soporte...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+  //   this.closureService.downloadSupport(this.req.id).subscribe({
+  //     next: (blob: Blob) => {
+  //       // Obtenemos la extensión original si es posible, o forzamos .pdf por defecto
+  //       const extension = this.req.notification_support_path?.split('.').pop() || 'pdf';
+        
+  //       // Reutilizamos el helper de tu ReportService para forzar la descarga en el navegador
+  //       this.reportService.forceFileDownload(blob, `soporte_notificacion_${this.req.rrti}.${extension}`);
+  //       Swal.close();
+  //     },
+  //     error: () => Swal.fire('Error', 'El archivo de soporte no se encuentra disponible en el servidor.', 'error')
+  //   });
+  // }
+
+
+  public viewAct(): void {
+    Swal.fire({ title: 'Abriendo Acta...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
     this.reportService.downloadRequirementReport(this.req.id).subscribe({
       next: (blob: Blob) => {
-        this.reportService.forceFileDownload(blob, `acta_cierre_${this.req.rrti}.pdf`);
+        this.openPreview(blob);
         Swal.close();
       },
-      error: () => Swal.fire('Error', 'No se pudo descargar el acta.', 'error')
+      error: () => Swal.fire('Error', 'No se pudo abrir el acta.', 'error')
     });
   }
 
-  public downloadSupport(): void {
-    Swal.fire({ title: 'Descargando Soporte...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  public viewSupport(): void {
+    Swal.fire({ title: 'Abriendo Soporte...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
     this.closureService.downloadSupport(this.req.id).subscribe({
       next: (blob: Blob) => {
-        // Obtenemos la extensión original si es posible, o forzamos .pdf por defecto
-        const extension = this.req.notification_support_path?.split('.').pop() || 'pdf';
-        
-        // Reutilizamos el helper de tu ReportService para forzar la descarga en el navegador
-        this.reportService.forceFileDownload(blob, `soporte_notificacion_${this.req.rrti}.${extension}`);
+        this.openPreview(blob);
         Swal.close();
       },
       error: () => Swal.fire('Error', 'El archivo de soporte no se encuentra disponible en el servidor.', 'error')

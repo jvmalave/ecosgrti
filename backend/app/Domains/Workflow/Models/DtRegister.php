@@ -34,7 +34,26 @@ class DtRegister extends Model
         'title',
         'date',
         'description',
+        'created_at',
+        'updated_at',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (auth()->check()) {
+                $model->created_by = auth()->id();
+            }
+        });
+
+        static::updating(function ($model) {
+            if (auth()->check()) {
+                $model->updated_by = auth()->id();
+            }
+        });
+    }
 
     /**
      * Los atributos que deben ser convertidos a tipos nativos.

@@ -54,15 +54,14 @@ class RequirementClosureController extends Controller
   /**
      * Descarga el soporte físico de notificación desde el disco privado.
      */
-    public function downloadSupport(Requirement $requirement)
-    {
-        if (!$requirement->notification_support_path || !Storage::disk('local')->exists($requirement->notification_support_path)) {
-            return response()->json([
-                'message' => 'El soporte físico no fue encontrado en el servidor.'
-            ], 404);
-        }
+  public function downloadSupport(Requirement $requirement)
+  {
+      if (!$requirement->notification_support_path || !Storage::disk('local')->exists($requirement->notification_support_path)) {
+          return response()->json([
+              'message' => 'El soporte físico no fue encontrado en el servidor.'
+          ], 404);
+      }
 
-        return Storage::disk('local')->download($requirement->notification_support_path);
-    }
-
+      return Storage::disk('local')->response($requirement->notification_support_path);
+  }
 } 

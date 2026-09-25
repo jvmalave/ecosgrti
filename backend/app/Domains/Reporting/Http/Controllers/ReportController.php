@@ -75,7 +75,7 @@ class ReportController extends Controller
      * 
      * @param string $id Identificador UUID del requerimiento
      */
-  public function generateClosureAct(string $id): Response
+    public function generateClosureAct(string $id): Response
     {
         $requirement = $this->reportService->getRequirementClosureData($id);
 
