@@ -34,6 +34,8 @@ export interface WorkflowPhaseItem {
   };
   // Propiedad inyectada por withCount() en Laravel
   registers_count?: number; 
+
+  test_users_count?: number;
   // Propiedad inyectada para CEE/CER relacionada a los tickets
   ticket_id?: string; 
 }

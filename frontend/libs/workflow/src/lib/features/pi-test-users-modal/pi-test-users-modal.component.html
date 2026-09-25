@@ -1,32 +1,68 @@
 <div class="modal-overlay">
-  <div class="modal-dialog-custom" style="max-width: 700px;">
+  <div class="modal-dialog-custom" style="max-width: 700px">
     <!-- CABECERA -->
-    <div class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center">
+    <div
+      class="modal-header text-white p-3 d-flex justify-content-between align-items-center"
+    >
       <h5 class="m-0 fw-bold">
         <i class="fa-solid fa-users me-2"></i> Usuarios de Prueba
       </h5>
-      <button type="button" class="btn text-white fs-5 p-0 border-0 shadow-none" (click)="closeModal.emit()">
-        <i class="fa-solid fa-xmark"></i>
+      <button
+        type="button"
+        class="close-btn"
+        (click)="closeModal.emit()"
+        aria-label="Close"
+      >
+        <i class="fa-solid fa-circle-xmark"></i>
       </button>
     </div>
-
     <div class="modal-body-scroll p-4">
+      <!-- IDENTIFICADOR DE REQUERIMIENTO Y COMPONENTE -->
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <span class="badge bg-light text-brand border border-light rounded-pill px-3 py-2 shadow-sm">
-          Requerimiento: {{ rrti() }}
-        </span>
-        <span class="badge bg-light text-secondary border border-light rounded-pill px-3 py-2 shadow-sm">
-          Rol: {{ roleName() }}
-        </span>
+        <div class="col-md-6 d-flex align-items-center ps-5">
+          <span class="text-muted fw-bold me-2 fs-6">Requerimiento:</span>
+          <span
+            class="badge badge-requirement rounded-pill px-3 py-2 fs-6 fw-semibold"
+          >
+            {{ rrti() }}
+          </span>
+        </div>
+        <div class="col-md-6 d-flex align-items-center justify-content-end pe-5">
+          <span class="text-muted fw-bold me-2 fs-6">Rol:</span>
+          <span
+            class="badge badge-component rounded-pill px-3 py-2 fs-6 fw-semibold"
+          >
+            {{ roleName() }}
+          </span>
+        </div>
       </div>
-
       <!-- FORMULARIO DE INGRESO -->
-      <form [formGroup]="userForm" (ngSubmit)="saveUser(false)" class="mb-4 bg-light p-3 rounded border">
-        <label for="identifier" class="form-label small fw-bold text-muted">Agregar Nuevo Usuario (ID / Indicador)</label>
+      <form
+        [formGroup]="userForm"
+        (ngSubmit)="saveUser(false)"
+        class="mb-4 bg-light p-3 rounded border"
+      >
+        <label for="identifier" class="form-label small fw-bold text-muted"
+          >Agregar Nuevo Usuario (ID / Indicador)</label
+        >
         <div class="input-group">
-          <span class="input-group-text bg-white"><i class="fa-solid fa-id-card text-muted"></i></span>
-          <input type="text" id="identifier" class="form-control" formControlName="identifier" placeholder="Ej. POO123456" style="text-transform: uppercase;">
-          <button class="btn btn-brand px-4" type="submit" [disabled]="userForm.invalid || isSubmitting()">
+          <span class="input-group-text bg-white"
+            ><i class="fa-solid fa-id-card text-muted"></i
+          ></span>
+          <input
+            type="text"
+            id="identifier"
+            class="form-control"
+            formControlName="identifier"
+            arialabel="Ej. POO123456"
+            placeholder="Ej. POO123456"
+            style="text-transform: uppercase"
+          />
+          <button
+            class="btn btn-tbl-success px-4"
+            type="submit"
+            [disabled]="userForm.invalid || isSubmitting()"
+          >
             @if (isSubmitting()) {
               <i class="fa-solid fa-circle-notch fa-spin me-2"></i>
             } @else {
@@ -35,12 +71,17 @@
           </button>
         </div>
       </form>
-
       <!-- BUSCADOR -->
       <div class="mb-3">
-        <input type="text" class="form-control border-light shadow-sm" placeholder="Buscar usuario en la lista..." (input)="updateSearch($event)" [disabled]="testUsers().length === 0">
+        <input
+          type="text"
+          class="form-control border-light shadow-sm"
+          placeholder="Buscar usuario en la lista..."
+          (input)="updateSearch($event)"
+          [disabled]="testUsers().length === 0"
+          aria-label="Buscar usuario en la lista..."
+        />
       </div>
-
       <!-- TABLA DE USUARIOS -->
       <div class="table-responsive">
         <table class="table table-hover border align-middle">
@@ -52,19 +93,35 @@
           </thead>
           <tbody>
             @if (isLoading()) {
-              <tr><td colspan="2" class="text-center py-4"><i class="fa-solid fa-circle-notch fa-spin text-brand fs-3"></i></td></tr>
+              <tr>
+                <td colspan="2" class="text-center py-4">
+                  <i
+                    class="fa-solid fa-circle-notch fa-spin text-brand fs-3"
+                  ></i>
+                </td>
+              </tr>
             } @else {
               @for (user of filteredUsers(); track user.id) {
                 <tr>
-                  <td class="fw-bold text-dark"><i class="fa-solid fa-user text-muted me-2"></i>{{ user.identifier }}</td>
+                  <td class="fw-bold text-dark">
+                    <i class="fa-solid fa-user text-muted me-2"></i
+                    >{{ user.identifier }}
+                  </td>
                   <td class="text-end">
-                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3" (click)="deleteUser(user.id, user.identifier)">
+                    <button
+                      class="btn btn-sm btn-tbl-delete rounded-pill px-3"
+                      (click)="deleteUser(user.id, user.identifier)"
+                    >
                       <i class="fa-solid fa-trash-can me-1"></i> Eliminar
                     </button>
                   </td>
                 </tr>
               } @empty {
-                <tr><td colspan="2" class="text-center text-muted py-4">No hay usuarios registrados o no hay coincidencias.</td></tr>
+                <tr>
+                  <td colspan="2" class="text-center text-muted py-4">
+                    No hay usuarios registrados o no hay coincidencias.
+                  </td>
+                </tr>
               }
             }
           </tbody>

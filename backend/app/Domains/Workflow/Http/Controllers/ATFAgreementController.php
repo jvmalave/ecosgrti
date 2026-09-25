@@ -10,6 +10,9 @@ use App\Domains\Workflow\Http\Requests\StoreAtfAgreementRequest;
 use App\Domains\Workflow\Services\ATFService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Exception;
+
 
 class ATFAgreementController extends Controller
 {
@@ -22,9 +25,11 @@ class ATFAgreementController extends Controller
      */
     public function store(StoreAtfAgreementRequest $request, string $requirementId): JsonResponse
     {
-        // 1. Obtener la entidad raíz
-        $requirement = Requirement::findOrFail($requirementId);
 
+        $requirement = Requirement::findOrFail($requirementId);
+        Gate::authorize('manage', $requirement);
+
+    
         // 2. Delegar toda la orquestación a la capa de servicios (Domain Logic)
         $agreement = $this->atfService->createAgreement(
             $requirement,
@@ -42,11 +47,30 @@ class ATFAgreementController extends Controller
 
     public function index(string $requirementId)
     {
+      try { 
+        $requirement = Requirement::findOrFail($requirementId);
+        Gate::authorize('manage', $requirement);
+    
         $agreements = $this->atfService->getAgreements($requirementId);
 
         return response()->json([
             'data' => $agreements
         ], 200);
+      } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+      // 🟢 3. MANEJO CORRECTO DEL RECHAZO (HTTP 403)
+        return response()->json([
+          'success' => false,
+          'message' => 'Acceso denegado. Solo el consultor asignado puede ver o gestionar esta estimación.'
+        ], 403);
+      }
+      catch (Exception $e) {
+      // Captura de errores inesperados
+      return response()->json([
+        'success' => false,
+        'message' => 'Error interno al obtener la estimación.',
+        'error'   => config('app.debug') ? $e->getMessage() : 'Falla del servidor.'
+      ], 500);
+    }
     }
 
     public function update(StoreAtfAgreementRequest $request, string $requirementId, string $agreementId)

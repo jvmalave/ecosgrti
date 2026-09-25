@@ -21,6 +21,8 @@ trait ManagesPhaseRegisters
     abstract protected function countRegistersInRequirement(string $requirementId): int;
     abstract protected function getPhaseInitCode(): string;
     
+
+    
     public function storeRegister(string $parentId, array $data, string $requirementId): Model
     {
         $registerModel = $this->getRegisterModel();
@@ -42,63 +44,50 @@ trait ManagesPhaseRegisters
 
             $totalRegisters = $this->countRegistersInRequirement($requirementId);
 
-            if ($totalRegisters === 1) {
-                $requirement = Requirement::lockForUpdate()->findOrFail($requirementId);
-                
-                $hasInitHistory = DB::table('workflow.requirement_phase_history')
-                    ->where('requirement_id', $requirementId)
-                    ->where('phase_status_code', $this->getPhaseInitCode())
-                    ->exists();
-                
-                if (!$hasInitHistory) {
-                    $this->phaseTransitionService->recordTransition(
-                        $requirementId,
-                        $this->getPhaseInitCode(),
-                        (string) auth()->id(),
-                        'Apertura automática de la subfase al crear el primer registro técnico.'
-                    );
-                    
-                    $calculatedProgress = $this->progressService->calculateGlobalProgress($requirement);
-                    $isVanguard = $this->phaseTransitionService->isVanguardStatus($this->getPhaseInitCode(), $requirement->status);
+            $requirement = Requirement::lockForUpdate()->findOrFail($requirementId);
 
-                    $updateData = [
-                        'progress_percentage' => $calculatedProgress,
-                        'updated_at' => now()
-                    ];
-
-                    if ($isVanguard) {
-                        $updateData['status'] = $this->getPhaseInitCode();
-                        $requirement->status = $this->getPhaseInitCode(); 
-                    }
-
-                    $requirement->update($updateData);
-
-                    $this->auditService->logModelChange(
-                        'INITIATE_GLOBAL_PHASE',
-                        "Apertura global de la fase " . $this->getPhaseInitCode() . ($isVanguard ? " (Nueva Vanguardia)" : " (Proceso Paralelo)"),
-                        [
-                            'requirement_id' => $requirementId,
-                            'new_status' => $requirement->status, 
-                            'progress_reached' => $calculatedProgress,
-                            'is_vanguard_update' => $isVanguard
-                        ],
-                        (string) auth()->id(),
-                        $requirementId
-                    );
-                    
-                    Cache::put(CacheKeyDictionary::requirementProgress($requirementId), $calculatedProgress, now()->addDays(1));
-                    Redis::incr(CacheKeyDictionary::globalDashboardVersion());
-                }
+            // Verificamos y abrimos la fase si es el primer registro
+            $hasInitHistory = DB::table('workflow.requirement_phase_history')
+                ->where('requirement_id', $requirementId)
+                ->where('phase_status_code', $this->getPhaseInitCode())
+                ->exists();
+            
+            if (!$hasInitHistory) {
+                $this->phaseTransitionService->recordTransition(
+                    $requirementId,
+                    $this->getPhaseInitCode(),
+                    (string) auth()->id(),
+                    'Apertura automática de la subfase al crear el primer registro técnico.'
+                );
             }
 
-            // DOBLE INVALIDACIÓN Y REACTIVIDAD
+            $calculatedProgress = $this->progressService->calculateGlobalProgress($requirement);
+            $isVanguard = $this->phaseTransitionService->isVanguardStatus($this->getPhaseInitCode(), $requirement->status);
+
+            $updateData = [
+                'progress_percentage' => $calculatedProgress,
+                'updated_at' => now()
+            ];
+
+            if ($isVanguard) {
+                $updateData['status'] = $this->getPhaseInitCode();
+                $requirement->status = $this->getPhaseInitCode(); 
+            }
+
+            $requirement->update($updateData);
+
+            Cache::put(CacheKeyDictionary::requirementProgress($requirementId), $calculatedProgress, now()->addDays(1));
+
+            // =====================================================================
+            // 🟢 DOBLE INVALIDACIÓN ROBUSTA Y GLOBAL
+            // =====================================================================
             $regKey = CacheKeyDictionary::componentRegisters($parentId, $this->getCacheKeyPrefix());
             $listKey = CacheKeyDictionary::phaseComponentsList($requirementId, $this->getCacheKeyPrefix());
             
             Cache::forget($regKey); Redis::del($regKey);
             Cache::forget($listKey); Redis::del($listKey);
 
-            // Incrementamos versión para que la UI se entere del nuevo registro
+            // Forzamos la actualización inmediata en el frontend
             Redis::incr(CacheKeyDictionary::globalDashboardVersion());
 
             return $register;
@@ -123,16 +112,25 @@ trait ManagesPhaseRegisters
                 auth()->id()
             );
 
-            // 🟢 DOBLE INVALIDACIÓN
+            // Obtener el requirementId de forma segura desde el componente padre
+            $parentModel = $this->getComponentModel();
+            $parent = $parentModel::findOrFail($parentId);
+            $reqColumn = $this->getRequirementColumn();
+            $requirementId = (string) $parent->{$reqColumn};
+
+            // 🟢 DOBLE INVALIDACIÓN COMPLETA
             $regKey = CacheKeyDictionary::componentRegisters($parentId, $this->getCacheKeyPrefix());
+            $listKey = CacheKeyDictionary::phaseComponentsList($requirementId, $this->getCacheKeyPrefix());
+            
             Cache::forget($regKey); Redis::del($regKey);
+            Cache::forget($listKey); Redis::del($listKey);
             
             Redis::incr(CacheKeyDictionary::globalDashboardVersion());
 
             return $register;
         });
     }
-
+    
     public function deleteRegister(string $registerId, string $parentId): void
     {
         $registerModel = $this->getRegisterModel();
@@ -158,7 +156,7 @@ trait ManagesPhaseRegisters
                 auth()->id()
             );
 
-            // 🟢 DOBLE INVALIDACIÓN
+            // DOBLE INVALIDACIÓN
             $regKey = CacheKeyDictionary::componentRegisters($parentId, $this->getCacheKeyPrefix());
             $listKey = CacheKeyDictionary::phaseComponentsList($requirementId, $this->getCacheKeyPrefix());
             

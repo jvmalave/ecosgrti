@@ -238,26 +238,26 @@ export class PhaseRegistersModalComponent implements OnInit {
       html: `
         <div style="text-align: left; padding: 0.5rem;">
           <!-- Cabecera Personalizada -->
-          <div style="display: flex; align-items: center; border-bottom: 2px solid #ea80fc; padding-bottom: 12px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; border-bottom: 2px solid #1c1ce2; padding-bottom: 12px; margin-bottom: 20px;">
             <i class="fa-solid fa-book-journal-whills" style="font-size: 1.5rem; color: #d500f9; margin-right: 12px;"></i>
-            <h5 style="margin: 0; font-weight: 700; color: #333; font-size: 1.25rem;">Detalle de la ${noun.charAt(0).toUpperCase() + noun.slice(1)} - ${phaseName}</h5>
+            <h5 style="margin: 0; font-weight: 700; color: #333; font-size: 1.25rem;"> ${noun.charAt(0).toUpperCase() + noun.slice(1)}  ${phaseName}</h5>
           </div>
           
           <!-- Cuerpo de Datos -->
           <div style="margin-bottom: 16px;">
-            <span style="font-size: 0.75rem; color: #6c757d; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Título </span>
-            <p style="margin: 4px 0 0 0; font-size: 1rem; color: #212529; font-weight: 500;">${reg.title}</p>
+            <span style="font-size: 0.9rem; color: #6c757d; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Título </span>
+            <p style="margin: 4px 0 0 0; font-size: 1rem; color: #212529; font-weight: 600;">${reg.title}</p>
           </div>
           
           <div style="margin-bottom: 20px;">
-            <span style="font-size: 0.75rem; color: #6c757d; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Fecha de Creación</span>
-            <p style="margin: 4px 0 0 0; font-size: 1rem; color: #212529;"><i class="fa-regular fa-calendar text-muted me-2"></i>${formattedDate}</p>
+            <span style="font-size: 0.9rem; color: #6c757d; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Fecha de Creación</span>
+            <p style="margin: 4px 0 0 0; font-size: 1rem; color: #212529; font-weight: 600;"><i class="fa-regular fa-calendar text-muted me-2"></i>${formattedDate}</p>
           </div>
           
           <!-- Caja de Descripción -->
           <div style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 16px;">
-            <span style="font-size: 0.75rem; color: #6c757d; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 8px;">Descripción Detallada</span>
-            <div style="font-size: 0.95rem; color: #495057; white-space: pre-wrap; line-height: 1.6; text-align: justify;">${reg.description}</div>
+            <span style="font-size: 0.9rem; color: #6c757d; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 8px;">Descripción Detallada</span>
+            <div style="font-size: 1rem; color: #495057; white-space: pre-wrap; line-height: 1.6; text-align: justify;">${reg.description}</div>
           </div>
         </div>
       `,
@@ -273,21 +273,21 @@ export class PhaseRegistersModalComponent implements OnInit {
         const confirmBtn = Swal.getConfirmButton();
         if (confirmBtn) {
           confirmBtn.textContent = 'Cerrar Vista';
-          confirmBtn.style.background = 'linear-gradient(90deg, #aa00ff 0%, #d500f9 100%)';
-          confirmBtn.style.color = 'white';
+          confirmBtn.style.background = 'btn-tbl-close';
+          confirmBtn.style.color = 'secondary';
           confirmBtn.style.border = 'none';
           confirmBtn.style.borderRadius = '0.375rem';
           confirmBtn.style.padding = '0.5rem 1.5rem';
           confirmBtn.style.fontWeight = '600';
-          confirmBtn.style.boxShadow = '0 4px 12px rgba(213, 0, 249, 0.3)';
+          // confirmBtn.style.boxShadow = '0 4px 12px rgba(213, 0, 249, 0.3)';
           
           confirmBtn.onmouseover = () => {
             confirmBtn.style.transform = 'translateY(-1px)';
-            confirmBtn.style.boxShadow = '0 6px 15px rgba(213, 0, 249, 0.4)';
+            // confirmBtn.style.boxShadow = '0 6px 15px rgba(213, 0, 249, 0.4)';
           };
           confirmBtn.onmouseout = () => {
             confirmBtn.style.transform = 'none';
-            confirmBtn.style.boxShadow = '0 4px 12px rgba(213, 0, 249, 0.3)';
+            // confirmBtn.style.boxShadow = '0 4px 12px rgba(213, 0, 249, 0.3)';
           };
         }
       }

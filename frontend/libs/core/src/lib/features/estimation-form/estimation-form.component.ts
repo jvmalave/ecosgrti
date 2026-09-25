@@ -278,6 +278,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { EstimationService } from '../../data-access/services/estimation';
 import { EstimationPayload, SavedEstimatedPhase } from '../../data-access/models/requirement.model';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { NotificationService } from '@app/workflow';
 import { switchMap } from 'rxjs/operators';
 

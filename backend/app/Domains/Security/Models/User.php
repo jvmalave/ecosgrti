@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Domains\Security\Observers\UserObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+use Illuminate\Database\Eloquent\Relations\HasMany; // <-- Importación añadida
 
 #[ObservedBy([UserObserver::class])]
 class User extends Authenticatable implements JWTSubject
@@ -19,12 +19,9 @@ class User extends Authenticatable implements JWTSubject
     use Notifiable, HasUuid, SoftDeletes; 
     use HasFactory; 
 
-
     protected $table = 'security.users';
-
     
     public $incrementing = false;
-
     
     protected $keyType = 'string';
 
@@ -37,9 +34,11 @@ class User extends Authenticatable implements JWTSubject
     ];
 
     protected $casts = [
-    'roles' => 'array',
+        'roles' => 'array',
+        'password' => 'hashed', 
+        'password_updated_at' => 'datetime', 
     ];
-
+    
     protected $hidden = [
         'password',
         'remember_token',
@@ -56,6 +55,15 @@ class User extends Authenticatable implements JWTSubject
     public function person(): BelongsTo
     {
         return $this->belongsTo(Person::class, 'id', 'id');
+    }
+
+    /**
+     * Relación: Un usuario tiene un historial de contraseñas.
+     * Se ordena por fecha de creación descendente para facilitar la validación.
+     */
+    public function passwordHistories(): HasMany
+    {
+        return $this->hasMany(PasswordHistory::class, 'user_id')->orderBy('created_at', 'desc');
     }
 
     // Métodos obligatorios para JWT

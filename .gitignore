@@ -25,3 +25,6 @@ backend/bootstrap/cache/*.php
 # --- Docker ---
 .docker/
 docker-compose.override.yml
+
+# Ignorar respaldos de base de datos de PostgreSQL (Docker)
+*.dump

@@ -2,64 +2,56 @@
 
 namespace App\Domains\Security\Http\Controllers;
 
-
-
 use App\Http\Controllers\Controller;
-use App\Domains\Security\Http\Requests\LoginRequest; // Validador
-use App\Domains\Security\Services\AuthService; // Gestor de lógica
-use Illuminate\Http\JsonResponse; // Respuesta JSON
-use Illuminate\Support\Facades\Auth; // Autenticación
-use App\Domains\Audit\Services\AuditService; // Registrar eventos de auditoría
-use Illuminate\Support\Facades\Log; // Registrar errores de auditoría laravel.log
-use Illuminate\Http\Request; // Manejar la solicitud en logout
+use App\Domains\Security\Http\Requests\LoginRequest;
+use App\Domains\Security\Http\Requests\ChangePasswordRequest; 
+use App\Domains\Security\Services\AuthService;
+use App\Domains\Security\Services\PasswordSecurityService; 
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+use App\Domains\Audit\Services\AuditService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
-use App\Domains\Security\Docs\AuthDocs; // Implementar la interfaz de documentación
-use Illuminate\Support\Facades\Cache; // Manejar la cache
-
+use App\Domains\Security\Docs\AuthDocs;
+use Illuminate\Support\Facades\Cache;
 
 #[OA\Info(title: "ECOSGRTI API", version: "1.0.0", description: "Documentación de Seguridad para el Sistema de Gestión de Requerimientos TI")]
 #[OA\Server(url: "http://127.0.0.1:8000", description: "Servidor Local")]
-
-
 class AuthController extends Controller implements AuthDocs
 {
     protected AuthService $authService;
-    protected AuditService $auditService; // Para registrar eventos de auditoría
+    protected AuditService $auditService;
+    protected PasswordSecurityService $passwordSecurityService; 
 
-    /**
-     * El constructor recibe el servicio automáticamente.
-     */
-    public function __construct(AuthService $authService, AuditService $auditService)
-    {
+    public function __construct(
+        AuthService $authService, 
+        AuditService $auditService,
+        PasswordSecurityService $passwordSecurityService
+    ) {
         $this->authService = $authService;
         $this->auditService = $auditService;
+        $this->passwordSecurityService = $passwordSecurityService;
     }
 
-    /**
-     * Método de Autenticación.
-     */
-
-        public function login(LoginRequest $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->only('email', 'password');
-        $email = $credentials['email'];
+        $username = $request->input('username');
+        $password = $request->input('password');
 
-        // Verificar si el usuario esta bloqueado
-        if ($this->authService->isLockedOut($email)) {
+        if ($this->authService->isLockedOut($username)) {
             return response()->json([
                 'error' => 'Demasiados intentos. Por favor, espere 15 minutos.'
             ], 423);
         }
 
-        // Valida Intentos de autenticación
-        if (!$token = Auth::attempt($credentials)) {
-            // Credenciales Inválidas: Incrementamos intentos en Redis
-            $this->authService->incrementAttempts($email);
+        if (!$token = Auth::attempt(['name' => $username, 'password' => $password])) {
             
-            //Registro de Auditoría para Fallo
+            $this->authService->incrementAttempts($username);
+            
             $this->auditService->store(
               'LOGIN_FAIL', 
-              "Intento de acceso fallido para el correo: {$email}", 
+              "Intento de acceso fallido para el usuario corporativo: {$username}", 
               $request
             );
             
@@ -68,25 +60,20 @@ class AuthController extends Controller implements AuthDocs
             ], 401);
         }
 
-        // Credenciales Válidas: Reset de intentos y respuesta 
-        $this->authService->resetAttempts($email);
+        $this->authService->resetAttempts($username);
 
-        //Registro de Auditoría para Éxito
         $user = Auth::user();
 
         try {
             $this->auditService->store(
                 'LOGIN_SUCCESS', 
-                "Inicio de sesión exitoso: {$user->email}", 
+                "Inicio de sesión exitoso: {$user->name}", 
                 $request,
                 $user->id
             );
         } catch (\Exception $e) {
-            // Registramos el error en storage/logs/laravel.log para revisarlo luego
             Log::error("Fallo registro de auditoría US01: " . $e->getMessage());
         }
-
-        // Guardar el token en la cache
 
         Cache::put(
             'user_session_' . $user->id, 
@@ -97,21 +84,15 @@ class AuthController extends Controller implements AuthDocs
         return $this->respondWithToken($token);
     }
 
-    // Método para cerrar sesion
-
     public function logout(Request $request)
     {
         try {
-            //  Obtener el usuario antes de invalidar el token para la auditoría
             $user = auth()->user();
-
-            // Invalidar el token actual
             auth()->logout();
 
-            // Registrar en Auditoría el cierre de sesión
             $this->auditService->store(
                 'LOGOUT',
-                "Cierre de sesión exitoso para el usuario: {$user->email}",
+                "Cierre de sesión exitoso para el usuario: {$user->name}",
                 $request,
                 $user->id
             );
@@ -119,28 +100,74 @@ class AuthController extends Controller implements AuthDocs
             return response()->json(['message' => 'Sesión cerrada exitosamente']);
 
         } catch (\Exception $e) {
-            // Si algo falla, se registra el error interno
             Log::error("Error en Logout US01: " . $e->getMessage());
-            
-            // Salida sin auditoría: Aun si la auditoría falla, el usuario debería sentir que salió
             return response()->json(['message' => 'Sesión finalizada'], 200);
         }
     }
-/**
- * Formatear la respuesta con el token 
- */
+
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        /** @var \App\Domains\Security\Models\User $user */
+        $user = $request->user();
+
+        // Delega la lógica al Service, respetando el SRP
+        $this->passwordSecurityService->changeUserPassword(
+            $user,
+            $request->validated('current_password'),
+            $request->validated('new_password'),
+            $user->id 
+        );
+
+        // Registro de Auditoría del cambio de contraseña
+        try {
+            $this->auditService->store(
+                'PASSWORD_CHANGE',
+                "El usuario {$user->name} actualizó su contraseña y renovó su periodo de caducidad.",
+                $request,
+                $user->id
+            );
+        } catch (\Exception $e) {
+            Log::error("Fallo registro de auditoría en cambio de clave: " . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tu contraseña ha sido actualizada exitosamente y tu periodo de validez ha sido renovado.'
+        ]);
+    }
+
     protected function respondWithToken(string $token): JsonResponse 
     {
+        $user = Auth::user();
+
+        $rawRoles = \Illuminate\Support\Facades\DB::table('security.users')
+                        ->where('id', $user->id)
+                        ->value('roles');
+        
+        $rolesArray = is_string($rawRoles) ? json_decode($rawRoles, true) : (array) $rawRoles;
+
+        $person = \Illuminate\Support\Facades\DB::table('security.persons')
+                        ->where('id', $user->id)
+                        ->first();
+        
+        $nombres = $person->nombres ?? $person->first_name ?? '';
+        $apellidos = $person->apellidos ?? $person->last_name ?? '';
+        $fullName = trim($nombres . ' ' . $apellidos);
+        
+        $fullName = !empty($fullName) ? $fullName : $user->name;
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => Auth::factory()->getTTL() * 60,
             'user' => [
-                'name' => Auth::user()->name,
-                'email' => Auth::user()->email,
-                // Aquí agregaremos la foto más adelante
+                'id'       => $user->id,
+                'name'     => $user->name, 
+                'username' => $user->name, 
+                'fullName' => $fullName, 
+                'email'    => $user->email,
+                'roles'    => !empty($rolesArray) ? $rolesArray : [], 
             ]
         ], 200);
     }
 }
-

@@ -1,47 +1,76 @@
 <div class="modal-overlay">
   <div class="modal-dialog-custom shadow-lg">
-    
     <!-- HEADER CORPORATIVO -->
-    <div class="modal-header d-flex justify-content-between align-items-center text-white" 
-        style="background: linear-gradient(90deg, #aa00ff 0%, #d500f9 100%); padding: 1rem 1.5rem;">
-      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-file-signature me-2"></i> Aprobación Funcional</h5>
-      <button type="button" class="btn-close btn-close-white" (click)="closeModal.emit()" [disabled]="isSubmitting()" aria-label="Cerrar modal">
-        <span class="visually-hidden">Cerrar</span>
-      </button>
+    <div
+      class="modal-header d-flex justify-content-between align-items-center text-white"
+    >
+      <h5 class="mb-0 fw-bold">
+        <i class="fa-solid fa-file-signature me-2"></i> 
+        Aprobación Funcional
+      </h5>
+      <button
+          type="button"
+          class="close-btn"
+          (click)="closeModal.emit()"
+          [disabled]="isSubmitting()"
+          aria-label="Cerrar modal"
+        >
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
     </div>
-
     <div class="modal-body p-4">
-      
       <!-- INFO DEL REQUERIMIENTO Y ROL -->
-      <div class="d-flex justify-content-between mb-4 border-bottom pb-2">
-        <span class="badge bg-light text-primary border px-3 py-2 fw-medium">RRTI: {{ rrti() }}</span>
-        <span class="badge bg-light text-secondary border px-3 py-2 fw-medium">{{ roleName() }}</span>
+      <div class="col-md-6 d-flex align-items-center ps-5">
+        <span class="text-muted fw-bold me-2 fs-6">Requerimiento:</span>
+        <span
+          class="badge badge-requirement rounded-pill px-3 py-2 fs-6 fw-semibold"
+        >
+          {{ rrti() }}
+        </span>
       </div>
-
+      <div class="col-md-6 d-flex align-items-center justify-content-end pe-5">
+        <span class="text-muted fw-bold me-2 fs-6">Rol:</span>
+        <span
+          class="badge badge-component rounded-pill px-3 py-2 fs-6 fw-semibold"
+        >
+          {{ roleName() }}
+        </span>
+      </div>
       <!-- ALERTA INFORMATIVA -->
-      <div class="alert alert-info bg-light border-info mb-4" role="alert" style="line-height: 1.5;">
+      <div
+        class="alert alert-info bg-light border-info mb-4"
+        role="alert"
+        style="line-height: 1.5"
+      >
         <i class="fa-solid fa-circle-info me-2 text-info"></i>
-        Al cargar este documento, <strong>{{ consultantName() }}</strong> de la unidad <strong>{{ functionalUnit() }}</strong> certifica formalmente que las pruebas para este rol han concluido satisfactoriamente.
+        Al cargar este documento, <strong>{{ consultantName() }}</strong> de la
+        unidad <strong>{{ functionalUnit() }}</strong> certifica formalmente que
+        las pruebas para este rol han concluido satisfactoriamente.
       </div>
-
       <!-- FORMULARIO -->
       <form [formGroup]="approvalForm" (ngSubmit)="onSubmit()">
-        
         <!-- INPUT TIPO ARCHIVO (PDF) -->
         <div class="mb-4">
-          <label for="fileInput" class="form-label fw-bold text-secondary text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">
+          <label
+            for="fileInput"
+            class="form-label fw-bold text-secondary text-uppercase"
+            style="font-size: 0.8rem; letter-spacing: 0.5px"
+          >
             Acta de Aprobación (PDF) <span class="text-danger">*</span>
           </label>
-          <input 
+          <input
             type="file"
-            id="fileInput" 
-            class="form-control form-control-lg" 
+            id="fileInput"
+            class="form-control form-control-lg"
             accept="application/pdf"
             (change)="onFileSelected($event)"
             [disabled]="isSubmitting()"
+            aria-label="Seleccionar archivo"
             #fileInput
-          >
-          <div class="form-text mt-1 text-muted">Tamaño máximo admitido: 5 MB.</div>
+          />
+          <div class="form-text mt-1 text-muted">
+            Tamaño máximo admitido: 5 MB.
+          </div>
         </div>
 
         <!-- OBSERVACIONES (OPCIONAL) -->
@@ -64,20 +93,34 @@
 
         <!-- BOTONES DE ACCIÓN -->
         <div class="d-flex justify-content-end gap-2 border-top pt-3 mt-4">
-          <button type="button" class="btn btn-light px-4" (click)="closeModal.emit()" [disabled]="isSubmitting()">
+          <button
+            type="button"
+            class="btn btn-tbl-close px-4"
+            (click)="closeModal.emit()"
+            [disabled]="isSubmitting()"
+          >
             Cancelar
           </button>
-          
-          <button type="submit" class="btn btn-primary px-4 shadow-sm" [disabled]="isSubmitting()" style="background: #aa00ff; border: none;">
+
+          <button
+            type="submit"
+            class="btn btn-tbl-success px-4 shadow-sm"
+            [disabled]="isSubmitting()"
+            style="background: #aa00ff; border: none"
+          >
             @if (isSubmitting()) {
-              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <span
+                class="spinner-border spinner-border-sm me-2"
+                role="status"
+                aria-hidden="true"
+              ></span>
               Procesando...
             } @else {
-              <i class="fa-solid fa-cloud-arrow-up me-2"></i> Registrar Aprobación
+              <i class="fa-solid fa-cloud-arrow-up me-2"></i> Registrar
+              Aprobación
             }
           </button>
         </div>
-
       </form>
     </div>
   </div>

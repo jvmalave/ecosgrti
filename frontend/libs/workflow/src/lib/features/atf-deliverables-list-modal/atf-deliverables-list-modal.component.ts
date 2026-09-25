@@ -111,28 +111,24 @@ export class AtfDeliverablesListComponent implements OnInit {
   }
 
   public async onDelete(deliverable: Deliverable): Promise<void> {
-    // 1. Invocamos el modal de confirmación unificado
-    const isConfirmed = await this.notificationService.confirm(
-      '¿Está seguro?', 
-      `Esta acción eliminará el entregable: ${deliverable.name} de forma permanente.`
+    // Invoca el modal de confirmación 
+    const isConfirmed = await this.notificationService.confirmDelete(
+      '¿Está seguro de eliminar este Entregable?', 
+      `Esta acción eliminará el entregable: ${deliverable.name} de forma permanente.`, 
+      'Sí, eliminar'
     );
-
-    // 2. Evaluamos la respuesta asíncrona
+    // Evalua la respuesta asíncrona
     if (isConfirmed) {
       this.deliverableService.deleteDeliverable(deliverable.id).subscribe({
         next: (response) => {
-          // 3. Notificación de éxito
-          this.notificationService.showSuccess(
-            'Operación Exitosa', 
-            response.message || 'Entregable eliminado correctamente'
-          );
-          
-          // 4. Actualizamos el estado del dashboard
+          // Notificación de éxito
+          this.notificationService.toastSuccess(response.message || 'Entregable eliminado correctamente');
+          // Actualiza el estado del dashboard
           this.loadDeliverables();
           this.deliverableService.refreshDeliverables$.next(); 
         },
         error: (err) => {
-          // 5. Notificación de error
+          // Notificación de error
           const errorMsg = err.error?.message || 'No se pudo eliminar el entregable. Intente de nuevo.';
           this.notificationService.showError('Error de Procesamiento', errorMsg);
           console.error('Error al eliminar', err);

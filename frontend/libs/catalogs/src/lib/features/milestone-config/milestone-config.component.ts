@@ -6,7 +6,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MilestoneService } from '../../data-access/services/milestone.service';
 import { Milestone } from '../../data-access/models/milestone.model';
 import { NotificationService } from '@ecosgrti/workflow';
-import Swal from 'sweetalert2';
+
 
 @Component({
   selector: 'lib-milestone-config',
@@ -103,7 +103,7 @@ export class MilestoneConfigComponent implements OnInit {
     } else {
       this.milestoneService.createMilestone(payload).subscribe({
         next: (res) => {
-          Swal.fire('Éxito', res.message, 'success');
+          //Swal.fire('Éxito', res.message, 'success');
           this.notificationService.toastSuccess(res.message || 'Operación exitosa');
           this.closeFormModal();
           this.loadMilestones();
@@ -116,25 +116,40 @@ export class MilestoneConfigComponent implements OnInit {
   public deleteMilestone(id?: string): void {
     if (!id) return;
 
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'Se validará la integridad referencial antes de eliminar.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d500f9',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
+    this.notificationService.confirm('Confirmación', '<span class="fw-bold mb-2">¿Estás seguro que deseas eliminar este hito?</span><br><br><span class="text-muted mt-2">Nota: Se validara la integridad referencial.</span>').then((confirmed) => {
+      if (confirmed) {
         this.milestoneService.deleteMilestone(id).subscribe({
           next: (res) => {
-            Swal.fire('Eliminado', res.message, 'success');
+            this.notificationService.toastSuccess(res.message || 'Hito eliminado exitosamente');
+            //Swal.fire('Eliminado', res.message, 'success');
             this.loadMilestones();
           },
-          error: (err) => Swal.fire('Restricción', err.error?.message || 'No se pudo eliminar.', 'error')
+          error: (err) => this.notificationService.showError('Error', err.error?.message || 'No se pudo eliminar el hito.')
         });
       }
     });
   }
+
+
+    // Swal.fire({
+    //   title: '¿Estás seguro?',
+    //   text: 'Se validará la integridad referencial antes de eliminar.',
+    //   icon: 'warning',
+    //   showCancelButton: true,
+    //   confirmButtonColor: '#0d6efd',
+    //   cancelButtonColor: '#6c757d',
+    //   confirmButtonText: 'Sí, eliminar',
+    //   cancelButtonText: 'Cancelar'
+    // }).then((result) => {
+    //   if (result.isConfirmed) {
+    //     this.milestoneService.deleteMilestone(id).subscribe({
+    //       next: (res) => {
+    //         Swal.fire('Eliminado', res.message, 'success');
+    //         this.loadMilestones();
+    //       },
+    //       error: (err) => this.notificationService.showError('Error', err.error?.message || 'No se pudo eliminar.', 'error')
+    //     });
+    //   }
+    // });
+ // }
 }

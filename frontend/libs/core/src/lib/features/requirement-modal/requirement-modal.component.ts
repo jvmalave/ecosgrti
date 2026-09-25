@@ -15,8 +15,9 @@ import {
   DeletionTicketResponse
 } from '../../data-access/models/requirement.model'; 
 import { RequirementService } from '../../data-access/services/requirement.service';
+import { SpecialOperationModalService } from '@ecosgrti/shared';
 import Swal from 'sweetalert2';
-
+import { HttpErrorResponse } from '@angular/common/http';
 
 
 
@@ -38,6 +39,7 @@ export class RequirementModalComponent implements OnInit, OnDestroy {
   
   private apiUrl = inject('GLOBAL_API_URL' as unknown as ProviderToken<string>);
   private requirementService = inject(RequirementService);
+  private specialOperationModalService = inject(SpecialOperationModalService);
   private fb = inject(FormBuilder);
 
   // --- ESTADOS Y SIGNALS ---
@@ -364,6 +366,16 @@ public enableEditing(): void {
       this.newFiles[type] = file;
     }
   }
+
+  public onViewDocument(path: string): void {
+  this.requirementService.downloadPrivateDocument(path);
+}
+
+  public openPrivateDoc(path: string | null | undefined): void {
+    if (!path) return;
+    this.requirementService.downloadPrivateDocument(path);
+  }
+
 // Escuchamos los cambios en el selector (consultor funcional)en tiempo real
   private listenToConsultantChanges(): void {
     // Escuchamos los cambios en el selector reactivo del formulario
@@ -393,7 +405,226 @@ public enableEditing(): void {
   // ----------------------------------------------------------------------
   // VALIDACIÓN DE OPERACIONES ESPECIALES
   // ----------------------------------------------------------------------
-  async iniciarBorradoLogico() {
+  // async iniciarBorradoLogico() {
+  //   const { value: pin } = await Swal.fire({
+  //     title: 'Operación Crítica',
+  //     text: 'Ingrese su clave especial de operaciones:',
+  //     input: 'password',
+  //     inputAttributes: {
+  //       autocapitalize: 'off',
+  //       autocorrect: 'off'
+  //     },
+  //     icon: 'warning',
+  //     showCancelButton: true,
+  //     confirmButtonText: 'Validar PIN',
+  //     cancelButtonText: 'Cancelar',
+  //     confirmButtonColor: '#0d6efd',
+  //   });
+
+  //   if (!pin) return; // Si el usuario cancela
+
+  //   this.isLoading.set(true);
+
+  //   // POST /deletion-ticket (Usamos TU método exacto)
+  //   this.requirementService.requestDeletionTicket(pin).subscribe({
+  //     next: (response: DeletionTicketResponse) => {
+  //       this.isLoading.set(false);
+  //       const ticketString = response.data.deletion_ticket; 
+  //       this.solicitarMotivoBorrado(ticketString);
+  //     },
+  //     error: (err) => {
+  //       this.isLoading.set(false);
+        
+  //       // Atrapamos el código de estado que nos envía Laravel
+  //       const status = err.status;
+  //       const serverMessage = err.error?.message || 'Ha ocurrido un error inesperado.';
+
+  //       switch (status) {
+  //         case 428: // PRECONDITION REQUIRED: No tiene PIN configurado
+  //           Swal.fire({
+  //             title: '¡Bienvenido a Operaciones Especiales!',
+  //             text: 'Para continuar, primero debes configurar tu PIN de alta seguridad.',
+  //             icon: 'info',
+  //             confirmButtonText: 'Configurar PIN ahora',
+  //             confirmButtonColor: '#0d6efd'
+  //           }).then((result) => {
+  //             if (result.isConfirmed) {
+  //               this.abrirModalDeConfiguracionPin(); //  flujo de configuración
+  //             }
+  //           });
+  //           break;
+
+  //         case 426: // UPGRADE REQUIRED: El PIN caducó
+  //           Swal.fire({
+  //             title: 'PIN Expirado',
+  //             text: 'Por políticas de seguridad, tu PIN ha caducado (90 días). Por favor, actualízalo.',
+  //             icon: 'warning',
+  //             confirmButtonText: 'Actualizar PIN',
+  //             confirmButtonColor: '#ffc107'
+  //           }).then((result) => {
+  //             if (result.isConfirmed) {
+  //               this.abrirModalDeConfiguracionPin(); 
+  //             }
+  //           });
+  //           break;
+
+  //         case 423: // LOCKED: Bloqueado por fuerza bruta
+  //           Swal.fire('Cuenta Bloqueada', serverMessage, 'error');
+  //           break;
+
+  //         case 401: // UNAUTHORIZED: PIN incorrecto
+  //           Swal.fire('Acceso Denegado', serverMessage, 'error');
+  //           break;
+
+  //         default:
+  //           Swal.fire('Error', serverMessage, 'error');
+  //           break;
+  //       }
+  //     }
+  //   });
+  // }
+
+
+  // ----------------------------------------------------------------------
+  // FLUJO DE CONFIGURACIÓN DE PIN (AUTOSERVICIO CON SWEETALERT)
+  // ----------------------------------------------------------------------
+  // async abrirModalDeConfiguracionPin() {
+  //   const { value: formValues } = await Swal.fire({
+  //     title: 'Configuración de Seguridad',
+  //     html: `
+  //       <p class="text-muted" style="font-size: 0.9em; margin-bottom: 15px;">
+  //         Verifica tu identidad y define un PIN numérico (4 a 6 dígitos) para autorizar operaciones críticas.
+  //       </p>
+  //       <div class="text-start mb-3">
+  //         <label for="swal-login-password" class="fw-bold mb-1" style="font-size: 0.9em;">Contraseña de Inicio de Sesión</label>
+  //         <input type="password" id="swal-login-password" class="swal2-input m-0 w-100" placeholder="Tu contraseña actual">
+  //       </div>
+  //       <div class="text-start">
+  //         <label for="swal-new-pin" class="fw-bold mb-1" style="font-size: 0.9em;">Nuevo PIN de Operaciones</label>
+  //         <input type="password" id="swal-new-pin" class="swal2-input m-0 w-100" placeholder="Ej. 123456" maxlength="6" inputmode="numeric">
+  //       </div>
+  //     `,
+  //     focusConfirm: false,
+  //     showCancelButton: true,
+  //     confirmButtonText: 'Guardar PIN',
+  //     cancelButtonText: 'Cancelar',
+  //     confirmButtonColor: '#0d6efd',
+  //     customClass: { popup: 'rounded-4' },
+  //     preConfirm: () => {
+  //       // Capturamos los valores del DOM de SweetAlert
+  //       const password = (document.getElementById('swal-login-password') as HTMLInputElement).value;
+  //       const pin = (document.getElementById('swal-new-pin') as HTMLInputElement).value;
+
+  //       // Validaciones en caliente
+  //       if (!password) {
+  //         Swal.showValidationMessage('Debes ingresar tu contraseña actual.');
+  //         return false;
+  //       }
+  //       if (!pin || pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
+  //         Swal.showValidationMessage('El PIN debe contener entre 4 y 6 números.');
+  //         return false;
+  //       }
+
+  //       // Retornamos el objeto si todo es válido
+  //       return { password, pin };
+  //     }
+  //   });
+
+  //   // Si el usuario presionó "Guardar PIN" y pasó las validaciones front-end
+  //   if (formValues) {
+  //     this.isLoading.set(true);
+
+  //     // Disparamos la petición a Laravel
+  //     this.requirementService.setupSpecialPin(formValues.password, formValues.pin).subscribe({
+  //       next: (res: {success: boolean, message: string}) => {
+  //         this.isLoading.set(false);
+          
+  //         Swal.fire({
+  //           title: '¡Bóveda Asegurada!',
+  //           text: res.message,
+  //           icon: 'success',
+  //           customClass: { popup: 'rounded-4' }
+  //         }).then(() => {
+  //           // Opcional y muy elegante: Una vez configurado el PIN, 
+  //           // le relanzamos automáticamente el modal de borrado para que no pierda el hilo.
+  //           this.iniciarBorradoLogico();
+  //         });
+  //       },
+  //       error: (err) => {
+  //         this.isLoading.set(false);
+  //         // Laravel nos dirá si la contraseña es incorrecta o si el PIN es igual a la clave
+  //         const errorMessage = err.error?.message || 'No se pudo configurar el PIN de seguridad.';
+  //         Swal.fire('Error de Configuración', errorMessage, 'error');
+  //       }
+  //     });
+  //   }
+  // }
+
+  // ----------------------------------------------------------------------
+  //BORRADO LÓGICO Y AUDITORÍA
+  // ----------------------------------------------------------------------
+  // async solicitarMotivoBorrado(ticketValido: string) {
+  //   const id = this.requirementId();
+  //   if (!id) return;
+
+  //   const { value: motivo } = await Swal.fire({
+  //     title: 'Justificación Requerida',
+  //     input: 'textarea',
+  //     inputLabel: 'Indique el motivo de la eliminación (Mínimo 10 caracteres)',
+  //     inputPlaceholder: 'Escriba aquí la justificación...',
+  //     showCancelButton: true,
+  //     confirmButtonText: 'Confirmar Eliminación',
+  //     confirmButtonColor: '#dc3545',
+  //     preConfirm: (text) => {
+  //       if (!text || text.trim().length < 10) {
+  //         Swal.showValidationMessage('El motivo debe tener al menos 10 caracteres');
+  //       }
+  //       return text;
+  //     }
+  //   });
+
+  //   if (motivo) {
+  //     this.isLoading.set(true);
+
+  //     // DELETE /requirements/{id} (Usamos TU método pasándole el ticket y el motivo)
+  //     this.requirementService.softDeleteRequirement(id, ticketValido, motivo).subscribe({
+  //       next: (res) => {
+  //         this.isLoading.set(false);
+          
+  //         // 1. Avisamos al Dashboard que recargue (usando nuestra alarma de RxJS)
+  //         this.requirementService.refreshDashboard$.next();
+          
+  //         // 2. Éxito y cierre
+  //         Swal.fire({
+  //           title: '¡Eliminado!', 
+  //           text: res.message || 'El requerimiento ha sido eliminado lógicamente.', 
+  //           icon: 'success',
+  //           customClass: { popup: 'rounded-4' }
+  //         }).then(() => {
+  //           // Inyecta private router: Router en tu constructor si no lo tienes
+  //           this.router.navigate(['/dashboard']); 
+  //         });
+  //       },
+  //       error: (err) => {
+  //         this.isLoading.set(false);
+  //         let errorMsg = 'No tienes permisos para realizar esta operación.';
+          
+  //         // Si el TTL expiró, usualmente tu backend mandará un 403 o 422
+  //         if (err.status === 403 || err.status === 422) {
+  //           errorMsg = 'El ticket de eliminación ha expirado (Tiempo superado). Intente nuevamente.';
+  //         }
+          
+  //         Swal.fire('Error al eliminar', errorMsg, 'error');
+  //       }
+  //     });
+  //   }
+  // }
+
+
+  // ----------------------------------------------------------------------
+  // VALIDACIÓN DE OPERACIONES ESPECIALES
+  // ----------------------------------------------------------------------
+  async iniciarBorradoLogico(): Promise<void> {
     const { value: pin } = await Swal.fire({
       title: 'Operación Crítica',
       text: 'Ingrese su clave especial de operaciones:',
@@ -406,29 +637,28 @@ public enableEditing(): void {
       showCancelButton: true,
       confirmButtonText: 'Validar PIN',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#dc3545',
+      confirmButtonColor: '#0d6efd',
     });
 
     if (!pin) return; // Si el usuario cancela
 
     this.isLoading.set(true);
 
-    // 🟢 POST /deletion-ticket (Usamos TU método exacto)
+    // POST /deletion-ticket
     this.requirementService.requestDeletionTicket(pin).subscribe({
       next: (response: DeletionTicketResponse) => {
         this.isLoading.set(false);
         const ticketString = response.data.deletion_ticket; 
         this.solicitarMotivoBorrado(ticketString);
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         this.isLoading.set(false);
         
-        // Atrapamos el código de estado que nos envía Laravel
         const status = err.status;
         const serverMessage = err.error?.message || 'Ha ocurrido un error inesperado.';
 
         switch (status) {
-          case 428: // PRECONDITION REQUIRED: No tiene PIN configurado
+          case 428: // PRECONDITION REQUIRED
             Swal.fire({
               title: '¡Bienvenido a Operaciones Especiales!',
               text: 'Para continuar, primero debes configurar tu PIN de alta seguridad.',
@@ -437,12 +667,12 @@ public enableEditing(): void {
               confirmButtonColor: '#0d6efd'
             }).then((result) => {
               if (result.isConfirmed) {
-                this.abrirModalDeConfiguracionPin(); // 🟢 Llamaremos al flujo de configuración
+                this.manejarConfiguracionPin(); // Llamamos al manejador unificado
               }
             });
             break;
 
-          case 426: // UPGRADE REQUIRED: El PIN caducó
+          case 426: // UPGRADE REQUIRED
             Swal.fire({
               title: 'PIN Expirado',
               text: 'Por políticas de seguridad, tu PIN ha caducado (90 días). Por favor, actualízalo.',
@@ -451,16 +681,16 @@ public enableEditing(): void {
               confirmButtonColor: '#ffc107'
             }).then((result) => {
               if (result.isConfirmed) {
-                this.abrirModalDeConfiguracionPin(); 
+                this.manejarConfiguracionPin(); 
               }
             });
             break;
 
-          case 423: // LOCKED: Bloqueado por fuerza bruta
+          case 423: // LOCKED
             Swal.fire('Cuenta Bloqueada', serverMessage, 'error');
             break;
 
-          case 401: // UNAUTHORIZED: PIN incorrecto
+          case 401: // UNAUTHORIZED
             Swal.fire('Acceso Denegado', serverMessage, 'error');
             break;
 
@@ -472,59 +702,20 @@ public enableEditing(): void {
     });
   }
 
-
   // ----------------------------------------------------------------------
-  // FLUJO DE CONFIGURACIÓN DE PIN (AUTOSERVICIO CON SWEETALERT)
+  // MANEJADOR UNIFICADO DE CONFIGURACIÓN DE PIN (NUEVO)
   // ----------------------------------------------------------------------
-  async abrirModalDeConfiguracionPin() {
-    const { value: formValues } = await Swal.fire({
-      title: 'Configuración de Seguridad',
-      html: `
-        <p class="text-muted" style="font-size: 0.9em; margin-bottom: 15px;">
-          Verifica tu identidad y define un PIN numérico (4 a 6 dígitos) para autorizar operaciones críticas.
-        </p>
-        <div class="text-start mb-3">
-          <label for="swal-login-password" class="fw-bold mb-1" style="font-size: 0.9em;">Contraseña de Inicio de Sesión</label>
-          <input type="password" id="swal-login-password" class="swal2-input m-0 w-100" placeholder="Tu contraseña actual">
-        </div>
-        <div class="text-start">
-          <label for="swal-new-pin" class="fw-bold mb-1" style="font-size: 0.9em;">Nuevo PIN de Operaciones</label>
-          <input type="password" id="swal-new-pin" class="swal2-input m-0 w-100" placeholder="Ej. 123456" maxlength="6" inputmode="numeric">
-        </div>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Guardar PIN',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0d6efd',
-      customClass: { popup: 'rounded-4' },
-      preConfirm: () => {
-        // Capturamos los valores del DOM de SweetAlert
-        const password = (document.getElementById('swal-login-password') as HTMLInputElement).value;
-        const pin = (document.getElementById('swal-new-pin') as HTMLInputElement).value;
+  async manejarConfiguracionPin(): Promise<void> {
+    // 1. Invocamos el servicio global de UI (Librería Security)
+    const credentials = await this.specialOperationModalService.abrirModalDeConfiguracionPin();
 
-        // Validaciones en caliente
-        if (!password) {
-          Swal.showValidationMessage('Debes ingresar tu contraseña actual.');
-          return false;
-        }
-        if (!pin || pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
-          Swal.showValidationMessage('El PIN debe contener entre 4 y 6 números.');
-          return false;
-        }
-
-        // Retornamos el objeto si todo es válido
-        return { password, pin };
-      }
-    });
-
-    // Si el usuario presionó "Guardar PIN" y pasó las validaciones front-end
-    if (formValues) {
+    // 2. Si el usuario completó la validación en el front y confirmó
+    if (credentials) {
       this.isLoading.set(true);
 
-      // Disparamos la petición a Laravel
-      this.requirementService.setupSpecialPin(formValues.password, formValues.pin).subscribe({
-        next: (res: {success: boolean, message: string}) => {
+      // 3. Ejecutamos la petición HTTP desde el contexto permitido (Librería Core)
+      this.requirementService.setupSpecialPin(credentials.password, credentials.pin).subscribe({
+        next: (res: { success: boolean; message: string }) => {
           this.isLoading.set(false);
           
           Swal.fire({
@@ -533,14 +724,12 @@ public enableEditing(): void {
             icon: 'success',
             customClass: { popup: 'rounded-4' }
           }).then(() => {
-            // Opcional y muy elegante: Una vez configurado el PIN, 
-            // le relanzamos automáticamente el modal de borrado para que no pierda el hilo.
+            // Retomamos automáticamente el flujo de borrado tras configurar
             this.iniciarBorradoLogico();
           });
         },
-        error: (err) => {
+        error: (err: HttpErrorResponse) => {
           this.isLoading.set(false);
-          // Laravel nos dirá si la contraseña es incorrecta o si el PIN es igual a la clave
           const errorMessage = err.error?.message || 'No se pudo configurar el PIN de seguridad.';
           Swal.fire('Error de Configuración', errorMessage, 'error');
         }
@@ -549,9 +738,9 @@ public enableEditing(): void {
   }
 
   // ----------------------------------------------------------------------
-  //BORRADO LÓGICO Y AUDITORÍA
+  // BORRADO LÓGICO Y AUDITORÍA
   // ----------------------------------------------------------------------
-  async solicitarMotivoBorrado(ticketValido: string) {
+  async solicitarMotivoBorrado(ticketValido: string): Promise<void> {
     const id = this.requirementId();
     if (!id) return;
 
@@ -563,7 +752,7 @@ public enableEditing(): void {
       showCancelButton: true,
       confirmButtonText: 'Confirmar Eliminación',
       confirmButtonColor: '#dc3545',
-      preConfirm: (text) => {
+      preConfirm: (text: string) => {
         if (!text || text.trim().length < 10) {
           Swal.showValidationMessage('El motivo debe tener al menos 10 caracteres');
         }
@@ -574,12 +763,11 @@ public enableEditing(): void {
     if (motivo) {
       this.isLoading.set(true);
 
-      // 🟢 DELETE /requirements/{id} (Usamos TU método pasándole el ticket y el motivo)
       this.requirementService.softDeleteRequirement(id, ticketValido, motivo).subscribe({
-        next: (res) => {
+        next: (res: { success: boolean; message: string }) => {
           this.isLoading.set(false);
           
-          // 1. Avisamos al Dashboard que recargue (usando nuestra alarma de RxJS)
+          // 1. Avisamos al Dashboard que recargue
           this.requirementService.refreshDashboard$.next();
           
           // 2. Éxito y cierre
@@ -589,15 +777,13 @@ public enableEditing(): void {
             icon: 'success',
             customClass: { popup: 'rounded-4' }
           }).then(() => {
-            // 🟢 Inyecta private router: Router en tu constructor si no lo tienes
             this.router.navigate(['/dashboard']); 
           });
         },
-        error: (err) => {
+        error: (err: HttpErrorResponse) => {
           this.isLoading.set(false);
           let errorMsg = 'No tienes permisos para realizar esta operación.';
           
-          // Si el TTL expiró, usualmente tu backend mandará un 403 o 422
           if (err.status === 403 || err.status === 422) {
             errorMsg = 'El ticket de eliminación ha expirado (Tiempo superado). Intente nuevamente.';
           }
@@ -607,4 +793,6 @@ public enableEditing(): void {
       });
     }
   }
+
+
 }

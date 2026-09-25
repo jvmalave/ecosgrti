@@ -14,18 +14,15 @@
     <div class="modal-content shadow-lg border-0 rounded-3">
       
       <!-- Cabecera del Modal -->
-      <div class="modal-header brand-gradient text-white py-3 border-bottom-0">
+      <div class="modal-header py-3 border-bottom-0">
         <h5 class="modal-title mb-0 d-flex align-items-center fw-bold">
           <i class="bi bi-file-earmark-plus-fill me-2"></i>
-          ECOSGRTI - Registro de Nuevo Requerimiento TI
+          Registro de Nuevo Requerimiento TI
         </h5>
-        <!-- Botón de cierre enlazado a la alerta de cancelación -->
-        <button
-          type="button"
-          class="btn-close btn-close-white shadow-none"
-          aria-label="Cerrar"
-          (click)="onCancel()"
-        ></button>
+        <button type="button" class="close-btn" 
+      (click)="onCancel()" aria-label="Close">
+        <i class="fa-solid fa-circle-xmark"></i>
+      </button>
       </div>
 
       <!-- Cuerpo del Modal -->
@@ -134,13 +131,25 @@
               <!-- Grafo Organizacional -->
               @if (organizationalData(); as graph) {
                 <div class="col-12 animate__animated animate__fadeIn">
-                  <div class="card bg-white border-start border-brand border-4 shadow-sm">
+                  <div class="card bg-white border-start border-brand border-1 shadow-sm">
                     <div class="card-body py-3">
                       <h6 class="text-brand fw-bold mb-2"><i class="bi bi-diagram-3-fill me-2"></i>Grafo Organizacional Validado</h6>
-                      <div class="row g-2 text-dark small">
-                        <div class="col-md-4"><strong>Unidad Solicitante:</strong> {{ graph.requesting_unit_name }}</div>
-                        <div class="col-md-4"><strong>Sistema:</strong> {{ graph.system_name }}</div>
-                        <div class="col-md-4"><strong>Sociedad:</strong> {{ graph.society_name }}</div>
+                      <div class="row g-2 text-dark ms-3 mt-3">
+                        <div class="col-md-4"><strong>Sociedad:</strong>
+                          <span class="badge badge-soft-society fs-6 ms-2">
+                          {{ graph.society_name }}
+                          </span>
+                        </div>
+                        <div class="col-md-4"><strong>Sistema:</strong> 
+                          <span class="badge badge-soft-system fs-6 ms-2">
+                            {{ graph.system_name }}
+                          </span>
+                        </div>
+                        <div class="col-md-4"><strong>Unidad Solicitante:</strong> 
+                          <span class="badge badge-soft-unit fs-6 text-white ms-2">
+                            {{ graph.requesting_unit_name }}
+                          </span> 
+                        </div> 
                       </div>
                     </div>
                   </div>
@@ -186,14 +195,14 @@
 
               <!-- Archivos Físicos -->
               <div class="col-md-6">
-                <label for="solicitud_ti" class="form-label fw-semibold small">Documento de Solicitud TI (PDF) <span class="text-danger">*</span></label>
+                <label for="solicitud_ti" class="form-label fw-semibold">Notificación RRTI (PDF) <span class="text-danger">*</span></label>
                 <input type="file" id="solicitud_ti" accept="application/pdf" (change)="onFileSelected($event, 'solicitud')" class="form-control form-control-sm"
                   [class.is-invalid]="requirementForm.get('rrti')?.touched && !solicitudTiFile">
               </div>
 
               <div class="col-md-6">
-                <label for="planilla_necesidades" class="form-label fw-semibold small">Matriz de Necesidades (PDF/Excel) <span class="text-danger">*</span></label>
-                <input type="file" id="planilla_necesidades" accept="application/pdf,.xlsx,.xls" (change)="onFileSelected($event, 'planilla')" class="form-control form-control-sm"
+                <label for="planilla_necesidades" class="form-label fw-semibold ">Planilla de Necesidades (PDF) <span class="text-danger">*</span></label>
+                <input type="file" id="planilla_necesidades" accept="application/pdf" (change)="onFileSelected($event, 'planilla')" class="form-control form-control-sm"
                   [class.is-invalid]="requirementForm.get('rrti')?.touched && !planillaNecesidadesFile">
               </div>
 
@@ -201,15 +210,13 @@
           </form>
         }
       </div>
-
       <!-- Pie del Modal (Action Buttons) -->
       @if (!isLoadingData()) {
         <div class="modal-footer bg-light border-top-0 px-4 py-3 justify-content-end">
-          <button type="button" class="btn btn-sm btn-outline-secondary px-4 rounded-pill" (click)="onCancel()">
-            <i class="bi bi-x-circle me-1"></i>Cancelar
+          <button type="button" class="btn btn-tbl-close px-4 fw-semibold rounded-pill" (click)="onCancel()">
+            <i class="fa-solid fa-circle-xmark me-2"></i>Cancelar
           </button>
-          <!-- El (click)="onSubmit()" es necesario porque sacamos el botón fuera del <form> -->
-          <button type="button" class="btn btn-sm btn-brand rounded-pill px-4 shadow-sm" 
+          <button type="button" class="btn btn-tbl-success rounded-pill fw-semibold px-4 shadow-sm" 
                   (click)="onSubmit()"
                   [disabled]="requirementForm.invalid || !solicitudTiFile || !planillaNecesidadesFile || isLoading()">
             @if (isLoading()) {
@@ -220,7 +227,6 @@
           </button>
         </div>
       }
-
     </div>
   </div>
 </div>

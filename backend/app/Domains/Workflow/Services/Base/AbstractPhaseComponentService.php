@@ -66,6 +66,7 @@ abstract class AbstractPhaseComponentService
             // 🟢 DOBLE INVALIDACIÓN Y REACTIVIDAD DEL FRONTEND
             // =====================================================================
             
+            // 1. Purga local de la fase
             $listKey = CacheKeyDictionary::phaseComponentsList($reqId, $this->getPhaseInitCode());
             Cache::forget($listKey);
             Redis::del($listKey);
@@ -74,7 +75,20 @@ abstract class AbstractPhaseComponentService
             Cache::forget($fallbackKey);
             Redis::del($fallbackKey);
 
-            // 🟢 CRÍTICO: Disparar la reactividad en Angular para mover el rol de tabla
+            // 2. 🟢 NUEVO: Purga global del Dashboard y del Requerimiento
+            $summaryKey = CacheKeyDictionary::requirementDashboardSummary($reqId);
+            $detailKey = CacheKeyDictionary::requirementDetail($reqId);
+            $progressKey = CacheKeyDictionary::progressDashboardData($reqId);
+
+            Cache::forget($summaryKey); Redis::del($summaryKey);
+            Cache::forget($detailKey); Redis::del($detailKey);
+            Cache::forget($progressKey); Redis::del($progressKey);
+
+            if (config('cache.default') === 'redis') {
+                Cache::tags([CacheKeyDictionary::dashboardTag()])->flush();
+            }
+
+            // 3. Disparar la reactividad en Angular para mover el rol de tabla y refrescar orquestadores
             Redis::incr(CacheKeyDictionary::globalDashboardVersion());
 
             return $component;

@@ -133,6 +133,8 @@ export class PhaseRolesModalComponent implements OnInit {
   closeRegistersAndRefresh(): void {
     this.selectedItemForRegisters.set(null); 
     this.loadItems(); // Recarga para actualizar conteos
+
+    this.phaseService.refreshDashboard$.next();
   }
 
   // -- Usuarios de Prueba (CU-042) --
@@ -185,6 +187,35 @@ export class PhaseRolesModalComponent implements OnInit {
     
     return 'Requisitos completados. Cerrar Rol.';
   }
+
+
+  /**
+   * RN-PI: Evalúa si el botón de Aprobación debe estar habilitado.
+   * Exige que al menos se haya registrado un usuario de prueba.
+   */
+  public canAccessApproval(item: WorkflowPhaseItem): boolean {
+    if (this.config().phaseCode !== 'PI') return true;
+    
+    // Verificamos si la propiedad de conteo de usuarios de prueba es mayor a 0
+    const testUsersCount = item.test_users_count ??  0;
+    return testUsersCount > 0;
+  }
+
+  /**
+   * Mensaje dinámico para el tooltip del botón de Aprobación
+   */
+  public getApprovalTooltip(item: WorkflowPhaseItem): string {
+    if (this.config().phaseCode !== 'PI') return 'Aprobación Funcional';
+    
+    const testUsersCount = item.test_users_count ??  0;
+    if (testUsersCount === 0) {
+      return 'Bloqueado: Debe registrar al menos un usuario de pruebas antes de gestionar la aprobación.';
+    }
+    
+    return 'Gestionar Aprobación Funcional';
+  }
+
+  
 
 
 

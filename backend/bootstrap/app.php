@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
           'role' => \App\Domains\Security\Middlewares\RoleMiddleware::class,
+          'password.expired' => \App\Domains\Security\Middlewares\EnsurePasswordIsNotExpired::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

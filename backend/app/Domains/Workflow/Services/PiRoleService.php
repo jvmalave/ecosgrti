@@ -97,6 +97,9 @@ class PiRoleService extends AbstractPhaseComponentService
                     'rr.role_name as name' 
                 )
                 ->withCount('registers') 
+                ->withCount(['testUsers as test_users_count' => function ($query) {
+                    $query->whereNull('deleted_at');
+                }])
                 ->orderBy('rr.role_name', 'asc')
                 ->get()
                 ->toArray();

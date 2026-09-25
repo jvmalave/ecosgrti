@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\DB;
 use App\Domains\Workflow\Models\PiTestUser;
 use App\Domains\Audit\Services\AuditService;
 use Exception;
+use App\Domains\Core\Dictionaries\CacheKeyDictionary;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 
 class PiTestUserService
 {
@@ -21,31 +24,34 @@ class PiTestUserService
             ->toArray();
     }
 
-    public function storeTestUser(string $roleId, string $requirementId, string $identifier, bool $force, string $userId): array
+  public function storeTestUser(string $roleId, string $requirementId, string $identifier, bool $force, string $userId): array
     {
-        // 1. RN-PI-21: Validación de Duplicado Interno Estricto
-        $existsInSameRole = PiTestUser::where('pi_role_id', $roleId)
-            ->where('identifier', $identifier)
-            ->exists();
+        $normalizedIdentifier = strtoupper($identifier);
 
-        if ($existsInSameRole) {
-            throw new Exception("El usuario {$identifier} ya está registrado en este rol.", 422);
+        // 1. Buscamos el usuario incluyendo los eliminados lógicamente
+        $existingUser = PiTestUser::withTrashed()
+            ->where('pi_role_id', $roleId)
+            ->where('identifier', $normalizedIdentifier)
+            ->first();
+
+        // Verificamos si existe y está activo antes de hacer nada
+        if ($existingUser && !$existingUser->trashed()) {
+            throw new \Exception("El usuario {$identifier} ya está registrado en este rol.", 422);
         }
 
-        // 2. Ejecutamos SIEMPRE la búsqueda de concurrencia para la auditoría
+        // 2. Búsqueda de concurrencia para la auditoría (Two-Step Submission)
         $otherReqs = DB::table('workflow.pi_test_users as ptu')
             ->join('core.requirements as r', 'ptu.requirement_id', '=', 'r.id')
-            ->where('ptu.identifier', $identifier)
+            ->where('ptu.identifier', $normalizedIdentifier)
             ->where('ptu.requirement_id', '!=', $requirementId)
-            ->whereNotIn('r.status', ['RC', 'RF']) // Filtramos requerimientos cerrados
+            ->whereNotIn('r.status', ['RC', 'RF'])
             ->whereNull('ptu.deleted_at')
             ->pluck('r.rrti')
             ->unique()
             ->toArray();
 
-        // 3. RN-PI-22: Validación Informativa Externa (Two-Step Submission)
+        // 3. RN-PI-22: Validación Informativa Externa
         if (!empty($otherReqs) && !$force) {
-            // Lanzamos una excepción especial 409 Conflict si no viene forzado
             throw new \Illuminate\Http\Exceptions\HttpResponseException(response()->json([
                 'requires_confirmation' => true,
                 'reqs' => array_values($otherReqs),
@@ -53,42 +59,56 @@ class PiTestUserService
             ], 409));
         }
 
-        // 4. RN-PI-26: Persistencia Atómica con Auditoría Dinámica
-        $testUser = DB::transaction(function () use ($roleId, $requirementId, $identifier, $userId, $force, $otherReqs) {
-            $newUser = PiTestUser::create([
-                'pi_role_id' => $roleId,
-                'requirement_id' => $requirementId,
-                'identifier' => strtoupper($identifier)
-            ]);
+        // 4. Persistencia Atómica
+        $testUser = DB::transaction(function () use ($roleId, $requirementId, $normalizedIdentifier, $userId, $force, $otherReqs, $existingUser) {
+            
+            // 🟢 AQUÍ ESTABA EL ERROR: Ahora la restauración ocurre DENTRO de la transacción
+            if ($existingUser) {
+                $existingUser->restore(); // Lo revivimos de la papelera
+                $existingUser->updated_by = $userId;
+                $existingUser->save();
+                $testUser = $existingUser;
+            } else {
+                // Si nunca ha existido, lo creamos
+                $testUser = PiTestUser::create([
+                    'pi_role_id' => $roleId,
+                    'requirement_id' => $requirementId,
+                    'identifier' => $normalizedIdentifier,
+                    'created_by' => $userId,
+                    'updated_by' => $userId
+                ]);
+            }
 
-            // AUDITORÍA FORENSE DIFERENCIADA
+            // Auditoría forense
             if ($force && !empty($otherReqs)) {
-                // El usuario aceptó el SweetAlert y forzó la creación
                 $reqsString = implode(', ', $otherReqs);
-                
                 $this->auditService->logModelChange(
                     action: 'SAVE_TEST_USER_OVERRIDE',
-                    description: "Se forzó la asignación del usuario {$newUser->identifier} (Advertencia ignorada. Activo también en: {$reqsString})",
-                    payload: [
-                        'pi_role_id' => $roleId, 
-                        'identifier' => $newUser->identifier,
-                        'overridden_requirements' => $otherReqs // Guardamos el array exacto en el JSONB
-                    ],
+                    description: "Se forzó la asignación del usuario {$testUser->identifier} (Activo también en: {$reqsString})",
+                    payload: ['pi_role_id' => $roleId, 'identifier' => $testUser->identifier, 'overridden_requirements' => $otherReqs],
                     userId: $userId,
-                    targetId: $newUser->id
+                    targetId: $testUser->id
                 );
             } else {
-                // Inserción regular sin conflictos
                 $this->auditService->logModelChange(
                     action: 'SAVE_TEST_USER',
-                    description: "Se agregó el usuario de prueba {$newUser->identifier}",
-                    payload: ['pi_role_id' => $roleId, 'identifier' => $newUser->identifier],
+                    description: "Se agregó el usuario de prueba {$testUser->identifier}",
+                    payload: ['pi_role_id' => $roleId, 'identifier' => $testUser->identifier],
                     userId: $userId,
-                    targetId: $newUser->id
+                    targetId: $testUser->id
                 );
             }
 
-            return $newUser;
+            // =====================================================================
+            // 🟢 DOBLE INVALIDACIÓN Y REACTIVIDAD
+            // (Asegúrate de que 'PI-I' coincida con lo que retorna getPhaseInitCode() en tu PiRoleService)
+            // =====================================================================
+            $listKey = CacheKeyDictionary::phaseComponentsList($requirementId, 'PI-I'); 
+            Cache::forget($listKey); 
+            Redis::del($listKey);
+            Redis::incr(CacheKeyDictionary::globalDashboardVersion());
+
+            return $testUser;
         });
 
         return $testUser->toArray();

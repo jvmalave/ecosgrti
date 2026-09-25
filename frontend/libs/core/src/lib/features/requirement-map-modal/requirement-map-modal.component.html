@@ -1,21 +1,18 @@
 <div class="modal-overlay">
-  <!-- Agregamos overflow-hidden en el CSS para que el fondo morado no se desborde -->
   <div class="modal-dialog-custom">
     <!-- Header: Estilo Corporativo CANTV -->
     <div
-      class="modal-header brand-gradient pb-3 pt-4 px-4 d-flex justify-content-between align-items-center"
+      class="modal-header pb-3 pt-4 px-4 d-flex justify-content-between align-items-center"
     >
       <h4 class="mb-0 fw-bold text-white d-flex align-items-center">
         <i class="fa-solid fa-map-location-dot me-2 fs-5"></i> Mapa de Ciclo de
         Vida
       </h4>
-      <button
-        type="button"
-        class="btn-close btn-close-white shadow-none"
-        aria-label="Cerrar modal"
-        title="Cerrar"
-        (click)="closeModal.emit()"
-      ></button>
+
+      <button type="button" class="close-btn" 
+        (click)="closeModal.emit()" aria-label="Close">
+          <i class="fa-solid fa-circle-xmark"></i>
+      </button>
     </div>
 
     <!-- Body -->
@@ -35,8 +32,8 @@
         <span class="text-muted small fw-semibold">
           Tipo de Gestión:
           <span
-            class="badge bg-light text-dark border rounded-pill px-3 py-1"
-            >{{ requirement().management_type }}</span
+            class="badge fs-6 bg-primary text-white border rounded-pill px-3 py-1 ms-2"
+            >{{requirement().management_type }}</span
           >
         </span>
         <hr class="mt-4 mb-0 opacity-10 w-75 mx-auto" />
@@ -111,9 +108,11 @@
     <div class="modal-footer px-4 pb-4 pt-0 border-0 text-end">
       <!-- Usamos btn-outline-brand para mantener consistencia con los botones de cierre -->
       <button
-        class="btn btn-outline-brand rounded-pill px-4 fw-bold"
+        class="btn btn-tbl-close rounded-pill px-4 fw-semibold"
         (click)="closeModal.emit()"
+        aria-label='Close'
       >
+      <i class="fa-solid fa-circle-xmark me-2"></i>
         Cerrar Mapa
       </button>
     </div>

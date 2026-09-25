@@ -88,28 +88,24 @@ export class AtfRolesListComponent implements OnInit {
   }
 
     public async deleteRole(roleId: string): Promise<void> {
-    // 1. Invocamos el modal de confirmación
-    const isConfirmed = await this.notificationService.confirm(
-      '¿Está seguro?', 
-      'Esta acción eliminará el rol técnico de forma permanente.'
+    // Invoca el modal de confirmación
+    const isConfirmed = await this.notificationService.confirmDelete(
+      '¿Está seguro de eliminar este Rol?', 
+      `Esta acción eliminará el rol de forma permanente.`,
+      'Sí, eliminar'
     );
-
-    // 2. Evaluamos la respuesta asíncrona
+    // Evalua la respuesta asíncrona
     if (isConfirmed) {
       this.roleService.deleteRole(roleId).subscribe({
         next: (response) => {
-          // 3. Notificación de éxito con Título y Mensaje
-          this.notificationService.showSuccess(
-            'Operación Exitosa', 
-            response.message || 'Rol eliminado correctamente'
-          );
-          
-          // 4. Actualizamos el estado del dashboard
+          // Notificación de éxito 
+          this.notificationService.toastSuccess(response.message || 'Rol eliminado correctamente');
+          // Actualiza el estado del dashboard
           this.loadRoles();
           this.roleService.refreshDashboard$.next(); 
         },
         error: (err) => {
-          // 5. Notificación de error con Título y Mensaje
+          // Notificación de error
           const errorMsg = err.error?.message || 'No se pudo eliminar el rol. Intente de nuevo.';
           this.notificationService.showError('Error de Procesamiento', errorMsg);
           console.error('Error al eliminar', err);

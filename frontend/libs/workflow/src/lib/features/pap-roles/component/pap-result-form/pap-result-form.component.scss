@@ -1,0 +1,101 @@
+/* ========================================================
+    IDENTIDAD VISUAL CANTV (ECOSGRTI) - Modal Orden PAP
+   ======================================================== */
+
+.brand-gradient {
+  background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%);
+  border-bottom: 3px solid #ea80fc;
+}
+
+.text-brand {
+  color: #d500f9 !important;
+}
+
+.btn-brand {
+  background: linear-gradient(90deg, #aa00ff 0%, #d500f9 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: linear-gradient(90deg, #7b1fa2 0%, #aa00ff 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4);
+    transform: translateY(-1px);
+  }
+  
+  &:disabled {
+    background: #e1bee7;
+    color: #9e9e9e;
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+// Botón Outline Corporativo
+.btn-outline-brand { 
+  border-color: #d500f9; 
+  color: #d500f9; 
+  font-weight: 500;
+  transition: all 0.3s ease; 
+  background: transparent;
+
+  &:hover { 
+    background: #d500f9; 
+    color: white; 
+    box-shadow: 0 4px 12px rgba(213, 0, 249, 0.4); 
+    transform: translateY(-1px);
+  }
+}
+
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  z-index: 1070; /* Por encima del orquestador */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-dialog-custom {
+  width: 100%;
+  max-width: 550px; /* Más angosto porque es un formulario simple */
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  background: #ffffff; 
+  border-radius: 12px;
+  overflow: hidden;
+  animation: modalFadeIn 0.3s ease-out forwards;
+}
+
+.modal-body-scroll {
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.custom-alert {
+  background-color: #fdf2ff;
+  border: 1px solid #ea80fc;
+  border-left: 4px solid #d500f9 !important;
+  color: #4a148c;
+}
+
+.focus-ring-none:focus {
+  box-shadow: 0 0 0 0.25rem rgba(213, 0, 249, 0.25);
+  border-color: #d500f9 !important;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

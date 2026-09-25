@@ -90,12 +90,20 @@ export class OrgStructureComponent implements OnInit {
         },
         error: (err) => {
           this.isLoading.set(false);
-          console.log(err);
-          this.notificationService.showError('Error de API', 'No se pudo cargar el árbol organizacional.');
+          console.error('Error al cargar árbol organizacional:', err);
+
+          // Evalua si el backend nos rechazó por permisos (403)
+          if (err.status === 403) {
+            // Extraemos el mensaje real de Laravel o usamos uno por defecto
+            const forbiddenMessage = err.error?.message || 'No tiene permisos para ver esta estructura.';
+            this.notificationService.showError('Acceso Denegado', forbiddenMessage);
+          } else {
+            // Para otros errores (500, 404, etc.) mantenemos el mensaje genérico
+            this.notificationService.showError('Error de API', 'No se pudo cargar el árbol organizacional.');
+          }
         }
       });
   }
-
   closeMainModal(): void {
     this.modalClosed.emit();
   }
@@ -239,7 +247,7 @@ export class OrgStructureComponent implements OnInit {
   // MÉTODO PARA ALTERNAR ESTATUS (PATCH)
   // ==========================================
   async toggleStatus(nodeType: 'societies' | 'systems' | 'requesting-units', id: string, currentStatus: boolean, name: string): Promise<void> {
-    const actionText = currentStatus ? 'Inactivar' : 'Activar';
+    const actionText = currentStatus ? 'Desactivar' : 'Activar';
     
     // Usamos el servicio de notificaciones para confirmar la acción
     const confirmed = await this.notificationService.confirm(

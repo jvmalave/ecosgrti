@@ -32,6 +32,7 @@ export class ReqStatusPipe implements PipeTransform {
     'CER-I': { label: 'CER Iniciada', cssClass: 'bg-primary bg-opacity-10 text-primary fw-bold' },
     'CEE-I': { label: 'CEE Iniciada', cssClass: 'bg-primary bg-opacity-10 text-primary fw-bold' },
     'PAP-I': { label: 'PAP Iniciado', cssClass: 'bg-primary bg-opacity-10 text-primary fw-bold' },
+    'AU-I': { label: 'AU Iniciado', cssClass: 'bg-primary bg-opacity-10 text-primary fw-bold' },
     
     // ---------------------------------------------------------
     // FASES COMPLETADAS / EXITOSAS (Verdes tenues)

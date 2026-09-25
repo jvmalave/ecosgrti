@@ -76,6 +76,23 @@ export class RequirementService {
     return this.http.post<ApiResponse<unknown>>(`${this.coreApiUrl}/${id}`, formData);
   }
 
+public downloadPrivateDocument(path: string): void {
+    const url = `${this.apiUrl}/core/requirements/download-doc`;
+    
+    this.http.get(url, { 
+      params: { path: path }, 
+      responseType: 'blob' // Obligatorio para manejar archivos binarios con HttpClient
+    }).subscribe({
+      next: (blob) => {
+        const fileURL = URL.createObjectURL(blob);
+        window.open(fileURL, '_blank'); // Abre el PDF en una pestaña de forma segura
+      },
+      error: (err) => {
+        console.error('Error al descargar el documento privado:', err);
+      }
+    });
+  }
+
   // ====================================================================
   // MÉTODOS DEL DASHBOARD Y BORRADO LÓGICO
   // ====================================================================

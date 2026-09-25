@@ -25,6 +25,11 @@ export interface RequirementDashboard {
   consultor_funcional: string; 
   unidad_solicitante: string;
   progress_percentage?: number;
+  notification_date?: string;
+  completion_date?: string;
+  notification_support_path?: string;
+  closure_act_path?: string;
+
 }
 
 export interface RequirementDetail {

@@ -1,3 +1,54 @@
+/* ========================================================
+  IDENTIDAD VISUAL CANTV
+  ======================================================== */
+
+$color-magenta: #e91e63;
+$color-purple: #9c27b0;
+$color-brand: #8e1482;
+$gradient-end: #ff00ff;
+$gradient-start: #1c1ce2;
+$sidebar-bg: #1c1ce2; 
+$text-muted: #64748b;
+$text-white: #ffffff;
+$color-success: #198754;
+$color-danger: #ef4444;
+$color-info: #3b82f6;
+$color-warning: #f59e0b;
+$color-dark: #1e293b;
+$color-light: #f3f4f6;
+$color-gray: #64748b;
+$color-blue: #1c1ce2;
+
+
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(90deg, $gradient-start 80%, $gradient-end 100%) !important;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h2, h3, h5 {
+    color: white !important;
+    margin: 0;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.3);
+      color: $text-white;
+    }
+  }
+}
+
 .brand-gradient {
   background: linear-gradient(90deg, #6200ea 0%, #d500f9 100%) !important;
   border-bottom: 3px solid #ea80fc !important;
