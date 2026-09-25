@@ -1,0 +1,257 @@
+@if (isVisible()) {
+  <div
+    class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+    style="
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 1050;
+      backdrop-filter: blur(6px);
+    "
+  >
+    <div
+      class="bg-white shadow-lg d-flex flex-column"
+      style="
+        max-width: 1000px;
+        width: 95%;
+        max-height: 90vh;
+        border-radius: 0.75rem;
+        overflow: hidden;
+      "
+    >
+      <!-- Cabecera -->
+      <div class="modal-header border-0 px-4 py-3 text-white">
+        <h5 class="modal-title m-0 fw-bold d-flex align-items-center gap-2">
+          <i class="fas fa-project-diagram"></i> Trazabilidad de Componentes
+        </h5>
+        <button
+          class="close-btn"
+          type="button"
+          (click)="closeModal()"
+          title="Cerrar modal"
+          aria-label="Close"
+        >
+          <i class="fa-solid fa-circle-xmark me-2"></i>
+        </button>
+      </div>
+
+      <!-- Buscador -->
+      <div class="bg-light p-4 border-bottom">
+        <div class="input-group input-group-lg shadow-sm">
+          <span class="input-group-text bg-white text-primary border-end-0"
+            ><i class="fas fa-search"></i
+          ></span>
+          <input
+            type="text"
+            class="form-control border-start-0"
+            placeholder="Ingrese nombre del rol o entregable (Ej: ZR3SLO_KL)"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+            (keyup.enter)="searchComponent()"
+          />
+          <button
+            class="btn btn-primary fw-bold px-4"
+            (click)="searchComponent()"
+            [disabled]="isLoading()"
+          >
+            @if (isLoading()) {
+              <span class="spinner-border spinner-border-sm"></span>
+            } @else {
+              Buscar
+            }
+          </button>
+        </div>
+      </div>
+
+      <!-- Resultados (Acordeón) -->
+      <div class="modal-body p-4 bg-white overflow-auto">
+        @if (results().length > 0) {
+          <h6 class="text-muted fw-bold mb-3">
+            Encontrado en {{ results().length }} requerimiento(s):
+          </h6>
+
+          <div class="d-flex flex-column gap-3">
+            @for (item of results(); track item.rrti) {
+              <div class="card border border-light shadow-sm">
+                <!-- Cabecera del Acordeón -->
+                <div
+                  class="card-header bg-white p-3 d-flex justify-content-between align-items-center"
+                  style="cursor: pointer; transition: background 0.2s"
+                  [ngClass]="{ 'bg-light': expandedRrti() === item.rrti }"
+                  (click)="toggleAccordion(item.rrti)"
+                >
+                  <div class="d-flex align-items-center gap-3">
+                    <div
+                      class="bg-primary bg-opacity-10 text-primary rounded p-2 text-center"
+                      style="min-width: 80px"
+                    >
+                      <small
+                        class="d-block text-uppercase fw-bold"
+                        style="font-size: 10px"
+                        >RRTI</small
+                      >
+                      <span class="fw-bold fs-5">{{ item.rrti }}</span>
+                    </div>
+                    <div>
+                      <h6 class="mb-1 fw-bold text-dark">
+                        {{ item.component_name }}
+                      </h6>
+                      <small class="text-muted"
+                        ><i class="fas fa-user-tie me-1"></i> Funcional:
+                        <strong>{{ item.functional_consultant }}</strong> |
+                        Tipo: {{ item.requirement_type }}</small
+                      >
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center gap-3">
+                    @if(item.req_status === 'RF') {
+                      <span class="badge bg-success px-3 py-2 rounded-pill">{{
+                        item.req_status
+                      }}</span>
+                    }@else{
+                    <span class="badge bg-secondary px-3 py-2 rounded-pill">{{
+                      item.req_status
+                    }}</span>
+                    }
+                    <i
+                      class="fas"
+                      [ngClass]="
+                        expandedRrti() === item.rrti
+                          ? 'fa-chevron-up text-primary'
+                          : 'fa-chevron-down text-muted'
+                      "
+                    ></i>
+                  </div>
+                </div>
+
+                <!-- Cuerpo del Acordeón (Timeline) -->
+                @if (expandedRrti() === item.rrti) {
+                  <div class="card-body bg-light border-top p-4">
+                    <div class="d-flex justify-content-between mb-4">
+                      <h6 class="fw-bold text-primary m-0">
+                        <i class="fas fa-history me-2"></i> Línea de Tiempo del
+                        Componente
+                      </h6>
+                      <button
+                        class="btn btn-sm btn-tbl-planning fw-bold px-3 shadow-sm"
+                        (click)="
+                          downloadPdf(item); $event.stopPropagation()
+                        "
+                      >
+                        <i class="fas fa-file-pdf me-1"></i> Expediente PDF
+                      </button>
+                    </div>
+
+                    <div class="timeline-container">
+                      <!-- Iteramos sobre los GRUPOS (Fases) -->
+                      @for (group of item.groupedTimeline; track $index) {
+                        <div class="timeline-item">
+                          <!-- Ícono de fase (Un solo ícono por grupo) -->
+                          <div
+                            class="timeline-icon bg-white shadow-sm {{
+                              group.color
+                            }}"
+                          >
+                            <i class="fas {{ group.icon }}"></i>
+                          </div>
+
+                          <!-- Contenedor de la Fase -->
+                          <div class="mb-4">
+                            <h6 class="fw-bold mb-3 pt-2 {{ group.color }}">
+                              {{ group.phase }}
+                            </h6>
+
+                            <div class="d-flex flex-column gap-3">
+                              <!-- Iteramos sobre los registros (entries) de esta fase -->
+                              @for (event of group.entries; track $index) {
+                                <div
+                                  class="timeline-content bg-white p-3 rounded shadow-sm border border-light"
+                                >
+                                  <!-- Título a la izquierda, Fecha a la derecha -->
+                                  <div
+                                    class="d-flex justify-content-between align-items-start mb-2"
+                                  >
+                                    <h6 class="mb-0 text-dark fw-bold">
+                                      {{ event.action }}
+                                    </h6>
+                                    <span
+                                      class="badge bg-light text-secondary border ms-3 text-nowrap"
+                                    >
+                                      <i class="far fa-calendar-alt me-1"></i>
+                                      {{ event.date | date: 'dd/MM/yyyy' }}
+                                    </span>
+                                  </div>
+
+                                  <!-- Detalles -->
+                                  <p class="mb-2 text-muted small">
+                                    {{ event.details }}
+                                  </p>
+
+                                  <!-- Diseño Discreto del Archivo de Soporte -->
+                                  @if (event.support_file) {
+                                    <div
+                                      class="d-flex align-items-center gap-2 mt-3 p-2 bg-light rounded border-start border-3 border-info"
+                                    >
+                                      <i
+                                        class="fas fa-paperclip text-secondary"
+                                      ></i>
+                                      <span
+                                        class="small text-muted text-truncate fw-medium"
+                                        style="max-width: 400px"
+                                        [title]="event.support_filename"
+                                      >
+                                        Soporte adjunto:
+                                        {{
+                                          event.support_filename ||
+                                            'Documento_Respaldo.pdf'
+                                        }}
+                                      </span>
+                                      <button
+                                        class="btn btn-sm btn-link text-primary p-0 ms-auto text-decoration-none fw-bold"
+                                        (click)="
+                                          viewSupport(event.support_file);
+                                          $event.stopPropagation()
+                                        "
+                                      >
+                                        <i
+                                          class="fas fa-external-link-alt me-1"
+                                        ></i>
+                                        Ver
+                                      </button>
+                                    </div>
+                                  }
+
+                                  <hr class="my-2 opacity-25" />
+                                  <small class="text-muted fw-semibold"
+                                    ><i class="fas fa-user-edit me-1"></i>
+                                    {{
+                                      event.actor
+                                    }}</small
+                                  >
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        </div>
+                      }
+
+                      @if (item.groupedTimeline.length === 0) {
+                        <div class="text-center text-muted p-3">
+                          Aún no hay registros en bitácora para este componente.
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        } @else if (!isLoading() && searchTerm().length > 0) {
+          <div class="text-center py-5 text-muted">
+            <i class="fas fa-box-open fs-1 mb-3 opacity-50"></i>
+            <h5>Sin resultados</h5>
+            <p>Intente con otro nombre de rol o entregable.</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

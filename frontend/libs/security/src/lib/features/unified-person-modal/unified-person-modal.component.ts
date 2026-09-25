@@ -42,7 +42,7 @@ export class UnifiedPersonModalComponent implements OnInit {
   'Coord': 'COORDINADOR-CSPE',
   'ConsCSPE': 'CONSULTOR-CSPE',
   'Gerente': 'GERENTE',
-  'Viewer': 'AUDITOR'
+  'Viewer': 'LECTOR'
 };
 
   constructor() {

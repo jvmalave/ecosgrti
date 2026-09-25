@@ -12,7 +12,6 @@ use App\Domains\Core\Http\Controllers\RequirementClosureController;
 */
 
 
-
 Route::prefix('core')->middleware(['auth:api', 'password.expired' ])->group(function () {
 
 
@@ -83,17 +82,18 @@ Route::prefix('core')->middleware(['auth:api', 'password.expired' ])->group(func
     // ==========================================
 
     Route::middleware(['role:Admin,Coord'])->group(function () {
-    // Endpoint para generar el Acta Borrador (Etapa 1 del Cierre)
-      Route::post('/requirements/{requirement}/generate-closure-act', [RequirementClosureController::class, 'generateDraft']);
+      Route::prefix('/requirements/{requirement}')->group(function () {
+        Route::post('/generate-closure-act', [RequirementClosureController::class, 'generateDraft']);
       // Endpoint para generar el Acta de Cierre (Etapa 2 del Cierre)
-      Route::post('/requirements/{requirement}/finalize-closure', [RequirementClosureController::class, 'finalizeClosure']);
-
-      Route::get('/requirements/{requirement}/download-support', [RequirementClosureController::class, 'downloadSupport']);
-
-    
+        Route::post('/finalize-closure', [RequirementClosureController::class, 'finalizeClosure']);
+        Route::get('/download-support', [RequirementClosureController::class, 'downloadSupport']);
       });
+    });
 
 
 });
+
+
+
 
 

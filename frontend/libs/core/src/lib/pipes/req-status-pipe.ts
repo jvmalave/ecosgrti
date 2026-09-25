@@ -50,7 +50,7 @@ export class ReqStatusPipe implements PipeTransform {
     // ---------------------------------------------------------
     // CIERRE ABSOLUTO (Oscuros tenues)
     // ---------------------------------------------------------
-    'RF': { label: 'REQ Finalizado', cssClass: 'bg-danger bg-opacity-10 text-danger fw-bold' }
+    'RF': { label: 'REQ. Cerrado', cssClass: 'bg-danger bg-opacity-10 text-danger fw-bold' }
   };
   transform(value: string, returnType: 'label' | 'class' = 'label'): string {
     // Fallback de seguridad en caso de que llegue un estado no mapeado

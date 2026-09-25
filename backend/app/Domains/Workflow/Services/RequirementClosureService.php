@@ -63,11 +63,22 @@ class RequirementClosureService
                 'notification_support_path' => $notificationFile
             ]);
 
+            DB::table('workflow.requirement_phase_history')->insert([
+                'id'                  => (string) \Illuminate\Support\Str::uuid(),
+                'requirement_id'      => $requirement->id,
+                'phase_status_code'   => 'RF',
+                'transitioned_at'     => now(),
+                'executed_by_user_id' => auth()->id(),
+                'remarks'             => 'Cierre global definitivo del requerimiento y generación de acta',
+                'created_at'          => now(),
+                'updated_at'          => now(),
+            ]);
+
             // Auditoría Trazabilidad 
             // Pasamos 'record_id' dentro del array payload para que el servicio lo mapee como 'target_id'
             $this->auditService->logModelChange(
                 'FINALIZE_PROJECT',
-                'Cierre histórico definitivo y generación de acta',
+                'Cierre global definitivo y generación de acta',
                 [
                     'record_id'         => $requirement->id,
                     'acta_file_path'    => $actFileName,

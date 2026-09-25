@@ -1,119 +1,235 @@
 @if (isVisible()) {
-  <!-- Overlay del Modal -->
-  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.5); z-index: 1050; backdrop-filter: blur(2px);">
-    
-    <!-- Contenedor Principal del Modal -->
-    <div class="bg-white rounded shadow-lg d-flex flex-column" style="max-width: 1200px; width: 95%; max-height: 90vh;">
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.6); z-index: 1050; backdrop-filter: blur(6px);">
+    <div class="bg-white shadow-lg d-flex flex-column" style="max-width: 1800px; width: 95%; max-height: 95vh; border-radius: 0.75rem; overflow: hidden;">
       
-      <!-- Cabecera Global con Gradiente Corporativo -->
-      <div class="modal-header rounded-top">
-        <h3><i class="fas fa-chart-pie me-2"></i> Panel Ejecutivo de Gestión</h3>
-        <button class="close-btn" (click)="closeModal()">&times;</button>
+      <div class="modal-header border-0 px-4 py-3 text-white" style="background: linear-gradient(90deg, #1a237e 0%, #aa00ff 100%);">
+        <h5 class="modal-title m-0 fw-bold d-flex align-items-center gap-2">
+          <i class="fas fa-chart-line"></i> Centro de Inteligencia de Negocios (CSPE)
+        </h5>
+        <button
+          class="close-btn"
+          type="button"
+          (click)="closeModal()"
+          title="Cerrar modal"
+          aria-label="Close"
+        >
+        <i class="fa-solid fa-circle-xmark me-2"></i>
+      </button>
       </div>
 
-      <!-- Cuerpo del Modal -->
-      <div class="modal-body p-4 overflow-auto">
+      <div class="modal-body p-0 bg-light overflow-auto">
         
-        @if (isLoading()) {
-          <div class="text-center p-5 text-muted">
-            <div class="spinner-border text-primary mb-3" role="status"></div>
-            <p>Sincronizando Inteligencia de Negocios...</p>
-          </div>
-        } @else {
+        <!-- ========================================== -->
+        <!-- ZONA 1: SALUD GLOBAL DEL PORTAFOLIO (HOY)  -->
+        <!-- ========================================== -->
+        <div class="bg-white p-4 border-bottom">
+          <h5 class="fw-bold text-primary mb-4 text-uppercase"><i class="fas fa-heartbeat me-2"></i> Salud Global (Histórico Total / En Tiempo Real)</h5>
           
-          <!-- Botón de Descarga PDF con Gradiente Brand -->
-          <div class="d-flex justify-content-end mb-4">
-            <button class="btn btn-tbl-planning rounded-pill px-4 fw-semibold" (click)="downloadReport()">
-              <i class="fas fa-file-pdf me-2"></i> Descargar Reporte PDF
-            </button>
-          </div>
+          @if (isLoadingGlobal()) {
+            <div class="text-center p-4"><div class="spinner-border text-primary" role="status"></div></div>
+          } @else {
+            <div class="row row-cols-1 row-cols-md-5 g-3 mb-4">
+              
+              <!-- Volumetría Histórica -->
+              <div class="col">
+                <div class="card border-0 shadow-sm bg-primary bg-opacity-10 h-100">
+                  <div class="card-body p-3">
+                    <h6 class="mb-3 fw-bold text-uppercase" style="color: #2632bd;">Volumen Histórico</h6>
+                    <h2 class="mb-0 fw-bold" style="color: #2632bd;">{{ globalTotalCreated() }} <span class="fs-6" style="color: #2632bd;">Requerimientos creados</span></h2>
+                    <div class="d-flex gap-2 fs-5 mt-2">
+                      <span class="badge bg-primary-light border shadow" style="color: #2632bd;"><i class="fas fa-gear" style="color: #2632bd;"></i> En Progreso: {{  activeReqs() }} </span>
+                      <span class="badge bg-primary-light border shadow" style="color: #2632bd;"><i class="fas fa-check-circle" style="color: #2632bd;"></i>  Cerrados: {{ globalTotalClosed() }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-          <!-- Cuadrícula de KPIs -->
-          <div class="row g-4 mb-5">
+              <!--  Componentes Finalizados Independiente -->
+              <div class="col">
+                <div class="card border-0 shadow-sm bg-secondary bg-opacity-10 h-100">
+                  <div class="card-body p-3">
+                    <h6 class="text-secondary text-muted mb-3 fw-bold text-uppercase">Componentes</h6>
+                    <div class="d-flex align-items-baseline mb-0">
+                      <h2 class="text-dark mb-0 fw-bold me-2">{{ globalTotalComponents() }}</h2>
+                      <span class="text-dark fw-semibold">Componentes Cerrados</span>
+                    </div>
+                    <div class="d-flex gap-2 fs-5 mt-2">
+                      <span class="badge bg-light text-dark border shadow-sm"><i class="fas fa-user-cog text-dark"></i> Roles: {{ globalRoles() }} </span>
+                      <span class="badge bg-light text-dark border shadow-sm"><i class="fas fa-file-alt text-dark"></i>  Entregables: {{ globalDeliverables() }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Tarjeta: Edad Media -->
+              <div class="col">
+                <div class="card border-0 shadow-sm bg-warning bg-opacity-10 h-100">
+                  <div class="card-body p-3">
+                    <h6 class=" mb-3 fw-bold text-uppercase" style="color: #f3a702;">Edad Media</h6>
+                    <h2 class="mb-0 fw-bold" style="color: #f3a702;">{{ avgGlobalAge() }} <span class="fs-6" style="color: #f3a702;">días</span></h2>
+                    <!-- <div class="text-muted mt-1" style="font-size: 16px;">Promedio de reqs. en progreso.</div> -->
+                    <div class="d-flex gap-2 fs-5 mt-2">
+                      <span class="badge bg-warning-light text-dark border shadow"><i class="fa-solid fa-sliders me-1" style="color: #f3a702;"></i><span style="color: #f3a702;" class=> Promedio de reqs en progreso</span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4. Tarjeta: OTD Global -->
+              <div class="col">
+                <div class="card border-0 shadow-sm bg-info bg-opacity-10 h-100">
+                  <div class="card-body p-3">
+                    <h6 class="text-primary mb-3 fw-bold text-uppercase">Eficiencia (OTD) Histórico</h6>
+                    <h2 class="text-primary mb-0 fw-bold">{{ globalOtdPercentage() }}%</h2>
+                    <!-- <div class="text-success mt-1" style="font-size: 14px;">
+                      A tiempo: <strong>{{ globalOnTimeCount() }} de {{ globalTotalEvaluated() }}</strong> evaluados.
+                    </div> -->
+                    <div class="d-flex gap-2 fs-5 mt-2">
+                      <span class="badge bg-info-light border shadow"><i class="fas fa-clock text-primary me-1"></i><span class="text-primary"> A tiempo: {{ globalOnTimeCount() }} de {{ globalTotalEvaluated() }} evaluados</span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 5. Tarjeta: Alertas Críticas -->
+              <div class="col">
+                <div class="card border-0 shadow-sm bg-danger bg-opacity-10 h-100" 
+                    style="cursor: pointer; transition: transform 0.2s;" 
+                    onmouseover="this.style.transform='scale(1.03)'" 
+                    onmouseout="this.style.transform='scale(1)'"
+                    (click)="isAlertsModalOpen = true" title="Clic para ver detalle">
+                  <div class="card-body p-3">
+                    <h6 class="text-danger mb-3 fw-bold text-uppercase">Riesgo (>5 días desvío)</h6>
+                    <h2 class="text-danger mb-0 fw-bold">{{ uniqueCriticalRrtisCount() }} <span class="fs-6">Reqs.</span></h2>
+                    <!-- <div class="text-danger mt-1 fw-medium" style="font-size: 13px;">
+                      <i class="fas fa-hand-pointer me-1"></i> Ver monitor táctico
+                    </div> -->
+                    <div class="d-flex gap-2 fs-5 mt-2">
+                      <span class="badge bg-danger-light text-dark border shadow"><i class="fas fa-hand-pointer me-1 text-danger"></i><span class="text-danger"> Ver monitor táctico</span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- GRÁFICAS GLOBALES -->
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-header bg-white border-0 pt-3 pb-0"><h6 class="fw-bold text-dark mb-0">Distribución por Estatus (Cuello de Botella)</h6></div>
+                  <div class="card-body" style="height: 220px;"><canvas baseChart [data]="statusChartData" [options]="statusChartOptions" [type]="'bar'"></canvas></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-header bg-white border-0 pt-3 pb-0"><h6 class="fw-bold text-dark mb-0">Envejecimiento (Reqs en Progreso)</h6></div>
+                  <div class="card-body" style="height: 220px;"><canvas baseChart [data]="agingChartData" [options]="agingChartOptions" [type]="'bar'"></canvas></div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- ========================================== -->
+        <!-- ZONA 2: RENDIMIENTO OPERATIVO (PERÍODO)    -->
+        <!-- ========================================== -->
+        <div class="p-4 border-bottom">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold text-success mb-0 text-uppercase"><i class="fas fa-chart-bar me-2"></i> Rendimiento Operativo </h5>
             
-            <!-- Tarjeta OTD -->
-            <div class="col-md-4">
-              <div class="card h-100 border-0 shadow-sm" style="border-top: 4px solid #28a745 !important;">
-                <div class="card-body text-center">
-                  <h6 class="text-muted fw-bold mb-3">TASA OTD</h6>
-                  <h2 class="display-5 fw-bold text-success mb-0">{{ otdMetrics()?.otd_percentage }}%</h2>
-                  <div class="small text-muted mt-3">
-                    A Tiempo: {{ otdMetrics()?.on_time_count }} <span class="mx-1">|</span> Atrasado: {{ otdMetrics()?.late_count }}
-                  </div>
-                </div>
-              </div>
+            <!-- Controles de Fecha -->
+            <div class="d-flex gap-2">
+              <input type="date" class="form-control form-control-sm shadow-sm" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)" title="Fecha Inicio">
+              <input type="date" class="form-control form-control-sm shadow-sm" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)" title="Fecha Fin">
+              <button class="btn btn-sm btn-primary fw-bold shadow-sm px-3" (click)="fetchPeriodPerformance()" [disabled]="isLoadingPeriod()">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+              <button class="btn btn-sm btn-danger fw-bold shadow-sm px-3" (click)="downloadPdf()">
+                <i class="fas fa-file-pdf"></i>
+              </button>
             </div>
-
-            <!-- Tarjeta Desviación -->
-            <div class="col-md-4">
-              <div class="card h-100 border-0 shadow-sm" style="border-top: 4px solid #dc3545 !important;">
-                <div class="card-body text-center">
-                  <h6 class="text-muted fw-bold mb-3">DESVIACIÓN PROMEDIO</h6>
-                  <h2 class="display-5 fw-bold text-danger mb-0">
-                    {{ deviationMetrics()?.deviation_stats?.global_average_delay_days }} <span class="fs-5">días</span>
-                  </h2>
-                  <div class="small text-muted mt-3">
-                    Fases Evaluadas: {{ deviationMetrics()?.deviation_stats?.total_phases_evaluated }}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Tarjeta Aging -->
-            <div class="col-md-4">
-              <div class="card h-100 border-0 shadow-sm border-brand" style="border-top: 4px solid #d500f9 !important;">
-                <div class="card-body text-center">
-                  <h6 class="text-muted fw-bold mb-3">VOLUMEN ACTIVO</h6>
-                  <h2 class="display-5 fw-bold text-brand mb-0">{{ agingMetrics()?.summary?.total_open_requirements }}</h2>
-                  <div class="small text-muted mt-3">
-                    Edad Media: {{ agingMetrics()?.summary?.average_global_age }} días
-                  </div>
-                </div>
-              </div>
-            </div>
-
           </div>
 
-          <!-- Alertas Tempranas -->
-          <div class="alerts-section">
-            <h5 class="border-bottom pb-2 mb-3 text-blue fw-bold">Alertas de Desviación Críticas</h5>
-            
-            @if (deviationMetrics()?.active_alerts?.length) {
-              <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                  <thead class="table-light">
-                    <tr>
-                      <th>RRTI</th>
-                      <th>Fase Crítica</th>
-                      <th>Tipo</th>
-                      <th class="text-end">Atraso</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (alert of deviationMetrics()?.active_alerts; track alert.rrti + alert.phase) {
-                      <tr>
-                        <td class="fw-bold">{{ alert.rrti }}</td>
-                        <td><span class="badge badge-kpi px-3 py-2">{{ alert.phase }}</span></td>
-                        <td>
-                          <span class="text-danger fw-semibold">
-                            <i class="fas fa-exclamation-circle me-1"></i>
-                            {{ alert.type === 'START_DELAY' ? 'Rezagado al Iniciar' : 'Estancado al Cerrar' }}
-                          </span>
-                        </td>
-                        <td class="text-end fw-semibold text-danger">{{ alert.days_late }} días</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+          @if (isLoadingPeriod()) {
+            <div class="text-center p-4"><div class="spinner-border text-success" role="status"></div></div>
+          } @else {
+            <div class="row g-3">
+              <div class="col-md-7">
+                <div class="row g-3 h-100">
+                  <!-- Fila 1: Creados y En Producción -->
+                  <div class="col-sm-6">
+                    <div class="card border-0 shadow-sm border-start border-primary border-4 h-100 p-2 bg-primary bg-opacity-10">
+                      <div class="card-body">
+                        <h6 class="fw-bold text-uppercase mb-3" style="color: #2632bd;">Requerimientos Creados</h6>
+                        <h3 class=" mb-0 fw-bold" style="color: #2632bd;">{{ periodEntered() }}</h3>
+                        <div class="d-flex gap-2 fs-5 mt-2">
+                          <span class="badge bg-primary-light border shadow" style="color: #2632bd;"><i class="fas fa-gear text-primary"></i> Requerimientos creados en el período </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="card border-0 shadow-sm border-start border-success border-4 h-100 p-2 bg-success bg-opacity-10">
+                      <div class="card-body">
+                        <h6 class="text-success fw-bold text-uppercase mb-3">Requerimientos Cerrados</h6>
+                        <h3 class="text-success mb-0 fw-bold">{{ periodClosed() }}</h3>
+                        <div class="d-flex gap-2 fs-5 mt-2">
+                          <span class="badge bg-sucess-light border shadow"><i class="fas fa-check-circle text-success me-1"></i> <span class="text-success">Requerimientos cerrados en el período</span></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Fila 2: OTD y Componentes del Período -->
+                  <div class="col-sm-6">
+                    <div class="card border-0 shadow-sm border-start border-info border-4 p-2 h-100 bg-info bg-opacity-10">
+                      <div class="card-body">
+                        <h6 class="text-primary fw-bold text-uppercase mb-3">Eficiencia (OTD)</h6>
+                        <h2 class="text-primary mb-1 fw-bold">{{ otdPercentage() }}%</h2>
+                        <!-- <div class="text-muted mt-1" style="font-size: 13px;">Mide el % de req. cerrados a tiempo en este período.</div> -->
+                        <div class="d-flex gap-2 fs-5 mt-2">
+                          <span class="badge bg-info-light border shadow"><i class="fas fa-clock text-primary mb-1"></i> <span class="text-primary"> Mide el % de req. cerrados a tiempo en este período</span></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-sm-6">
+                    <div class="card border-0 shadow-sm border-start border-secondary border-4 p-2 h-100 bg-secondary bg-opacity-10">
+                      <div class="card-body">
+                        <h6 class="text-secondary fw-bold text-uppercase mb-3">Componentes</h6>
+                        <div class="d-flex align-items-baseline mb-2">
+                          <h2 class="text-dark mb-0 fw-bold me-2">{{ periodTotalComponents() }}</h2>
+                          <span class="text-dark fw-semibold">Componentes cerrados en el período</span>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 fs-5 mt-2">
+                          <span class="badge bg-secondary-light text-dark border shadow"><i class="fas fa-user-cog text-dark"></i> Roles: {{ periodRoles() }} </span>
+                          <span class="badge bg-secondary-light text-dark border shadow"><i class="fas fa-file-alt text-dark"></i> Entregables: {{ periodDeliverables() }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
               </div>
-            } @else {
-              <div class="alert alert-success text-center mt-3" role="alert">
-                <i class="fas fa-check-circle me-2"></i> Operación óptima. No se detectan desviaciones de cronograma actuales.
+              <div class="col-md-5">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-body d-flex justify-content-center" style="height: 200px;">
+                    <canvas baseChart [data]="otdChartData" [options]="otdChartOptions" [type]="'doughnut'"></canvas>
+                  </div>
+                </div>
               </div>
-            }
-          </div>
-        }
+            </div>
+          }
+        </div>
+
       </div>
     </div>
   </div>
 }
+
+<lib-alerts-modal 
+  [isVisible]="isAlertsModalOpen" 
+  [alerts]="criticalAlerts()" 
+  (closeModalEvent)="isAlertsModalOpen = false">
+</lib-alerts-modal>

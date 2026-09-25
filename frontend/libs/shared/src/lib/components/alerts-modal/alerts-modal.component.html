@@ -1,0 +1,84 @@
+@if (isVisible()) {
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0, 0, 0, 0.7); z-index: 1060; backdrop-filter: blur(4px);">
+    <div class="bg-white shadow-lg d-flex flex-column" style="max-width: 900px; width: 95%; max-height: 85vh; border-radius: 0.75rem; overflow: hidden;">
+      
+      <div class="modal-header border-0 px-4 py-3 bg-danger text-white">
+        <h5 class="modal-title m-0 fw-bold d-flex align-items-center gap-2">
+          <i class="fas fa-exclamation-triangle"></i> Monitor Táctico de Riesgos (Efecto Cascada)
+        </h5>
+        <button
+          class="close-btn"
+          type="button"
+          (click)="closeModal()"
+          title="Cerrar modal"
+          aria-label="Close"
+        >
+        <i class="fa-solid fa-circle-xmark me-2"></i>
+      </button>
+      </div>
+
+      <div class="modal-body p-4 bg-light overflow-auto">
+        <div class="mb-4 text-center">
+          <h6 class="text-muted fw-medium">Requerimientos con desviaciones mayores a 5 días respecto a su estimación base.</h6>
+        </div>
+
+        @if (groupedAlerts().length > 0) {
+          <div class="d-flex flex-column gap-4">
+            
+            @for (group of groupedAlerts(); track group.rrti) {
+              <!-- Tarjeta Agrupadora por RRTI -->
+              <div class="card border-0 shadow-sm rrti-card">
+                <div class="card-header bg-white border-bottom pt-3 pb-2 d-flex justify-content-between align-items-center">
+                  <h5 class="fw-bold text-dark mb-0">
+                    <i class="fas fa-folder-open text-muted me-2"></i> RRTI: <span class="text-primary">{{ group.rrti }}</span>
+                  </h5>
+                  <div class="d-flex gap-2">
+                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">Atraso Máx: {{ group.maxDelay }} días</span>
+                    <span class="badge bg-secondary">{{ group.details.length }} alertas en cascada</span>
+                  </div>
+                </div>
+                
+                <div class="card-body p-0">
+                  <ul class="list-group list-group-flush">
+                    @for (alert of group.details; track $index) {
+                      <li class="list-group-item p-3 d-flex align-items-center gap-3">
+                        
+                        <!-- Ícono Visual de la Fase -->
+                        <div class="phase-icon-box {{ getPhaseVisuals(alert.phase).bg }} bg-opacity-10 {{ getPhaseVisuals(alert.phase).text }}">
+                          <i class="fas {{ getPhaseVisuals(alert.phase).icon }}"></i>
+                        </div>
+                        
+                        <!-- Detalle de la Alerta -->
+                        <div class="flex-grow-1">
+                          <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold text-dark">{{ alert.phase }}</h6>
+                            <span class="badge" [ngClass]="alert.type === 'START_DELAY' ? 'bg-warning text-dark' : 'bg-danger'">
+                              {{ alert.type === 'START_DELAY' ? 'Atraso de Inicio' : 'Atraso de Cierre' }}
+                            </span>
+                          </div>
+                          <p class="mb-0 text-muted" style="font-size: 13px;">{{ alert.message }}</p>
+                        </div>
+                        
+                        <!-- Días Específicos -->
+                        <div class="text-end ms-3">
+                          <h4 class="mb-0 fw-bold text-danger">{{ alert.days_late }}</h4>
+                          <span class="text-muted" style="font-size: 11px;">días</span>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="text-center p-5 text-success">
+            <i class="fas fa-check-circle fs-1 mb-3"></i>
+            <h5>Sin Desviaciones Críticas</h5>
+            <p>Todos los requerimientos activos están operando dentro del margen de 5 días de su planificación.</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

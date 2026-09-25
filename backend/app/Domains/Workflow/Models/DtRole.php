@@ -36,7 +36,26 @@ class DtRole extends Model
         'requirement_role_id',
         'name',
         'status',
+        'created_by',
+        'updated_by'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (auth()->check()) {
+                $model->created_by = auth()->id();
+            }
+        });
+
+        static::updating(function ($model) {
+            if (auth()->check()) {
+                $model->updated_by = auth()->id();
+            }
+        });
+    }
 
     /**
      * Relación: Pertenece al requerimiento principal (Core)

@@ -2,6 +2,10 @@
 
 .swal2-container {
   z-index: 9999 !important;
+  /* NUEVO: Fondo oscuro elegante y difuminado (Efecto Glassmorphism inverso) */
+  background-color:  rgba(0, 0, 0, 0.65) !important;  
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important; /* Soporte para Safari */
 }
 
 /* ==============================================================
@@ -89,6 +93,14 @@ $color-danger:   #ef4444;
   font-weight: bold !important;
   border: 1px solid rgba($color-blue, 0.80)!important;
 }
+
+.badge-success{
+  background-color: rgba(#22c55e, 0.80) !important; 
+  color: $text-white !important;
+  font-weight: bold !important;
+  border: 1px solid rgba($color-blue, 0.80)!important;
+}
+
 
 .btn-brand {
   background: linear-gradient(90deg, #aa00ff 0%, #d500f9 100%);

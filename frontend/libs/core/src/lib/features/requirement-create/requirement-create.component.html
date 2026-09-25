@@ -38,15 +38,19 @@
           <form [formGroup]="requirementForm" (ngSubmit)="onSubmit()" novalidate>
             <div class="row g-3">
               
-              <!-- RRTI -->
+              <!-- Identificador del requerimiento -->
+
               <div class="col-md-4">
                 <label for="rrti" class="form-label fw-semibold">Número Único RRTI <span class="text-danger">*</span></label>
                 <input type="text" id="rrti" formControlName="rrti" class="form-control"
                   [class.is-invalid]="requirementForm.get('rrti')?.touched && requirementForm.get('rrti')?.invalid"
-                  placeholder="Ej. 20261023">
-                <div class="invalid-feedback">Requerido. Solo caracteres numéricos.</div>
+                  placeholder="Ej. 20261023"
+                  minlength="5"
+                  maxlength="8"
+                  (input)="onRrtiInput($event)" 
+                  (blur)="formatRrtiCode()"> 
+                <div class="invalid-feedback">Requerido. Mínimo 5 dígitos numéricos.</div>
               </div>
-
               <!-- Tipo de Requerimiento -->
               <div class="col-md-4">
                 <label for="requirement_type" class="form-label fw-semibold">Tipo de Requerimiento <span class="text-danger">*</span></label>

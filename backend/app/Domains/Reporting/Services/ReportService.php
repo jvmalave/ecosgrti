@@ -18,22 +18,23 @@ class ReportService
      * 
      * @return Collection<int, User>
      */
-    public function getMdmDirectoryData(): Collection
+  
+    public function getMdmDirectoryData(array $filters = [])
     {
-        // NOTA DE VERIFICACIÓN: Asumimos que existe la relación 'person' en el modelo User.
         return User::withTrashed()
             ->with(['person' => function ($query) {
-                // Seleccionamos solo los campos necesarios de la tabla persons para optimizar memoria
-                $query->select('id', 'first_name', 'last_name', 'email'); // Ajustar si la FK es diferente
+                $query->select('id', 'first_name', 'last_name', 'email');
             }])
-            ->select('id', 'name', 'email', 'roles', 'deleted_at') // Importante: Si la relación usa un person_id, debe incluirse en este select
+            ->when(!empty($filters['role']), function ($query) use ($filters) {
+                // Cast forzado a texto para evitar conflictos de operadores JSONB en PostgreSQL
+                $query->whereRaw("roles::text LIKE ?", ['%' . $filters['role'] . '%']);
+            })
+            ->select('id', 'name', 'email', 'roles', 'deleted_at')
             ->orderBy('name', 'asc')
             ->get();
     }
-
     /**
      * Extrae toda la data relacional necesaria para emitir un Acta de Cierre.
-     * Carga ansiosamente (Eager Loading) a los involucrados para evitar consultas N+1.
      * 
      * @param string $requirementId Identificador UUID del requerimiento
      */
@@ -49,20 +50,15 @@ class ReportService
                 $query->orderBy('created_at', 'asc');
             },
             'cerTicket', 'papOrder', 'auTicket', 'ceeTicket',
-            
-            // Colecciones específicas por fase para validar el estatus de cada componente
             'dtRoles', 'corRoles', 'piRoles', 'cerRoles', 'papRoles', 'auRoles',
             'coeDeliverables', 'ceeDeliverables'
         ])->findOrFail($requirementId);
     }
-
     /**
-     * Extrae toda la data relacional necesaria para emitir un Acta de Cierre.
-     * Carga ansiosamente (Eager Loading) a los involucrados para evitar consultas N+1.
+     * Extrae toda la data relacional necesaria para emitir un Acta de Cierre por RRTI.
      * 
      * @param string $rrti Código RRTI del requerimiento
      */
-
     public function getRequirementClosureDataByRrti(string $rrti)
     {
         return Requirement::with([
@@ -79,6 +75,7 @@ class ReportService
             'coeDeliverables', 'ceeDeliverables'
         ])->where('rrti', $rrti)->firstOrFail();
     }
+
     /**
      * Consulta los registros de auditoría aplicando filtros dinámicos.
      */
@@ -86,7 +83,6 @@ class ReportService
     {
         $requirementId = null;
 
-        // Si se envió un código RRTI, resolvemos su UUID en memoria
         if (!empty($filters['rrti'])) {
             $cleanRrti = trim(str_replace('#', '', $filters['rrti']));
             $requirement = Requirement::where('rrti', $cleanRrti)->first();
@@ -107,7 +103,6 @@ class ReportService
                 $q->where('action', $filters['action']);
             })
             ->when($requirementId, function ($q) use ($requirementId) {
-                // Filtro híbrido: busca en target_id o dentro del payload JSON
                 $q->where(function ($sub) use ($requirementId) {
                     $sub->where('target_id', $requirementId)
                         ->orWhere('payload->record_id', $requirementId)
@@ -117,47 +112,40 @@ class ReportService
             ->orderBy('created_at', 'desc')
             ->get();
     }
-
     /**
-     * Genera el consolidado de gestión agrupado por consultor CSPE (DDD Compliant).
+     * Genera el consolidado de gestión agrupado por consultor CSPE.
      */
     public function getConsultantManagement(array $filters)
     {
-        // 1. Definimos los diccionarios de estado al inicio para usarlos en el Query Builder
         $activeStatuses = ['RC', 'ES-R', 'ATF-I', 'DT-I', 'COR-I', 'COE-I', 'PI-I', 'CER-I', 'CEE-I', 'PAP-I', 'AU-I', 'ATF-C', 'DT-C', 'COR-C', 'COE-C', 'PI-C', 'CER-C', 'CEE-C', 'PAP-C', 'AU-C'];
-        $completedStatuses = ['RF'];
-        $stoppedStatuses = ['DET', 'CAN'];
+        $completedStatuses = ['RF']; // RF = Requerimiento Finalizado / Cerrado
 
-        // 2. Extraemos los requerimientos aplicando todos los filtros multidimensionales
+        // Construimos la consulta con sub-selects para buscar las fechas exactas en el historial
         $requirements = DB::table('core.cspe_consultant_requirement as pivot')
             ->join('core.requirements as r', 'pivot.requirement_id', '=', 'r.id')
-            ->select('pivot.cspe_consultant_id', 'r.rrti', 'r.status', 'r.progress_percentage')
-            // Filtro por Fechas
+            ->whereNull('r.deleted_at')
+            ->select(
+                'pivot.cspe_consultant_id', 
+                'r.rrti', 
+                'r.description',
+                'r.status', 
+                'r.completion_date',
+                // Fecha de Inicio de Atención (Primer registro de ATF-I)
+                DB::raw("(SELECT created_at FROM workflow.requirement_phase_history WHERE requirement_id = r.id AND phase_status_code = 'ATF-I' ORDER BY created_at ASC LIMIT 1) as fecha_inicio_atencion"),
+                // Fecha PAP (Último registro de PAP-C)
+                DB::raw("(SELECT created_at FROM workflow.requirement_phase_history WHERE requirement_id = r.id AND phase_status_code = 'PAP-C' ORDER BY created_at DESC LIMIT 1) as fecha_pap")
+            )
             ->when(!empty($filters['start_date']), fn($q) => $q->whereDate('r.created_at', '>=', $filters['start_date']))
             ->when(!empty($filters['end_date']), fn($q) => $q->whereDate('r.created_at', '<=', $filters['end_date']))
-            // Filtro por RRTI (Acepta formato con o sin '#')
             ->when(!empty($filters['rrti']), fn($q) => $q->where('r.rrti', 'like', '%' . trim(str_replace('#', '', $filters['rrti'])) . '%'))
-            // Filtro por Estado Operativo
-            ->when(!empty($filters['status_type']), function($q) use ($filters, $activeStatuses, $completedStatuses) {
-                if ($filters['status_type'] === 'active') {
-                    $q->whereIn('r.status', $activeStatuses);
-                } elseif ($filters['status_type'] === 'completed') {
-                    $q->whereIn('r.status', $completedStatuses);
-                }
-            })
-            // Filtro por Nombre o Apellido del Consultor (Uniendo las tablas de identidad)
             ->when(!empty($filters['consultant_id']), fn($q) => $q->where('pivot.cspe_consultant_id', $filters['consultant_id']))
             ->get();
 
-        // Si la consulta no arrojó resultados tras los filtros, retornamos una colección vacía de inmediato
         if ($requirements->isEmpty()) {
             return collect([]);
         }
 
-        // 3. Extraemos los IDs únicos de los consultores resultantes
         $cspeConsultantIds = $requirements->pluck('cspe_consultant_id')->unique()->toArray();
-
-        // 4. Dominio Security: Resolución de identidades
         $consultantsIdentity = CspeConsultant::with('person')
             ->whereIn('id', $cspeConsultantIds)
             ->get()
@@ -166,35 +154,30 @@ class ReportService
         $result = [];
         $grouped = $requirements->groupBy('cspe_consultant_id');
 
-        // 5. Agrupación y clasificación
         foreach ($grouped as $consultantId => $reqs) {
             $consultant = $consultantsIdentity->get($consultantId);
             $person = $consultant ? $consultant->person : null;
 
-            $activeReqs = $reqs->filter(fn($r) => in_array($r->status, $activeStatuses))->values();
-            $completedReqs = $reqs->filter(fn($r) => in_array($r->status, $completedStatuses))->values();
-            $stoppedReqs = $reqs->filter(fn($r) => in_array($r->status, $stoppedStatuses))->values();
+            // Filtramos y transformamos los datos para la vista
+            $cerrados = $reqs->filter(fn($r) => in_array($r->status, $completedStatuses))->values();
+            $enProceso = $reqs->filter(fn($r) => in_array($r->status, $activeStatuses))->values();
 
             $result[] = [
-                'consultant_id'     => $consultantId,
-                'first_name'        => $person ? $person->first_name : 'Consultor',
-                'last_name'         => $person ? $person->last_name : 'Desconocido',
-                'total_asignados'   => $reqs->count(),
-                'req_en_proceso'    => $activeReqs->count(),
-                'req_completados'   => $completedReqs->count(),
-                'req_detenidos'     => $stoppedReqs->count(),
-                'active_details'    => $activeReqs,
-                'completed_details' => $completedReqs,
+                'consultant_id'  => $consultantId,
+                'full_name'      => $person ? $person->first_name . ' ' . $person->last_name : 'Consultor Desconocido',
+                'cerrados'       => $cerrados,
+                'en_proceso'     => $enProceso,
+                'total_asignados'=> $reqs->count()
             ];
         }
 
-        usort($result, fn($a, $b) => $b['total_asignados'] <=> $a['total_asignados']);
+        // Ordenamos alfabéticamente por nombre de consultor
+        usort($result, fn($a, $b) => strcmp($a['full_name'], $b['full_name']));
 
         return collect($result);
     }
-
     /**
-     * Retorna el diccionario de consultores CSPE formateado para los selectores del frontend.
+     * Retorna el diccionario de consultores CSPE formateado para selectores.
      */
     public function getCspeConsultantsDictionary(): \Illuminate\Support\Collection
     {
@@ -208,7 +191,52 @@ class ReportService
             });
     }
 
-    
+    public function getConsolidatedGeneral(array $filters)
+    {
+        $activeStatuses = ['RC', 'ES-R', 'ATF-I', 'DT-I', 'COR-I', 'COE-I', 'PI-I', 'CER-I', 'CEE-I', 'PAP-I', 'AU-I', 'ATF-C', 'DT-C', 'COR-C', 'COE-C', 'PI-C', 'CER-C', 'CEE-C', 'PAP-C', 'AU-C'];
+        $completedStatuses = ['RF'];
+
+        // Consultamos directo al modelo de Requerimientos
+        $query = Requirement::with(['cspeConsultants.person'])
+            ->select(
+                'core.requirements.id', 'rrti', 'description', 'status', 'completion_date', 'created_at',
+                DB::raw("(SELECT created_at FROM workflow.requirement_phase_history WHERE requirement_id = core.requirements.id AND phase_status_code = 'ATF-I' ORDER BY created_at ASC LIMIT 1) as fecha_inicio_atencion"),
+                DB::raw("(SELECT created_at FROM workflow.requirement_phase_history WHERE requirement_id = core.requirements.id AND phase_status_code = 'PAP-C' ORDER BY created_at DESC LIMIT 1) as fecha_pap")
+            );
+
+        // Filtros
+        if (!empty($filters['start_date'])) {
+            $query->whereDate('created_at', '>=', $filters['start_date']);
+        }
+        if (!empty($filters['end_date'])) {
+            $query->whereDate('created_at', '<=', $filters['end_date']);
+        }
+        if (!empty($filters['rrti'])) {
+            $query->where('rrti', 'like', '%' . trim(str_replace('#', '', $filters['rrti'])) . '%');
+        }
+        if (!empty($filters['consultant_id'])) {
+            // Buscamos requerimientos que tengan asignado a este consultor en la tabla pivote
+            $query->whereHas('cspeConsultants', function($q) use ($filters) {
+                $q->where('security.cspe_consultants.id', $filters['consultant_id']);
+            });
+        }
+
+        $requirements = $query->orderBy('created_at', 'desc')->get();
+
+        // Mapeamos a los consultores en un solo string separado por comas
+        $requirements->each(function ($req) {
+            $req->nombres_consultores = $req->cspeConsultants->map(function ($c) {
+                return trim(($c->person->first_name ?? '') . ' ' . ($c->person->last_name ?? ''));
+            })->filter()->implode(', ') ?: 'Sin asignar';
+        });
+
+        // Devolvemos los dos grupos separados
+        return [
+            'cerrados'   => $requirements->filter(fn($r) => in_array($r->status, $completedStatuses))->values(),
+            'en_proceso' => $requirements->filter(fn($r) => in_array($r->status, $activeStatuses))->values(),
+        ];
+    }
+
     /**
      * Genera el Histórico de Pases a Producción y evolución de roles.
      */
@@ -247,7 +275,6 @@ class ReportService
                 continue;
             }
 
-            // Llamamos a la función con 3 parámetros, ya que ahora calcula en memoria
             $rolesDetails = $this->buildRolesProgress($reqBaseRoles, $rolesLog, $orders);
             $rolesInProdCount = collect($rolesDetails)->where('current_status', 'IN_PRODUCTION')->count();
             $totalRoles = $reqBaseRoles->count();
@@ -273,10 +300,6 @@ class ReportService
         return collect($result);
     }
 
-    /* ====================================================================
-        MÉTODOS PRIVADOS DE SOPORTE (Refactorización)
-       ==================================================================== */
-
     private function getDeploymentsCoreData(array $filters)
     {
         return DB::table('core.requirements as r')
@@ -284,6 +307,7 @@ class ReportService
                 $join->on('r.id', '=', 'rph.requirement_id')
                     ->where('rph.phase_status_code', '=', 'PAP-C');
             })
+            ->whereNull('r.deleted_at') // Prevención de SoftDeletes
             ->select('r.id as requirement_id', 'r.rrti', 'r.description', 'r.status', 'rph.created_at as pap_c_date')
             ->whereIn('r.status', ['PAP-I', 'PAP-C', 'AU-I', 'AU-C', 'RF'])
             ->when(!empty($filters['rrti']), fn($q) => $q->where('r.rrti', 'like', '%' . trim(str_replace('#', '', $filters['rrti'])) . '%'))
@@ -292,64 +316,64 @@ class ReportService
     }
 
     private function isExcludedByDateFilter(?string $referenceDate, array $filters): bool
-      {
-          if (!$referenceDate) return false;
+    {
+        if (!$referenceDate) return false;
 
-          if (!empty($filters['start_date']) && \Carbon\Carbon::parse($referenceDate)->startOfDay() < \Carbon\Carbon::parse($filters['start_date'])->startOfDay()) {
-              return true;
-          }
-          if (!empty($filters['end_date']) && \Carbon\Carbon::parse($referenceDate)->endOfDay() > \Carbon\Carbon::parse($filters['end_date'])->endOfDay()) {
-              return true;
-          }
-          
-          return false;
-      }
+        if (!empty($filters['start_date']) && \Carbon\Carbon::parse($referenceDate)->startOfDay() < \Carbon\Carbon::parse($filters['start_date'])->startOfDay()) {
+            return true;
+        }
+        if (!empty($filters['end_date']) && \Carbon\Carbon::parse($referenceDate)->endOfDay() > \Carbon\Carbon::parse($filters['end_date'])->endOfDay()) {
+            return true;
+        }
+        
+        return false;
+    }
+
 
     private function buildRolesProgress(
-        \Illuminate\Support\Collection $reqBaseRoles, 
-        \Illuminate\Support\Collection $rolesLog, 
-        \Illuminate\Support\Collection $orders
-    ): array {
-        $details = [];
-        foreach ($reqBaseRoles as $baseRole) {
-            $roleHistory = $rolesLog->where('requirement_role_id', $baseRole->id);
-            $lastAttempt = $roleHistory->first();
+          \Illuminate\Support\Collection $reqBaseRoles, 
+          \Illuminate\Support\Collection $rolesLog, 
+          \Illuminate\Support\Collection $orders
+        ):array 
+    {
+      $details = [];
+      foreach ($reqBaseRoles as $baseRole) {
+        $roleHistory = $rolesLog->where('requirement_role_id', $baseRole->id);
+        $lastAttempt = $roleHistory->first();
+        
+        $orderInfo = null;
+        $orderDate = null;
+        $attempts  = 0;
+        
+        if ($lastAttempt) {
+            $attempts = 1; 
             
-            $orderInfo = null;
-            $orderDate = null;
-            $attempts  = 0;
-            
-            if ($lastAttempt) {
-                // Si existe registro en pap_roles, ya cuenta como el intento actual (1)
-                $attempts = 1; 
-                
-                // Le sumamos todos los rechazos previos registrados en su historial inmutable
-                if (!empty($lastAttempt->rejection_history)) {
-                    $historyData = json_decode($lastAttempt->rejection_history, true);
-                    if (is_array($historyData)) {
-                        $attempts += count($historyData);
-                    }
-                }
-                
-                if ($lastAttempt->order_id) {
-                    $order = $orders->firstWhere('id', $lastAttempt->order_id);
-                    if ($order) {
-                        $orderInfo = $order->order_number;
-                        $orderDate = $order->date;
-                    }
+            if (!empty($lastAttempt->rejection_history)) {
+                $historyData = json_decode($lastAttempt->rejection_history, true);
+                if (is_array($historyData)) {
+                    $attempts += count($historyData);
                 }
             }
             
-            $details[] = [
-                'role_name'      => $baseRole->role_name,
-                'current_status' => $lastAttempt->status ?? 'SIN PROCESAR',
-                'attempts'       => $attempts,
-                'order_number'   => $orderInfo,
-                'order_date'     => $orderDate
-            ];
+            if ($lastAttempt->order_id) {
+                $order = $orders->firstWhere('id', $lastAttempt->order_id);
+                if ($order) {
+                    $orderInfo = $order->order_number;
+                    $orderDate = $order->date;
+                }
+            }
         }
-        return $details;
-    }
+        
+        $details[] = [
+            'role_name'      => $baseRole->role_name,
+            'current_status' => $lastAttempt->status ?? 'SIN PROCESAR',
+            'attempts'       => $attempts,
+            'order_number'   => $orderInfo,
+            'order_date'     => $orderDate
+        ];
+      }
+    return $details;
+  }
 
     private function extractDecodedRollbacks(\Illuminate\Support\Collection $rolesLog, \Illuminate\Support\Collection $reqBaseRoles): \Illuminate\Support\Collection
     {
@@ -379,13 +403,13 @@ class ReportService
      */
     public function getOperationalSheet(array $filters)
     {
-        // 1. Extracción base de requerimientos con sus relaciones directas (Consultor CSPE y Funcional)
         $requirements = DB::table('core.requirements as r')
             ->leftJoin('core.cspe_consultant_requirement as ccr', 'r.id', '=', 'ccr.requirement_id')
             ->leftJoin('security.cspe_consultants as cc', 'ccr.cspe_consultant_id', '=', 'cc.id')
             ->leftJoin('security.persons as cp', 'cc.person_id', '=', 'cp.id')
             ->leftJoin('security.functional_consultants as fc', 'r.functional_consultant_id', '=', 'fc.id')
             ->leftJoin('security.persons as fcp', 'fc.person_id', '=', 'fcp.id')
+            ->whereNull('r.deleted_at') // Prevención de SoftDeletes
             ->select(
                 'r.id',
                 'r.rrti',
@@ -408,21 +432,18 @@ class ReportService
 
         $reqIds = $requirements->pluck('id')->toArray();
 
-        // 2. Extraemos el histórico de fases para mapear las fechas de cierre (DT, COR, COE, PI, CER, CEE, PAP, AU)
         $phaseHistories = DB::table('workflow.requirement_phase_history')
             ->whereIn('requirement_id', $reqIds)
             ->select('requirement_id', 'phase_status_code', 'transitioned_at')
             ->get()
             ->groupBy('requirement_id');
 
-        // 3. Cruzamos y estructuramos la información final en memoria sin horas
         $sheetData = $requirements->map(function ($req) use ($phaseHistories) {
             $history = $phaseHistories->get($req->id, collect());
 
-            // Función auxiliar interna para limpiar la fecha (quita la hora si viene con timestamp)
             $cleanDate = function($timestamp) {
                 if (empty($timestamp) || $timestamp === '-') return '-';
-                return substr($timestamp, 0, 10); // Extrae solo 'YYYY-mm-dd'
+                return substr($timestamp, 0, 10);
             };
 
             return [
@@ -435,7 +456,6 @@ class ReportService
                 'functional_consultant' => $req->functional_consultant ?? 'No asignado',
                 'creation_date'         => $cleanDate($req->creation_date),
                 'completion_date'       => $req->completion_date ? $cleanDate($req->completion_date) : 'En Proceso',
-                // Fechas de cierre de fases limpias sin hora
                 'dt_close_date'         => $cleanDate(optional($history->firstWhere('phase_status_code', 'DT-C'))->transitioned_at),
                 'cor_close_date'        => $cleanDate(optional($history->firstWhere('phase_status_code', 'COR-C'))->transitioned_at),
                 'coe_close_date'        => $cleanDate(optional($history->firstWhere('phase_status_code', 'COE-C'))->transitioned_at),
@@ -455,23 +475,35 @@ class ReportService
      */
     public function getOperationalExecutiveSummary(array $filters): array
     {
-        $query = DB::table('core.requirements')
+        // 1. DEMANDA: Requerimientos ingresados (creados) en el período
+        $queryCreated = DB::table('core.requirements')
+            ->whereNull('deleted_at')
             ->when(!empty($filters['start_date']), fn($q) => $q->whereDate('creation_date', '>=', $filters['start_date']))
             ->when(!empty($filters['end_date']), fn($q) => $q->whereDate('creation_date', '<=', $filters['end_date']));
 
-        $total = (clone $query)->count();
-        $completed = (clone $query)->whereIn('status', ['RF', 'AU-C'])->count();
-        $inProgress = (clone $query)->whereNotIn('status', ['RF', 'AU-C'])->count();
+        $total = $queryCreated->count();
 
-        // Agrupación por tipo de requerimiento
-        $byType = (clone $query)
+        // 2. Requerimientos completados (cerrados) en el período
+        $queryClosed = DB::table('workflow.requirement_phase_history as rph')
+            ->join('core.requirements as r', 'rph.requirement_id', '=', 'r.id')
+            ->whereNull('r.deleted_at')
+            ->where('rph.phase_status_code', 'RF') // Hito exacto de pase a producción
+            ->when(!empty($filters['start_date']), fn($q) => $q->whereDate('rph.transitioned_at', '>=', $filters['start_date']))
+            ->when(!empty($filters['end_date']), fn($q) => $q->whereDate('rph.transitioned_at', '<=', $filters['end_date']));
+
+        // Usamos distinct para contar RRTIs únicos que pasaron a RF en ese lapso
+        $completed = $queryClosed->distinct('rph.requirement_id')->count('rph.requirement_id');
+
+        // 3. DATOS DE DISTRIBUCIÓN (Se mantienen anclados a la consulta base)
+        $inProgress = (clone $queryCreated)->whereNotIn('status', ['RF'])->count();
+
+        $byType = (clone $queryCreated)
             ->select('requirement_type', DB::raw('count(*) as total'))
             ->groupBy('requirement_type')
             ->pluck('total', 'requirement_type')
             ->toArray();
 
-        // Agrupación por estatus actual
-        $rawStatus = (clone $query)
+        $rawStatus = (clone $queryCreated)
             ->select('status', DB::raw('count(*) as total'))
             ->groupBy('status')
             ->get();
@@ -483,15 +515,16 @@ class ReportService
         }
 
         return [
-            'total_requirements' => $total,
-            'completed_count'    => $completed,
+            'total_requirements' => $total, // Ingresos puros
+            'completed_count'    => $completed, // Salidas puras (Pases a Producción)
             'in_progress_count'  => $inProgress,
-            'efficiency_rate'    => $total > 0 ? round(($completed / $total) * 100, 1) : 0,
+            // Tasa de reemplazo/eficiencia de flujo: puede ser > 100% si cierran más de los que entran
+            'efficiency_rate'    => $total > 0 ? round(($completed / $total) * 100, 1) : 0, 
             'by_type'            => $byType,
             'by_status'          => $byStatus,
         ];
     }
-
+    
     private function translateStatusCode(string $code): string
     {
         $translations = [
@@ -521,5 +554,4 @@ class ReportService
 
         return $translations[$code] ?? $code;
     }
-    
 }

@@ -101,7 +101,7 @@
           <div class="d-flex gap-3 justify-content-between">
             <button
               class="btn btn-tbl-info rounded-pill shadow-sm py-2 fw-semibold ps-2"
-              (click)="downloadAct()"
+              (click)="viewAct()"
             >
               <i class="fa-solid fa-file-pdf me-2"></i> Ver Acta de Cierre
               Definitiva
@@ -110,7 +110,7 @@
             @if (req.notification_support_path) {
               <button
                 class="btn btn-tbl-info rounded-pill py-2 shadow-sm fw-semibold pe-2"
-                (click)="downloadSupport()"
+                (click)="viewSupport()"
               >
                 <i class="fa-solid fa-paperclip me-2"></i> Ver Soporte Físico
                 Cargado

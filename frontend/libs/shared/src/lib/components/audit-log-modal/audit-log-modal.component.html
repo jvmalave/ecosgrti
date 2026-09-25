@@ -1,0 +1,161 @@
+@if (isVisible()) {
+  <div
+    class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+    style="
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1050;
+      backdrop-filter: blur(2px);
+    "
+  >
+    <div
+      class="bg-white rounded shadow-lg d-flex flex-column"
+      style="max-width: 1400px; width: 95%; max-height: 90vh"
+    >
+      <div class="modal-header rounded-top">
+        <h3>
+          <i class="fas fa-shield-alt me-2"></i> Bitácora de Auditoría Forense
+        </h3>
+        <button
+        class="close-btn"
+        type="button"
+        (click)="closeModal()"
+        title="Cerrar modal"
+        aria-label="Close"
+      >
+        <i class="fa-solid fa-circle-xmark me-2"></i>
+      </button>
+        
+      </div>
+
+      <div class="modal-body p-4 overflow-auto">
+        <!-- Panel de Filtros -->
+        <div class="bg-light p-3 rounded mb-4 border shadow-sm">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+              <label class="form-label small fw-bold text-muted mb-1"
+                >Fecha Inicio <span class="text-danger">*</span></label
+              >
+              <input
+                type="date"
+                class="form-control form-control-sm"
+                [ngModel]="filterStartDate()"
+                (ngModelChange)="filterStartDate.set($event)"
+              />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-bold text-muted mb-1"
+                >Fecha Fin <span class="text-danger">*</span></label
+              >
+              <input
+                type="date"
+                class="form-control form-control-sm"
+                [ngModel]="filterEndDate()"
+                (ngModelChange)="filterEndDate.set($event)"
+              />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-bold text-muted mb-1"
+                >Código RRTI</label
+              >
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="Ej: 00041601"
+                [ngModel]="filterRrti()"
+                (ngModelChange)="filterRrti.set($event)"
+              />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold text-muted mb-1"
+                >Tipo de Evento</label
+              >
+              <select
+                class="form-select form-select-sm"
+                [ngModel]="filterAction()"
+                (ngModelChange)="filterAction.set($event)"
+              >
+                <option value="">Todos los eventos</option>
+                <option value="LOGIN_SUCCESS">Inicios de Sesión</option>
+                <option value="LOGIN_FAIL">Intentos Fallidos</option>
+                <option value="LOGOUT">Cierres de Sesión</option>
+                <option value="CREATE_REQUIREMENT">
+                  Creación de Requerimiento
+                </option>
+                <option value="CREATE_ATF_AGREEMENT">Acuerdos ATF</option>
+              </select>
+            </div>
+            <div class="col-md-3 text-end d-flex justify-content-end gap-2">
+              <button
+                class="btn btn-tbl-edit btn-sm rounded px-3 shadow-sm fw-semibold"
+                (click)="loadData()"
+                [disabled]="isLoading()"
+              >
+                <i class="fas fa-search me-1"></i> Filtrar
+              </button>
+              <button
+                class="btn btn-tbl-planning btn-sm rounded px-3 shadow-sm fw-semibold"
+                (click)="downloadPdf()"
+                [disabled]="isGeneratingPdf() || logData().length === 0"
+              >
+                <i class="fas fa-file-pdf me-1"></i> Descargar Reporte PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla de Datos -->
+        @if (isLoading()) {
+          <div class="text-center p-5 text-muted">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p>Rastreando eventos de seguridad...</p>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="text-muted small">FECHA Y HORA</th>
+                  <th class="text-muted small">USUARIO RESPONSABLE</th>
+                  <th class="text-muted small">ACCIÓN</th>
+                  <th class="text-muted small">DESCRIPCIÓN</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (log of logData(); track log.id) {
+                  <tr>
+                    <td class="small">
+                      {{ log.created_at | date: 'dd/MM/yyyy HH:mm:ss' }}
+                    </td>
+                    <td class="fw-bold small">
+                      {{ log.user?.person?.first_name || 'Sistema' }}
+                      {{ log.user?.person?.last_name || '' }}
+                    </td>
+                    <td>
+                      <span class="badge badge-component px-3 py-2">{{
+                        actionMap[log.action] || log.action
+                      }}</span>
+                    </td>
+                    <td class="small font-monospace text-muted px-3">
+                      {{ log.description ||  log.target_id || log.rrti || 'N/A' }}
+                    </td>
+                  </tr>
+                }
+                @if (logData().length === 0) {
+                  <tr>
+                    <td colspan="4" class="text-center py-4 text-muted">
+                      No existen registros para los criterios seleccionados.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="text-end text-muted small mt-3">
+            Eventos registrados en este periodo:
+            <strong>{{ logData().length }}</strong>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

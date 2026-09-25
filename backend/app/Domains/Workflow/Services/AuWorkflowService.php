@@ -216,7 +216,7 @@ class AuWorkflowService extends AbstractPhaseComponentService
                 ]);
             }
 
-            // 🟢 Invocamos la limpieza de caché al final
+            // Invocamos la limpieza de caché al final
             $this->flushDashboardCaches($requirementId);
 
             return $ticket;

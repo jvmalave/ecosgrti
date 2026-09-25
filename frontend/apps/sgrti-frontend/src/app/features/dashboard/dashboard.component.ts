@@ -11,9 +11,23 @@ import Swal from 'sweetalert2';
 
 // Imports de tus servicios e interfaces
 import { AuthService } from '@ecosgrti/security/data-access';
-import { PasswordChangeModalService, ReportService, KpiModalComponent } from '@ecosgrti/shared';
+import { 
+        PasswordChangeModalService, 
+        ReportService, 
+        KpiModalComponent,
+        MdmDirectoryModalComponent,
+        AuditLogModalComponent,
+        TrackingDocumentModalComponent,
+        CspeWorkloadModalComponent, 
+        ReportOrchestratorModalComponent,
+        ReportFilterModalComponent,
+        ConfigOrchestratorModalComponent,
+        PapHistoryModalComponent,
+        OperationalDataModalComponent,
+        TraceabilityModalComponent,
+      } from '@ecosgrti/shared';
 
-// eslint-disable-next-line @nx/enforce-module-boundaries
+
 import {
         RequirementService, 
         RequirementDashboard, 
@@ -37,6 +51,15 @@ import {
 import { UnifiedPersonModalComponent, UnifiedPersonListModalComponent } from '@ecosgrti/security';
 import { OrgStructureComponent, ProgressMatrixConfigComponent, MilestoneConfigComponent  } from '@ecosgrti/catalogs';
 
+interface ReportFilters {
+    start_date: string;
+    end_date: string;
+    rrti: string;
+    status_type: string;
+    consultant_id: string;
+    consultant_name: string;
+    format: 'pdf' | 'csv';
+  }
 
 @Component({
   selector: 'app-dashboard',
@@ -59,7 +82,17 @@ import { OrgStructureComponent, ProgressMatrixConfigComponent, MilestoneConfigCo
     LifecycleOrchestratorModalComponent,
     ReqStatusPipe,
     RequirementClosureModalComponent,
-    KpiModalComponent
+    KpiModalComponent,
+    MdmDirectoryModalComponent,
+    AuditLogModalComponent,
+    TrackingDocumentModalComponent,
+    CspeWorkloadModalComponent,
+    ReportOrchestratorModalComponent, 
+    ReportFilterModalComponent,
+    ConfigOrchestratorModalComponent,
+    PapHistoryModalComponent,
+    OperationalDataModalComponent, 
+    TraceabilityModalComponent
   ], 
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -231,7 +264,6 @@ public async cambiarContrasenaVoluntario(): Promise<void> {
   }
 }
 
-
 public logoutDropdown(): void {
   this.isDropdownOpen.set(false); // Cerramos el menú al hacer clic
   this.authService.logout().subscribe({
@@ -241,9 +273,6 @@ public logoutDropdown(): void {
       }
     });
 }
-
-
-
   // Control Reactivo para el Buscador
   searchControl = new FormControl('');
   public selectedReqManagementType = computed(() => {
@@ -773,7 +802,7 @@ public isGrEnabled(status: string): boolean {
       }
     }
     
-    // 🟢 Validación estricta: Solo usamos .some() si estamos 100% seguros de que es un Array
+    // Validación estricta: Solo usamos .some() si estamos 100% seguros de que es un Array
     if (Array.isArray(consultores) && consultores.length > 0) {
       const consultoresArray = consultores as { person_id: string }[];
       return consultoresArray.some(consultant => consultant.person_id === myUserId);
@@ -923,29 +952,69 @@ public isGrEnabled(status: string): boolean {
 
 // Gatilla la descarga del Reporte de Gestión de CSPE
   public triggerConsultantManagementReport(): void {
-    // 1. Bloqueamos la pantalla temporalmente mientras consultamos la BD
     this.notificationService.showLoading('Sincronizando...', 'Obteniendo lista de consultores activos.');
 
-    // 2. Pedimos los consultores a la API
     this.reportService.getCspeConsultantsList().subscribe({
       next: async (consultants) => {
-        this.notificationService.close(); // Quitamos el loading
+        this.notificationService.close(); 
 
-        // 3. Pasamos los consultores al modal
         const filters = await this.notificationService.promptConsultantManagementFilters(consultants);
 
         if (filters) {
           this.notificationService.showLoading('Estructurando Métricas', 'Consolidando la carga operativa...');
 
-          this.reportService.downloadConsultantManagement(filters).subscribe({
+          // Pasamos explícitamente el formato como segundo parámetro
+          this.reportService.downloadConsultantManagement(filters, filters.format).subscribe({
             next: (blob: Blob) => {
-              const filename = `Gestion_CSPE_${new Date().getTime()}.pdf`;
+              // Asignamos la extensión dinámicamente
+              const extension = filters.format === 'csv' ? 'csv' : 'pdf';
+              const filename = `Historico_Gestion_CSPE_${new Date().getTime()}.${extension}`;
+              
               this.reportService.forceFileDownload(blob, filename);
               this.notificationService.close(); 
             },
             error: (err) => {
-              this.notificationService.showError('Error', 'No se pudo generar el documento.')
+              this.notificationService.showError('Error', 'No se pudo generar el documento.');
               console.error('Error al generar el reporte:', err);
+            }
+          });
+        }
+      },
+      error: () => {
+        this.notificationService.showError('Error de Conexión', 'No se pudo cargar el diccionario de consultores.');
+      }
+    });
+  }
+
+  // Gatilla la descarga del Consolidado General de Operaciones CSPE
+  public triggerConsolidatedGeneralReport(): void {
+    // 1. Bloqueamos la pantalla temporalmente
+    this.notificationService.showLoading('Sincronizando...', 'Obteniendo base de consultores.');
+
+    // 2. Pedimos los consultores a la API para poblar el selector
+    this.reportService.getCspeConsultantsList().subscribe({
+      next: async (consultants) => {
+        this.notificationService.close(); // Quitamos el loading
+
+        // 3. Reutilizamos tu modal de SweetAlert para obtener los filtros y el formato
+        const filters = await this.notificationService.promptConsultantManagementFilters(consultants);
+
+        if (filters) {
+          this.notificationService.showLoading('Estructurando Consolidado', 'Procesando el histórico general...');
+
+          // 4. Llamamos al NUEVO método del servicio
+          this.reportService.downloadConsolidatedGeneral(filters, filters.format).subscribe({
+            next: (blob: Blob) => {
+              // Asignamos la extensión dinámicamente según lo elegido en SweetAlert
+              const extension = filters.format === 'csv' ? 'csv' : 'pdf';
+              const filename = `Consolidado_General_CSPE_${new Date().getTime()}.${extension}`;
+              
+              this.reportService.forceFileDownload(blob, filename);
+              this.notificationService.close(); 
+            },
+            error: (err) => {
+              this.notificationService.showError('Error', 'No se pudo generar el consolidado general.');
+              console.error('Error al generar el reporte consolidado:', err);
             }
           });
         }
@@ -1030,8 +1099,164 @@ public isGrEnabled(status: string): boolean {
     this.isKpiModalOpen = true;
   }
 
+  isMdmModalOpen = false;
+
+  openMdmDirectoryModal() {
+    this.isMdmModalOpen = true;
+  }
+
+  isAuditLogModalOpen = false;
+
+  openAuditLogModal() {
+    this.isAuditLogModalOpen = true;
+  }
+  
+
+  isTrackingModalOpen = false;
+
+  openTrakingModal(){
+    this.isTrackingModalOpen = true;
+  }
+
+  isCspeWorkloadModalOpen = false;
+
+  openCspeWorkloadModal() {
+    this.isCspeWorkloadModalOpen = true;
+  }
+
+  isReportOrchestratorModalOpen = false;
+
+  openReportOrchestratorModal() {
+    this.isReportOrchestratorModalOpen = true;
+  }
+
+  isPapHistoryModalOpen = false;
+
+  isOperationalDataModalOpen = false;
+
+  isMdmDirectoryModalOpen = false;
+
+  isTraceabilityModalOpen = false;
+
+  isReportFilterModalOpen = false;
+
+  activeReportType = ''; 
+  activeConsultantsList: {id: string, name: string}[] = [];
 
 
+  handleReportAction(action: string): void {
+    switch (action) {
+      // --- SECCIÓN 1: Auditoría y Trazabilidad ---
+      case 'mdm':
+        this.isMdmDirectoryModalOpen = true;
+        break;
+      case 'audit':
+        this.isAuditLogModalOpen = true; 
+        break;
+      case 'tracking':
+        this.isTrackingModalOpen = true; 
+        break;
+      case 'pap':
+        this.isPapHistoryModalOpen = true;
+        break;
 
+      // --- SECCIÓN 2: Gestión Operativa CSPE ---
+      case 'traceability':
+        this.isTraceabilityModalOpen = true; 
+        break;
+      case 'workload':
+        this.isCspeWorkloadModalOpen = true; 
+        break;
+      case 'consultant_history':
+      case 'consolidated':
+        // Ambos abren ahora nuestro nuevo modal nativo
+        this.openReportFilterModal(action);
+        break;
+
+      // --- SECCIÓN 3: Métricas Globales ---
+      case 'data': 
+        this.isOperationalDataModalOpen = true;
+        break;
+      case 'kpis':
+        this.isKpiModalOpen = true; 
+        break;
+
+      default:
+        console.warn('Acción de reporte no reconocida por el orquestador:', action);
+    }
+  }
+
+  openReportFilterModal(type: string): void {
+    this.activeReportType = type;
+    this.notificationService.showLoading('Sincronizando...', 'Obteniendo base de consultores.');
+
+    this.reportService.getCspeConsultantsList().subscribe({
+      next: (consultants) => {
+        this.activeConsultantsList = consultants;
+        this.notificationService.close(); 
+        this.isReportFilterModalOpen = true; 
+      },
+      error: () => {
+        this.notificationService.showError('Error', 'No se pudo cargar el diccionario de consultores.');
+      }
+    });
+  }
+
+  // 3. Tipamos el parámetro filters usando la interfaz creada
+  processReportGeneration(filters: ReportFilters): void {
+    this.isReportFilterModalOpen = false;
+    this.notificationService.showLoading('Generando Reporte', 'Estructurando la data operativa...');
+
+    const extension = filters.format === 'csv' ? 'csv' : 'pdf';
+    let request$;
+    let filename = '';
+
+    if (this.activeReportType === 'consolidated') {
+      request$ = this.reportService.downloadConsolidatedGeneral(filters, filters.format);
+      filename = `Consolidado_General_CSPE_${new Date().getTime()}.${extension}`;
+    } else {
+      request$ = this.reportService.downloadConsultantManagement(filters, filters.format);
+      filename = `Historico_Consultor_CSPE_${new Date().getTime()}.${extension}`;
+    }
+
+    request$.subscribe({
+      next: (blob: Blob) => {
+        this.reportService.forceFileDownload(blob, filename);
+        this.notificationService.close(); 
+      },
+      error: (err) => {
+        this.notificationService.showError('Error', 'No se pudo generar el documento.');
+        console.error('Error al generar el reporte:', err);
+      }
+    });
+  }
+
+  isConfigOrchestratorOpen = false;
+
+  openConfigOrchestratorModal() {
+    this.isConfigOrchestratorOpen = true;
+  }
+
+  // 3. Método orquestador
+  handleConfigAction(action: string): void {
+    switch (action) {
+      case 'fichas':
+        this.openUnifiedPersonListModal();
+        break;
+      case 'estructura':
+        this.openOrgStructureModal();
+        break;
+      case 'matrices':
+        this.openProgressMatrixModal();
+        break;
+      case 'hitos':
+        this.openMilestoneConfigModal();
+        break;
+      default:
+        console.warn('Acción de configuración no reconocida:', action);
+    }
+  }
+
+  
 }
 

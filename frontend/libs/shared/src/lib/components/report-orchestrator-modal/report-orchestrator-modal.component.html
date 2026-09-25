@@ -1,0 +1,133 @@
+@if (isVisible()) {
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.6); z-index: 1040; backdrop-filter: blur(4px);">
+    <div class="bg-white shadow-lg d-flex flex-column" style="max-width: 950px; width: 95%; max-height: 90vh; border-radius: 0.75rem; overflow: hidden;">
+      
+      <!-- Cabecera Corporativa -->
+      <div class="modal-header border-0 px-4 py-3 text-white" style="background: linear-gradient(90deg, #1a237e 0%, #aa00ff 100%);">
+        <h5 class="modal-title m-0 fw-bold d-flex align-items-center gap-2">
+          <i class="fas fa-chart-pie"></i> Centro de Reportes y Consultas
+        </h5>
+        <button
+        class="close-btn"
+        type="button"
+        (click)="closeModal()"
+        title="Cerrar modal"
+        aria-label="Close"
+      >
+        <i class="fa-solid fa-circle-xmark me-2"></i>
+      </button>
+      </div>
+
+      <div class="modal-body p-5 overflow-auto">
+        
+        <!-- ========================================== -->
+        <!-- SECCIÓN 1: Auditoría y Trazabilidad -->
+        <!-- ========================================== -->
+        <div class="path-container mb-4 text-start">
+          <h6 class="text-muted mb-3 text-uppercase fw-semibold fs-6">
+            <i class="fa-solid fa-search me-2 text-primary"></i> Auditoría y Trazabilidad
+          </h6>
+
+          <div class="phase-grid">
+            <!-- Directorio MDM (Validación -> Naranja) -->
+            <button class="phase-btn btn-phase-construction" (click)="selectReport('mdm')">
+              <div class="icon-wrapper">
+                <i class="fas fa-id-card"></i>
+              </div>
+              <span class="btn-label">Directorio MDM</span>
+            </button>
+            <!-- Bitácora (Planificación -> Azul) -->
+            <button class="phase-btn btn-phase-planning" (click)="selectReport('audit')">
+              <div class="icon-wrapper">
+                <i class="fa-solid fa-list-ol"></i>
+              </div>
+              <span class="btn-label">Bitácora de<br />Auditoría</span>
+            </button>
+            <!-- Doc. Seguimiento (Info -> Azul Profundo) -->
+            <button class="phase-btn btn-phase-info" (click)="selectReport('tracking')">
+              <div class="icon-wrapper">
+                <i class="fa-solid fa-file-signature"></i>
+              </div>
+              <span class="btn-label">Documento de<br />Seguimiento</span>
+            </button>
+            <!-- Histórico PAP (Éxito -> Verde) -->
+            <button class="phase-btn btn-phase-success" (click)="selectReport('pap')">
+              <div class="icon-wrapper">
+                <i class="fa-solid fa-server"></i>
+              </div>
+              <span class="btn-label">Histórico<br />PAP</span>
+            </button>
+          </div>
+        </div>
+        <!-- ========================================== -->
+        <!-- SECCIÓN 2: Gestión Operativa CSPE -->
+        <!-- ========================================== -->
+        <div class="path-container mb-4 text-start">
+          <h6 class="text-muted mb-3 text-uppercase fw-semibold fs-6">
+            <i class="fa-solid fa-users-gear me-2 text-brand"></i> Gestión Operativa CSPE
+          </h6>
+
+          <div class="phase-grid">
+            <button class="phase-btn btn-phase-success" (click)="selectReport('traceability')">
+              <div class="icon-wrapper">
+                <i class="fas fa-project-diagram"></i>
+              </div>
+              <span class="btn-label">Trazabilidad de<br/>Componentes</span>
+            </button>
+            <!-- Carga Operativa (Validación -> Naranja) -->
+            <button class="phase-btn btn-phase-validation" (click)="selectReport('workload')">
+              <div class="icon-wrapper">
+                <i class="fa-solid fa-weight-hanging"></i>
+              </div>
+              <span class="btn-label">Carga<br />Operativa</span>
+            </button>
+
+            <!-- Histórico Consultor (Construcción -> Fucsia) -->
+            <button class="phase-btn btn-phase-construction" (click)="selectReport('consultant_history')">
+              <div class="icon-wrapper">
+                <i class="fa-solid fa-user-tie"></i>
+              </div>
+              <span class="btn-label">Histórico por<br />Consultor</span>
+            </button>
+
+            <!-- Consolidado General (Planificación -> Azul Zafiro) -->
+            <button class="phase-btn btn-phase-planning" (click)="selectReport('consolidated')">
+              <div class="icon-wrapper">
+                <i class="fa-solid fa-folder-open"></i>
+              </div>
+              <span class="btn-label">Consolidado<br />General</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECCIÓN 3: Métricas y Rendimiento -->
+        <!-- ========================================== -->
+        <div class="path-container mb-2 text-start">
+          <h6 class="text-muted mb-4 text-uppercase fw-semibold fs-6">
+            <i class="fa-solid fa-chart-line me-2 text-dark"></i> Métricas y Rendimiento
+          </h6>
+
+          <div class="phase-grid">
+            <!-- Data Operativa (Inactivo por ahora) -->
+            <button class="phase-btn btn-phase-validation" (click)="selectReport('data')">
+              <div class="icon-wrapper">
+                <i class="fa-solid fa-database"></i>
+              </div>
+              <span class="btn-label">Data<br />Operativa</span>
+            </button>
+
+            <!-- KPIs (Inactivo por ahora) -->
+            <button class="phase-btn btn-phase-success" (click)="selectReport('kpis')">
+              <div class="icon-wrapper">
+                <i class="fa-solid fa-tachometer-alt"></i>
+              </div>
+              <span class="btn-label">Indicadores<br />KPIs</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

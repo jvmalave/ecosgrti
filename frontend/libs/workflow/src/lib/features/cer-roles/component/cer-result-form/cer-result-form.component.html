@@ -2,7 +2,7 @@
   <div class="modal-dialog-custom">
     <!-- CABECERA CORPORATIVA -->
     <div
-      class="brand-gradient text-white p-3 d-flex justify-content-between align-items-center"
+      class="modal-header text-white p-3 d-flex justify-content-between align-items-center"
     >
       <h5 class="m-0 fw-bold">
         <i class="fa-solid fa-clipboard-check me-2"></i> 
@@ -10,13 +10,12 @@
       </h5>
       <button
         type="button"
-        class="btn text-white fs-5 p-0 border-0 shadow-none"
+        class="close-btn"
         (click)="closeModal()"
       >
-        <i class="fa-solid fa-xmark"></i>
+        <i class="fa-solid fa-circle-xmark"></i>
       </button>
     </div>
-
     <!-- CUERPO DEL MODAL -->
     <div class="modal-body-scroll bg-white p-4">
       <div class="mb-4">
@@ -179,7 +178,7 @@
         <div class="d-flex justify-content-end gap-2 mt-2 pt-3 border-top">
           <button
             type="button"
-            class="btn btn-light px-4 fw-medium text-secondary"
+            class="btn btn-tbl-close px-4 me-2 fw-semibold rounded-pill"
             (click)="closeModal()"
             [disabled]="isSubmitting()"
           >
@@ -189,7 +188,7 @@
           @if (viewMode()) {
             <button
               type="button"
-              class="btn btn-brand px-4 rounded-pill"
+              class="btn btn-tbl-planning px-4 rounded-pill fw-semibold"
               (click)="viewPdfDocument()"
             >
               <i class="fa-solid fa-file-pdf me-2"></i> Ver Dictamen PDF
@@ -197,7 +196,7 @@
           } @else {
             <button
               type="submit"
-              class="btn btn-brand px-4 rounded-pill"
+              class="btn btn-tbl-success px-4 rounded-pill fw-semibold"
               [disabled]="isSubmitting()"
             >
               @if (isSubmitting()) {

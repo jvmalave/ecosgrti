@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Domains\Core\Models\Requirement;
 
 class CspeConsultant extends Model
 {
@@ -31,5 +32,22 @@ class CspeConsultant extends Model
     public function person()
     {
         return $this->belongsTo(Person::class, 'person_id');
+    }
+
+    // Historial completo de requerimientos
+    public function allRequirements()
+    {
+        return $this->belongsToMany(
+            Requirement::class,
+            'core.cspe_consultant_requirement', // pivote con esquema
+            'cspe_consultant_id',
+            'requirement_id'
+        )->orderBy('created_at', 'desc');
+    }
+
+    // Requerimientos actualmente activos (Para la carga de trabajo)
+    public function activeRequirements()
+    {
+        return $this->allRequirements()->where('status', '!=', 'RF'); 
     }
 }

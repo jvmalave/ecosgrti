@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { Subject, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import Swal, { SweetAlertIcon } from 'sweetalert2';
 import { RequirementService } from '../../data-access/services/requirement.service';
 import { 
   OrganizationalGraph, 
@@ -11,9 +10,10 @@ import {
   FunctionalConsultantItem, 
   CspeConsultantItem 
 } from '../../data-access/models/requirement.model';
+import { NotificationService } from '@ecosgrti/workflow';
 
 @Component({
-  selector: 'lib-requirement-create-modal', // Selector actualizado para reflejar su nueva naturaleza
+  selector: 'lib-requirement-create-modal', 
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './requirement-create.component.html',
@@ -23,6 +23,7 @@ export class RequirementCreateComponent implements OnInit, OnDestroy {
   
   private fb = inject(NonNullableFormBuilder);
   private requirementService = inject(RequirementService);
+  private notificationService = inject(NotificationService);
   private destroy$ = new Subject<void>();
 
   // ==========================================
@@ -85,16 +86,41 @@ export class RequirementCreateComponent implements OnInit, OnDestroy {
   // ==========================================
   // 3. LÓGICA DE INTERFAZ Y NOTIFICACIONES
   // ==========================================
-  private showNotification(icon: SweetAlertIcon, title: string, html: string, showCancel = false) {
-    return Swal.fire({
-      icon,
-      title,
-      html,
-      showCancelButton: showCancel,
-      confirmButtonText: showCancel ? 'Sí, continuar' : 'Aceptar',
-      cancelButtonText: 'No, regresar',
-      confirmButtonColor: '#8e1482' // Ajustado al color de marca de ECOSGRTI
-    });
+
+  /**
+   * Intercepta la escritura en tiempo real y elimina cualquier 
+   * carácter que no sea un número del 0 al 9.
+   */
+  onRrtiInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    // Reemplaza todo lo que NO sea un dígito por vacío
+    const sanitizedValue = input.value.replace(/[^0-9]/g, '');
+    
+    if (input.value !== sanitizedValue) {
+      input.value = sanitizedValue;
+      this.requirementForm.get('rrti')?.setValue(sanitizedValue);
+    }
+  }
+
+  /**
+   * Formatea el campo RRTI agregando ceros a la izquierda
+   * si el usuario ingresó un número válido de al menos 5 dígitos.
+   */
+  formatRrtiCode(): void {
+    const rrtiControl = this.requirementForm.get('rrti');
+    
+    if (rrtiControl && rrtiControl.value) {
+      const value = String(rrtiControl.value).trim();
+      const isNumeric = /^\d+$/.test(value);
+
+      if (isNumeric && value.length >= 5 && value.length < 8) {
+        // Rellena con ceros a la izquierda hasta alcanzar 8 caracteres
+        const formattedValue = value.padStart(8, '0');
+        
+        // Se actualiza el form sin disparar eventos extraños
+        rrtiControl.setValue(formattedValue, { emitEvent: false });
+      }
+    }
   }
 
   private loadDictionaries(): void {
@@ -114,7 +140,7 @@ export class RequirementCreateComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.isLoadingData.set(false);
-        this.showNotification('error', 'Error de Conexión', 'No se pudieron cargar los catálogos.');
+        this.notificationService.showError('Error de Conexión', 'No se pudieron cargar los catálogos.');
       }
     });
   }
@@ -129,7 +155,7 @@ export class RequirementCreateComponent implements OnInit, OnDestroy {
       error: () => {
         this.organizationalData.set(null);
         this.isLoading.set(false);
-        this.showNotification('warning', 'Atención', 'No se pudo resolver la jerarquía de este consultor.');
+        this.notificationService.showWarning('Atención', 'No se pudo resolver la jerarquía de este consultor.');
       }
     });
   }
@@ -179,18 +205,24 @@ export class RequirementCreateComponent implements OnInit, OnDestroy {
     }
   }
 
+  
   // ==========================================
   // 5. ACCIONES PRINCIPALES (Guardar / Cancelar)
   // ==========================================
-  onCancel(): void {
+  async onCancel(): Promise<void> {
     // Verificamos si el usuario ingresó algún dato antes de advertirle
     if (this.requirementForm.dirty || this.solicitudTiFile || this.planillaNecesidadesFile) {
-      this.showNotification('warning', '¿Descartar registro?', 'Se perderán todos los datos ingresados.', true)
-        .then((result) => {
-          if (result.isConfirmed) {
-            this.closeModal.emit(); // Emitimos el cierre y dejamos que Angular limpie la memoria
-          }
-        });
+      
+      // Llamamos al método global confirm que devuelve true/false
+      const isConfirmed = await this.notificationService.confirm(
+        '¿Descartar registro?',
+        'Se perderán todos los datos ingresados.',
+        'Sí, descartar'
+      );
+      
+      if (isConfirmed) {
+        this.closeModal.emit(); // Emitimos el cierre y Angular limpia la memoria
+      }
     } else {
       this.closeModal.emit(); // Cerramos directo si no tocó nada
     }
@@ -199,7 +231,10 @@ export class RequirementCreateComponent implements OnInit, OnDestroy {
   onSubmit(): void {
     if (this.requirementForm.invalid || !this.solicitudTiFile || !this.planillaNecesidadesFile) {
       this.requirementForm.markAllAsTouched();
-      this.showNotification('warning', 'Formulario Incompleto', 'Debe llenar todos los campos obligatorios y adjuntar los archivos requeridos.');
+      this.notificationService.showWarning(
+        'Formulario Incompleto', 
+        'Debe llenar todos los campos obligatorios y adjuntar los archivos requeridos.'
+      );
       return;
     }
 
@@ -224,11 +259,14 @@ export class RequirementCreateComponent implements OnInit, OnDestroy {
     this.requirementService.createRequirement(formData).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.showNotification('success', 'Requerimiento Registrado', 'El requerimiento se ha creado exitosamente en el ecosistema.')
-          .then(() => {
-            this.requirementCreated.emit(); // Le avisamos al Dashboard que recargue la tabla
-            this.closeModal.emit(); // Cerramos el modal
-          });
+        this.notificationService.showSuccess(
+          'Requerimiento Registrado', 
+          'El requerimiento se ha creado exitosamente en el ecosistema.'
+        );
+        
+        // Emitimos las señales inmediatamente
+        this.requirementCreated.emit(); 
+        this.closeModal.emit(); 
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -241,7 +279,7 @@ export class RequirementCreateComponent implements OnInit, OnDestroy {
           errorMsg = err.error.message;
         }
 
-        this.showNotification('error', 'Error de Validación', errorMsg);
+        this.notificationService.showError('Error de Validación', errorMsg);
       }
     });
   }

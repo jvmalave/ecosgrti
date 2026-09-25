@@ -4,6 +4,7 @@ import { Observable, Subject } from 'rxjs';
 import { OtdResponse, DeviationResponse, AgingResponse, KpiFilters } from '../../models/kpi-metrics.interface';
 
 
+
 @Injectable({
   providedIn: 'root'
 })
@@ -29,12 +30,25 @@ export class ReportService {
     });
   }
 
-  downloadMdmDirectoryReport(): Observable<Blob> {
-    return this.http.get(`${this.reportingApiUrl}/mdm-directory`, {
-      responseType: 'blob' // CRÍTICO: Mantenemos la intercepción binaria
+  downloadMdmDirectoryReport(role?: string): Observable<Blob> {
+    let queryParams = new HttpParams();
+    
+    // Si hay un rol, lo añadimos a los parámetros de la URL
+    if (role) {
+      queryParams = queryParams.set('role', role);
+    }
+    return this.http.get(`${this.reportingApiUrl}/mdm-directory/pdf`, {
+      params: queryParams,
+      responseType: 'blob'
     });
   }
 
+  /**
+   * Obtiene la data del Directorio MDM para renderizar en tabla
+   */
+  getMdmDirectoryData(): Observable<any> {
+    return this.http.get<any>(`${this.reportingApiUrl}/mdm-directory/data`);
+  }
   /**
    * Solicita al backend la generación del Acta de Cierre o Documento de Seguimiento.
    * 
@@ -46,37 +60,47 @@ export class ReportService {
     });
   }
 
-
-  downloadAuditLog(filters: { start_date: string, end_date: string, rrti: string, action: string }): Observable<Blob> {
-    let params = new HttpParams()
-      .set('start_date', filters.start_date)
-      .set('end_date', filters.end_date);
-
-    if (filters.rrti) {
-      params = params.set('rrti', filters.rrti);
-    }
-    if (filters.action) {
-      params = params.set('action', filters.action);
-    }
-
-    return this.http.get(`${this.reportingApiUrl}/audit-log`, { 
-      params,
+  /**
+   * Solicita el documento de seguimiento o acta de cierre basado en el código RRTI.
+   * @param rrti Código de control del requerimiento.
+   */
+  downloadTrackingDocument(rrti: string): Observable<Blob> {
+    // Limpiamos el RRTI de caracteres especiales como el hashtag por seguridad
+    const cleanRrti = rrti.replace('#', '').trim();
+    
+    return this.http.get(`${this.reportingApiUrl}/tracking-document/${cleanRrti}`, {
       responseType: 'blob'
     });
   }
 
-  downloadConsultantManagement(filters: any): Observable<Blob> {
+  getTrackingData(rrti: string): Observable<any> {
+    const cleanRrti = rrti.replace('#', '').trim();
+    return this.http.get<any>(`${this.reportingApiUrl}/tracking-document/${cleanRrti}/data`);
+  }
+
+  getAuditLogData(filters: any): Observable<any> {
+    // Petición POST enviando el objeto JSON en el body
+    return this.http.post<any>(`${this.reportingApiUrl}/audit-log/data`, filters);
+  }
+
+  downloadAuditLog(filters: any): Observable<Blob> {
+    // Petición POST apuntando a la nueva ruta /pdf
+    return this.http.post(`${this.reportingApiUrl}/audit-log/pdf`, filters, { 
+      responseType: 'blob' 
+    });
+  }
+
+  downloadConsultantManagement(filters: any, format: 'pdf' | 'csv' = 'pdf'): Observable<Blob> {
     let params = new HttpParams();
 
     if (filters.start_date && filters.end_date) {
       params = params.set('start_date', filters.start_date).set('end_date', filters.end_date);
     }
     if (filters.rrti) params = params.set('rrti', filters.rrti);
-    if (filters.status_type) params = params.set('status_type', filters.status_type);
-    
-    // Inyectamos el ID y el Nombre
     if (filters.consultant_id) params = params.set('consultant_id', filters.consultant_id);
-    if (filters.consultant_name) params = params.set('consultant_name', filters.consultant_name);
+    
+    // Anexamos el formato seleccionado
+    params = params.set('format', format);
 
     return this.http.get(`${this.reportingApiUrl}/consultant-management`, { params, responseType: 'blob' });
   }
@@ -85,6 +109,46 @@ export class ReportService {
   getCspeConsultantsList(): Observable<{id: string, name: string}[]> {
     return this.http.get<{id: string, name: string}[]>(`${this.reportingApiUrl}/cspe-consultants`);
   }
+
+/**
+   * Obtiene la matriz de capacidad semanal o proyectada de los consultores CSPE.
+   * @param horizon Periodo de tiempo a evaluar (current_week, 15_days, 30_days, 60_days)
+   */
+  getConsultantsWorkload(horizon: string = 'current_week', includeBacklog: boolean = false): Observable<any> {
+    return this.http.get<any>(`${this.reportingApiUrl}/cspe/workload`, {
+      params: { 
+        horizon,
+        include_backlog: includeBacklog
+      }
+    });
+  }
+
+  /**
+   * Obtiene el historial de requerimientos asignados a un consultor.
+   * @param consultantId El identificador UUID del consultor.
+   */
+  getConsultantHistory(consultantId: string): Observable<any> {
+    return this.http.get<any>(`${this.reportingApiUrl}/cspe/${consultantId}/history`);
+  }
+
+  downloadConsolidatedGeneral(filters: any, format: 'pdf' | 'csv' = 'pdf'): Observable<Blob> {
+    let params = new HttpParams();
+
+    if (filters.start_date && filters.end_date) {
+      params = params.set('start_date', filters.start_date).set('end_date', filters.end_date);
+    }
+    if (filters.rrti) params = params.set('rrti', filters.rrti);
+    if (filters.consultant_id) params = params.set('consultant_id', filters.consultant_id);
+    
+    // Inyectamos el formato solicitado
+    params = params.set('format', format);
+
+    return this.http.get(`${this.reportingApiUrl}/cspe/consolidated-general`, { 
+      params, 
+      responseType: 'blob' 
+    });
+  }
+
 
   downloadProductionDeployments(filters: any): Observable<Blob> {
     let params = new HttpParams();
@@ -100,6 +164,17 @@ export class ReportService {
       params,
       responseType: 'blob'
     });
+  }
+
+  // Obtiene los datos JSON para la vista en pantalla
+  getProductionDeploymentsData(filters: any): Observable<any> {
+    let params = new HttpParams();
+
+    if (filters.start_date) params = params.set('start_date', filters.start_date);
+    if (filters.end_date) params = params.set('end_date', filters.end_date);
+    if (filters.rrti) params = params.set('rrti', filters.rrti);
+
+    return this.http.get<any>(`${this.reportingApiUrl}/production-deployments/data`, { params });
   }
 
   /**
@@ -142,18 +217,6 @@ export class ReportService {
     });
   }
 
-  // Descarga el Resumen Ejecutivo en PDF con gráficas
-  // downloadExecutiveSummary(filters: any): Observable<Blob> {
-  //   let params = new HttpParams();
-  //   if (filters.start_date) params = params.set('start_date', filters.start_date);
-  //   if (filters.end_date) params = params.set('end_date', filters.end_date);
-
-  //   return this.http.get(`${this.reportingApiUrl}/executive-summary`, {
-  //     params,
-  //     responseType: 'blob'
-  //   });
-  // }
-
   /**
    * Construye los HttpParams a partir de un objeto de filtros.
    */
@@ -177,6 +240,18 @@ export class ReportService {
     });
   }
 
+  // Obtiene volumetría y estatus
+  getOperationalMetrics(filters?: KpiFilters): Observable<any> {
+    return this.http.get<any>(`${this.reportingApiUrl}/kpi/operational`, {
+      params: this.buildParams(filters)
+    });
+  }
+
+  // Obtiene desviaciones y alertas tempranas
+  getDeviationMetrics(): Observable<any> {
+    return this.http.get<any>(`${this.reportingApiUrl}/kpi/deviations`);
+  }
+
   /**
    * Obtiene las estadísticas de desviación y alertas tempranas en tiempo real.
    */
@@ -184,7 +259,6 @@ export class ReportService {
     // Este endpoint evalúa contra el reloj actual, no requiere parámetros de fecha
     return this.http.get<DeviationResponse>(`${this.reportingApiUrl}/kpi/deviation`);
   }
-
   /**
    * Obtiene el análisis de envejecimiento y detección de cuellos de botella.
    */
@@ -204,17 +278,30 @@ export class ReportService {
     });
   }
 
-  
+  /**
+   * 
+   * @param query 
+   * @returns 
+   */
+  searchComponentTraceability(query: string): Observable<any> {
+      const params = new HttpParams().set('query', query);
+      return this.http.get(`${this.reportingApiUrl}/traceability/search`, { params });
+  }
 
-  
+  downloadSupportFile(filePath: string): Observable<Blob> {
+    const params = new HttpParams().set('file_path', filePath);
+    
+    return this.http.get(`${this.reportingApiUrl}/traceability/download-support`, {
+      params,
+      responseType: 'blob'
+    });
+  }
 
-  
-  
-
-  
-
-  
-
+  exportComponentPdf(payload: any): Observable<Blob> {
+    return this.http.post(`${this.reportingApiUrl}/traceability/component-pdf`, payload, {
+      responseType: 'blob'
+    });
+  }
 
 
 

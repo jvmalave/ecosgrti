@@ -1,0 +1,60 @@
+    .phase-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem;
+      width: 100%;
+      padding: 0.5rem 0;
+    }
+
+    .phase-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 1rem;
+      width: 170px;
+      min-height: 140px;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      text-decoration: none;
+
+      .icon-wrapper {
+        font-size: 3.2rem;
+        margin-bottom: 0.8rem;
+        transition: transform 0.3s ease;
+      }
+
+      .btn-label {
+        color: #495057;
+        font-weight: 600;
+        font-size: 1rem;
+        text-align: center;
+        line-height: 1.2;
+      }
+
+      &:hover:not(:disabled) {
+        background: rgba(59, 130, 246, 0.05);
+        border-color:rgba(59, 130, 246, 0.50);
+        box-shadow: 0 8px 16px rgba(59, 130, 246, 0.30);;
+        
+        .icon-wrapper {
+          transform: scale(1.1);
+        }
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        background: transparent;
+        border-color: transparent;
+        
+        .icon-wrapper {
+          color: #dee2e6; /* Gris muy claro para denotar inactividad */
+        }
+        .btn-label {
+          color: #adb5bd;
+        }
+      }
+    }

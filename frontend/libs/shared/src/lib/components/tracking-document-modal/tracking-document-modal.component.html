@@ -1,0 +1,151 @@
+@if (isVisible()) {
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.5); z-index: 1050; backdrop-filter: blur(2px);">
+    
+    <!-- Contenedor principal con bordes redondeados y ocultamiento de desbordamiento para la cabecera -->
+    <div class="bg-white shadow-lg d-flex flex-column" style="max-width: 650px; width: 95%; max-height: 90vh; border-radius: 0.75rem; overflow: hidden;">
+      
+      <!-- Cabecera Corporativa -->
+      <div class="modal-header border-0 px-4 py-3 text-white">
+        <h3 class="modal-title m-0 fw-bold d-flex align-items-center gap-2">
+          <i class="fas fa-file-signature"></i> Trazabilidad y Seguimiento
+        </h3>
+        <!-- Botón de cierre (Asegúrate de tener la clase btn-close-white si usas Bootstrap 5) -->
+        <button
+        class="close-btn"
+        type="button"
+        (click)="closeModal()"
+        title="Cerrar modal"
+        aria-label="Close"
+      >
+        <i class="fa-solid fa-circle-xmark me-2"></i>
+      </button>
+      </div>
+
+      <div class="modal-body p-4 overflow-auto text-center">
+        
+        <!-- PASO 1: BÚSQUEDA -->
+        @if (!requirementData()) {
+          <div class="mb-3 mt-2">
+            <div class="d-inline-flex justify-content-center align-items-center rounded-circle border border-info border-2" style="width: 70px; height: 70px;">
+              <i class="fas fa-search text-info fs-2"></i>
+            </div>
+          </div>
+
+          <h5 class="fw-bold text-dark mb-2">Consultar Requerimiento</h5>
+          <p class="text-muted small mb-4 px-3">
+            Ingrese el código de control (RRTI) para consultar su historial de fases y estado actual:
+          </p>
+
+          <div class="mb-4 px-3">
+            <input type="text" class="form-control form-control-lg text-center fs-6" 
+                  placeholder="Ej: 00011114"
+                  [ngModel]="rrtiCode()"
+                  (ngModelChange)="rrtiCode.set($event)"
+                  (keyup.enter)="searchRequirement()"
+                  [disabled]="isSearching()">
+          </div>
+
+          <div class="d-flex justify-content-center gap-3 px-3 mb-2">
+            <button class="btn btn-tbl-planning rounded-pill px-4 d-flex align-items-center gap-2" 
+                    (click)="searchRequirement()"
+                    [disabled]="isSearching() || rrtiCode().trim().length === 0">
+              @if (isSearching()) {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Buscando...
+              } @else {
+                <i class="fas fa-search"></i> Consultar
+              }
+            </button>
+            <button class="btn btn-tbl-close border rounded-pill px-4 text-muted fw-medium" (click)="closeModal()">
+              Cancelar
+            </button>
+          </div>
+        } 
+        
+        <!-- PASO 2: RESULTADOS -->
+        @else {
+          <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h5 class="fw-bold mb-0 text-start">
+              <i class="fas fa-clipboard-list text-primary me-2"></i> 
+              Detalle del Requerimiento
+            </h5>
+            <span class="badge rounded-pill px-3 py-2" [ngClass]="requirementData().status === 'RF' ? 'bg-success' : 'bg-warning text-dark'">
+              {{ requirementData().status === 'RF' ? 'CERRADO' : 'EN PROCESO' }}
+            </span>
+          </div>
+
+          <div class="text-start mb-4">
+            <div class="row mb-3">
+              <div class="col-6">
+                <p class="small text-muted mb-0 fw-bold">Código RRTI</p>
+                <p class="mb-0 fs-6">{{ requirementData().rrti }}</p>
+              </div>
+              <div class="col-6">
+                <p class="small text-muted mb-0 fw-bold">Fecha de Creación</p>
+                <p class="mb-0 fs-6">{{ requirementData().created_at | date:'dd/MM/yyyy' }}</p>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-6">
+                <p class="small text-muted mb-0 fw-bold">Consultor Funcional</p>
+                <p class="mb-0 fs-6">
+                  {{ requirementData().functional_consultant?.person?.first_name || 'N/A' }} 
+                  {{ requirementData().functional_consultant?.person?.last_name || '' }}
+                </p>
+              </div>
+              <div class="col-6">
+                <p class="small text-muted mb-0 fw-bold">Consultores CSPE</p>
+                @if (requirementData().cspe_consultants?.length > 0) {
+                  <ul class="list-unstyled mb-0">
+                    @for (consultant of requirementData().cspe_consultants; track consultant.id) {
+                      <li class="fs-6 text-truncate" [title]="consultant.person?.first_name + ' ' + consultant.person?.last_name">
+                        {{ consultant.person?.first_name }} {{ consultant.person?.last_name }}
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="mb-0 fs-6 text-muted fst-italic">No asignado</p>
+                }
+              </div>
+            </div>
+
+            <!-- Historial de Fases -->
+            <div class="mt-4">
+              <p class="small text-muted mb-2 fw-bold border-bottom pb-1">Últimos Movimientos</p>
+              <ul class="list-unstyled">
+                @for (history of requirementData().phase_histories; track history.id) {
+                  <li class="small mb-2 d-flex justify-content-between border-bottom pb-1 border-light">
+                    <span>
+                      <i class="fas fa-check-circle text-success me-2"></i> 
+                      {{ phaseDictionary[history.phase_status_code] || history.phase_status_code }}
+                    </span>
+                    <span class="text-muted font-monospace">{{ history.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                  </li>
+                }
+                @if (!requirementData().phase_histories || requirementData().phase_histories.length === 0) {
+                  <li class="small text-muted fst-italic">No hay fases registradas aún.</li>
+                }
+              </ul>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-center gap-3 mt-4">
+            <button class="btn btn-tbl-planning rounded-pill px-4 d-flex align-items-center gap-2 shadow-sm fw-semibold" 
+                    (click)="downloadDocument()"
+                    [disabled]="isGeneratingPdf()">
+              @if (isGeneratingPdf()) {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...
+              } @else {
+                <i class="fas fa-file-pdf"></i> {{ requirementData().status === 'RF' ? 'Descargar Acta de Cierre' : 'Descargar Seguimiento' }}
+              }
+            </button>
+            <button class="btn btn-tbl-close border rounded-pill px-4 text-muted fw-semibold" (click)="resetSearch()">
+              Nueva Consulta
+            </button>
+          </div>
+        }
+
+      </div>
+    </div>
+  </div>
+}

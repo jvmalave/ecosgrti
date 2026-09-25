@@ -1,0 +1,55 @@
+@if (isVisible()) {
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.6); z-index: 1050; backdrop-filter: blur(6px);">
+    <div class="bg-white shadow-lg d-flex flex-column" style="max-width: 600px; width: 95%; border-radius: 0.75rem; overflow: hidden;">
+
+      <!-- Cabecera -->
+      <div class="modal-header border-0 px-4 py-3 text-white">
+        <h5 class="modal-title m-0 fw-bold d-flex align-items-center gap-2">
+          <i class="fas fa-database"></i> Sábana Operativa (Extracción CSV)
+        </h5>
+        <button
+        class="close-btn"
+        type="button"
+        (click)="closeModal()"
+        title="Cerrar modal"
+        aria-label="Close"
+      >
+        <i class="fa-solid fa-circle-xmark me-2"></i>
+      </button>
+      </div>
+
+      <!-- Cuerpo -->
+      <div class="modal-body p-4 bg-light">
+        <p class="text-muted small mb-4 text-center">
+          Seleccione el rango de fechas para acotar la extracción de datos, o deje los campos en blanco para descargar el histórico global de la coordinación.
+        </p>
+        
+        <div class="row g-3 justify-content-center mb-2">
+          <div class="col-md-5">
+            <label class="form-label fw-bold text-secondary small mb-1">Fecha Inicio</label>
+            <input type="date" class="form-control shadow-sm" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)">
+          </div>
+          <div class="col-md-5">
+            <label class="form-label fw-bold text-secondary small mb-1">Fecha Fin</label>
+            <input type="date" class="form-control shadow-sm" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer / Acciones -->
+      <div class="modal-footer border-top-0 bg-light px-4 pb-4 pt-0 d-flex justify-content-center gap-3">
+        <button type="button" class="btn btn-secondary fw-bold px-4 shadow-sm" (click)="closeModal()" [disabled]="isLoading()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" (click)="downloadCsv()" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Procesando...
+          } @else {
+            <i class="fas fa-file-csv me-2"></i> Descargar Reporte
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

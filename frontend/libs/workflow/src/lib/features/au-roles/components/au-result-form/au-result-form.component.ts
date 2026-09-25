@@ -59,7 +59,7 @@ export class AuResultFormComponent implements OnInit {
         rejection_reason: [''] 
       });
 
-      // 🟢 Escuchador reactivo adaptado a los 3 estados
+      // Escuchador reactivo adaptado a los 3 estados
       roleGroup.get('verdict')?.valueChanges.subscribe(verdictValue => {
         const reasonCtrl = roleGroup.get('rejection_reason');
         if (verdictValue !== 'TOTAL') {
@@ -144,15 +144,12 @@ export class AuResultFormComponent implements OnInit {
       }
     });
   }
-
-  // ... (tus otros métodos)
-
   /**
-   * 🟢 Motor privado para procesar la visualización del Blob PDF
+   * Motor privado para procesar la visualización del Blob PDF
    */
   private processDocumentView(path: string): void {
-    // // Activamos un estado de carga opcional si tuvieras un spinner general, o simplemente notificamos
-    // this.notificationService.showSuccess('Descargando', 'Obteniendo documento seguro del servidor...');
+   
+    this.notificationService.showLoading('Descargando', 'Obteniendo documento seguro del servidor...');
 
     this.auApiService.downloadDocument(path).subscribe({
       next: (blob: Blob) => {
