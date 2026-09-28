@@ -47,13 +47,11 @@ Route::prefix('catalogs')->middleware(['auth:api', 'password.expired' ])->group(
         // INACTIVACIÓN LÓGICA DE NODOS JERÁRQUICOS 
         Route::patch('/{nodeType}/{id}/status', [OrgStructureController::class, 'updateStatus']);
     });
-
       /*
     |--------------------------------------------------------------------------------------------------
     | API Routes - Mantenimiento de Matrices de Progreso y Manejo de Versiones
     |--------------------------------------------------------------------------------------------------
     */
-    
     Route::middleware(['role:admin,Coord'])->prefix('progress-matrices')->group(function () {
         
         // OBTENER TODAS LAS MATRICES DE PROGRESO
@@ -62,13 +60,11 @@ Route::prefix('catalogs')->middleware(['auth:api', 'password.expired' ])->group(
         // VERSIONAMIENTO INMUTABLE: PUBLICACIÓN DE NUEVA MATRIZ
         Route::post('/publish', [ProgressMatrixController::class, 'publish'])->name('matrix.publish');
     });
-
     /*
     |--------------------------------------------------------------------------------------------------
     | API Routes - Mantenimiento de Hitos Técnicos 
     |--------------------------------------------------------------------------------------------------
     */
-
     Route::middleware(['role:admin,Coord'])->prefix('milestones')->group(function () {
         // LISTADO DE HITOS TÉCNICOS 
         Route::get('/', [MilestoneController::class, 'index']);

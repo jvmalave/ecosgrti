@@ -19,7 +19,6 @@ function createAdminUser(): User
 {
     $uuid = Str::uuid()->toString();
     $person = Person::create([
-        'identity_card' => 'V-' . rand(10000000, 99999999),
         'first_name' => 'Admin',
         'last_name' => 'Sistema',
         'email' => "admin.{$uuid}@cantv.com.ve",
@@ -31,7 +30,31 @@ function createAdminUser(): User
         'name' => "admin_{$uuid}",
         'email' => $person->email,
         'password' => bcrypt('password123'),
+        'password_updated_at' => now(), // <-- Corregido el nombre de la columna
         'roles' => ['admin'],
+    ]);
+}
+
+/**
+ * Helper: Crea y retorna un usuario Coordinador aislado.
+ */
+function createCoordUser(): User
+{
+    $uuid = Str::uuid()->toString();
+    $person = Person::create([
+        'first_name' => 'Coordinador',
+        'last_name' => 'Gestión',
+        'email' => "coord.{$uuid}@cantv.com.ve",
+        'phone' => '04162222222',
+    ]);
+
+    return User::create([
+        'id' => $person->id,
+        'name' => "coord_{$uuid}",
+        'email' => $person->email,
+        'password' => bcrypt('password123'),
+        'password_updated_at' => now(),
+        'roles' => ['coord'],
     ]);
 }
 
@@ -42,7 +65,6 @@ function createConsultantUser(): User
 {
     $uuid = Str::uuid()->toString();
     $person = Person::create([
-        'identity_card' => 'V-' . rand(10000000, 99999999),
         'first_name' => 'Consultor',
         'last_name' => 'Prueba',
         'email' => "consultor.{$uuid}@cantv.com.ve",
@@ -54,11 +76,13 @@ function createConsultantUser(): User
         'name' => "consultant_{$uuid}",
         'email' => $person->email,
         'password' => bcrypt('password123'),
+        'password_updated_at' => now(), // <-- Corregido el nombre de la columna
         'roles' => ['consultant'],
     ]);
 }
 
-test('RBAC: Deniega el acceso a la estructura organizacional a usuarios sin rol admin', function () {
+// 1. PRUEBA DE RECHAZO (403): El consultor no puede acceder
+test('RBAC: Deniega el acceso a la estructura organizacional a usuarios sin rol admin o coord', function () {
     $consultantUser = createConsultantUser();
 
     $this->actingAs($consultantUser, 'api')
@@ -66,6 +90,7 @@ test('RBAC: Deniega el acceso a la estructura organizacional a usuarios sin rol 
         ->assertStatus(403);
 });
 
+// 2. PRUEBA DE ÉXITO (201): El admin sí puede registrar
 test('HAPPY PATH: Permite al admin registrar Sociedad, Sistema y Unidad Solicitante', function () {
     $adminUser = createAdminUser();
 
@@ -94,6 +119,18 @@ test('HAPPY PATH: Permite al admin registrar Sociedad, Sistema y Unidad Solicita
         ->postJson('/api/catalogs/org-structure/requesting-units', [
             'system_id' => $systemId,
             'name' => 'COORDINACION DE SEGURIDAD PORTALES',
+        ])
+        ->assertStatus(201);
+});
+
+// 3. PRUEBA DE ÉXITO (201): El coordinador también puede registrar
+test('HAPPY PATH: Permite al coord registrar entidades en el catálogo', function () {
+    $coordUser = createCoordUser();
+
+    $this->actingAs($coordUser, 'api')
+        ->postJson('/api/catalogs/org-structure/societies', [
+            'name' => 'CANTV SUCURSAL ' . Str::random(5),
+            'acronym' => 'S' . strtoupper(Str::random(4)),
         ])
         ->assertStatus(201);
 });
